@@ -1,0 +1,21 @@
+
+server:
+  port: 8080
+spring:
+  profiles:
+    active: dev
+  application:
+      name: TexApi
+  thymeleaf:
+    cache: true
+  datasource:
+    driver-class-name: ${tex.driver-class-name}
+    url: jdbc:mysql://${tex.datasource.host}:${tex.datasource.port}/${tex.datasource.database}?serverTimezone=Asia/Shanghai&useUnicode=true&characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull&useSSL=false&allowPublicKeyRetrieval=true
+    username: ${tex.username}
+    password: ${tex.password}
+mybatis:
+  configuration:
+    map-underscore-to-camel-case: true
+
+
+
