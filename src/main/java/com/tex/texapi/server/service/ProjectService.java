@@ -4,7 +4,7 @@ import com.tex.texapi.pojo.entity.Project;
 
 import java.util.List;
 
-public interface HomeService {
+public interface ProjectService {
     /**
      * 获取项目列表
      * @param id

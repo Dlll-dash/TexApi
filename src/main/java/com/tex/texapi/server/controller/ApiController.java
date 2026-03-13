@@ -13,12 +13,13 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api")
+@RequestMapping("/tex/api")
 @Slf4j
 public class ApiController {
 
     @Autowired
     private ApiService apiService;
+
     /**
      * 根据项目id获取接口列表
      * @param id
