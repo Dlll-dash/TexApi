@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="../texicon.ico" type="image/x-icon">
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <title>主页</title>
+    <style>
+        /* 全局重置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
+        }
+
+        /* 页面背景（匹配登录界面） */
+        body {
+            background-color: #f5f7fa;
+            padding: 2rem 1rem;
+        }
+
+        /* 核心容器（居中、卡片化） */
+        #container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+            padding: 2rem;
+        }
+
+        /* 标题样式 */
+        h2 {
+            color: #2d3748;
+            font-size: 1.8rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.8rem;
+            border-bottom: 1px solid #e8e8e8;
+            text-align: center;
+        }
+
+        /* 空数据提示 */
+        .empty-tip {
+            padding: 2rem;
+            text-align: center;
+            color: #718096;
+            font-size: 1rem;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            margin: 1rem 0;
+        }
+
+        /* 列表样式 - 网格布局，适配正方形卡片 */
+        ul {
+            list-style: none;
+            padding: 0;
+            display: grid;
+            /* 自动排列，每列宽度=高度（正方形），间距16px */
+            grid-template-columns: repeat(auto-fill, 200px); 
+            gap: 20px;
+            /* 列表居中对齐 */
+            justify-content: center;
+        }
+
+        /* 列表项样式（正方形卡片 + 淡阴影 + 文字居中） */
+        li {
+            /* 强制正方形：宽高相等 */
+            width: 200px;
+            height: 200px;
+            /* 卡片样式 */
+            padding: 1.5rem;
+            border-radius: 8px;
+            background-color: #ffffff;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            /* 淡阴影效果 */
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.07);
+            border: none;
+            margin: 0;
+            /* 文字居中核心：flex布局 */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+        
+        /* 列表项hover效果（阴影加深 + 轻微上浮） */
+        li:hover {
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            transform: translateY(-3px);
+        }
+
+        /* 项目名称样式 */
+        .project-name {
+            font-weight: 600;
+            color: #4299e1;
+            font-size: 1.4rem;
+            margin-bottom: 0.6rem;
+        }
+
+        /* 项目描述样式 */
+        .project-desc {
+            color: #718096;
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+
+        /* 错误提示样式 */
+        .error-tip {
+            padding: 1.2rem;
+            color: #e53e3e;
+            background-color: #fef2f2;
+            border-radius: 8px;
+            margin: 1rem 0;
+            border: 1px solid #fee2e2;
+        }
+
+        /* 响应式适配（手机端） */
+        @media (max-width: 768px) {
+            #container {
+                padding: 1.2rem;
+            }
+            h2 {
+                font-size: 1.5rem;
+                margin-bottom: 1rem;
+            }
+            /* 手机端正方形卡片略小 */
+            ul {
+                grid-template-columns: repeat(auto-fill, 160px);
+                gap: 15px;
+            }
+            li {
+                width: 160px;
+                height: 160px;
+                padding: 1.2rem;
+            }
+            .project-name {
+                font-size: 1rem;
+            }
+            .project-desc {
+                font-size: 0.85rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="container"></div>
+
+    <script src="home.js"></script>
+</body>
+</html>

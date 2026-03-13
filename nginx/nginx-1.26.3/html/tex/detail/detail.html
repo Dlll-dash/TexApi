@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="../texicon.ico" type="image/x-icon">
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <style>
+    /* 全局重置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
+        }
+
+        /* 页面背景（和主页一致） */
+        body {
+            background-color: #f5f7fa;
+            padding: 2rem 1rem;
+            display: flex;
+            gap: 1.5rem; /* 左侧列表和右侧区域的间距 */
+            min-height: 100vh; /* 铺满视口高度 */
+        }
+
+        /* 左侧接口列表容器（占1/4宽度） */
+        #apiList {
+            width: 25%; /* 核心：1/4宽度 */
+            min-width: 280px; /* 最小宽度，避免小屏太窄 */
+            background: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+            padding: 1.5rem;
+            height: fit-content; /* 高度自适应内容 */
+        }
+
+        /* 右侧测试窗口容器（占3/4宽度） */
+        #testWindow {
+            flex: 1; /* 自动占剩余3/4宽度 */
+            background: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+            padding: 1.5rem;
+            min-height: 600px; /* 基础高度 */
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* 子窗口容器 */
+        #subWindow {
+            flex: 1;
+            margin-top: 1rem;
+            overflow-y: auto;
+        }
+
+        /* 标题样式（和主页一致） */
+        h2 {
+            color: #2d3748;
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.2rem;
+            padding-bottom: 0.6rem;
+            border-bottom: 1px solid #e8e8e8;
+            text-align: center; 
+        }
+
+        h3 {
+            color: #2d3748;
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        h4 {
+            color: #4a5568;
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin: 1rem 0 0.5rem;
+        }
+
+        /* 空数据提示（复用主页样式） */
+        .empty-tip {
+            padding: 1.5rem;
+            text-align: center;
+            color: #718096;
+            font-size: 1rem;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            margin: 0.5rem 0;
+        }
+
+        /* 接口列表样式 */
+        ul.api-list-ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        /* 列表项样式（和主页列表一致） */
+        li.api-list-li {
+            padding: 0.8rem 1rem;
+            border-bottom: 1px solid #e8e8e8;
+            border-radius: 8px;
+            margin-bottom: 0.6rem;
+            background-color: #ffffff;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+        }
+
+        /* 主文字样式（高亮） */
+        .method{
+            font-weight: 600; /* 加粗 */
+            font-size: 1.1rem; 
+            margin-right: 8px; /* 和副文字留间距 */
+            min-width: 70px;
+            text-align: center;
+        }
+        .methodValue{
+            font-weight: 600; /* 加粗 */
+            font-size: 1.1rem; 
+            margin-right: 8px; /* 和副文字留间距 */
+            min-width: 70px;
+            text-align: center;
+        }
+        /* 副文字样式（弱化） */
+        .name{
+            font-weight: 400; /* 常规粗细 */
+            color: #718096; /* 浅灰色 */
+            font-size: 1.1rem; 
+            flex: 1;
+        }
+
+        /* 列表项hover效果 */
+        li.api-list-li:hover {
+            background-color: #f5f7fa;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            transform: translateY(-1px);
+        }
+
+        /* 最后一个列表项去掉下边框 */
+        li.api-list-li:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+
+        /* 接口名称样式 */
+        .api-name {
+            font-weight: 500;
+            color: #2d3748;
+            font-size: 1rem;
+        }
+
+        /* 错误提示样式（复用主页） */
+        .error-tip {
+            padding: 1.2rem;
+            color: #e53e3e;
+            background-color: #fef2f2;
+            border-radius: 8px;
+            margin: 1rem 0;
+            border: 1px solid #fee2e2;
+        }
+
+        /* 测试窗口标签容器 */
+        .test-tab-container {
+            display: flex;
+            gap: 0.5rem;
+            border-bottom: 1px solid #e8e8e8;
+            padding-bottom: 0.5rem;
+        }
+
+        /* 测试窗口标签样式 */
+        .test-tab {
+            padding: 0.5rem 1.2rem;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: #718096;
+            font-size: 1rem;
+            font-weight: 500;
+        }
+
+        /* 激活的标签样式 */
+        .test-tab.active {
+            background-color: #4299e1;
+            color: #ffffff;
+        }
+
+        .test-tab:hover:not(.active) {
+            color: #4299e1;
+            background-color: #f0f7ff;
+        }
+
+        /* 调试窗口样式 */
+        .debug-container {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        /* 请求行样式 */
+        .request-line {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        /* URL输入框样式 */
+        .url {
+            flex: 1;
+            padding: 0.8rem 1rem;
+            border: 1px solid #e8e8e8;
+            border-radius: 8px;
+            font-size: 1rem;
+            color: #2d3748;
+            outline: none;
+            transition: border-color 0.2s ease;
+            min-width: 200px;
+        }
+
+        .url:focus {
+            border-color: #4299e1;
+            box-shadow: 0 0 0 2px rgba(66, 153, 225, 0.2);
+        }
+
+        /* 发送按钮样式 */
+        .submit-btn {
+            padding: 0.8rem 1.5rem;
+            background-color: #4299e1;
+            color: #ffffff;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+
+        .submit-btn:hover {
+            background-color: #3182ce;
+            transform: translateY(-1px);
+        }
+
+        .submit-btn:active {
+            transform: translateY(0);
+        }
+        .request-info {
+            display: flex;
+            gap: 0.5rem;
+            border-bottom: 1px solid #e8e8e8;
+            padding-bottom: 0.5rem;
+            margin: 1rem 0;
+        }
+
+        /* 响应区域样式 */
+        .response-area {
+            width: 100%;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            padding: 1rem;
+        }
+
+        .response-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 0.5rem;
+        }
+
+        .response-content {
+            width: 100%;
+            background-color: #ffffff;
+            border: 1px solid #e8e8e8;
+            border-radius: 6px;
+            padding: 1rem;
+            font-size: 0.95rem;
+            color: #2d3748;
+            line-height: 1.6;
+            overflow-x: auto;
+        }
+
+        /* 设计窗口样式 */
+        .design-container {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .design-title {
+            color: #2d3748;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid #e8e8e8;
+        }
+
+        .base-info {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+            padding: 1rem;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .info-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: #4a5568;
+            min-width: 80px;
+        }
+
+        .info-value {
+            color: #2d3748;
+            font-size: 1rem;
+        }
+
+        .params-design {
+            width: 100%;
+        }
+
+        .params-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 0.8rem;
+        }
+
+        .params-table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: #ffffff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .params-table th {
+            background-color: #f8f9fa;
+            padding: 0.8rem 1rem;
+            text-align: left;
+            font-weight: 600;
+            color: #2d3748;
+            border-bottom: 1px solid #e8e8e8;
+        }
+
+        .params-table td {
+            padding: 0.8rem 1rem;
+            color: #4a5568;
+            border-bottom: 1px solid #e8e8e8;
+        }
+
+        .params-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .params-table tr:hover td {
+            background-color: #f5f7fa;
+        }
+
+        /* 文档预览窗口样式 */
+        .preview-container {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .preview-title {
+            color: #2d3748;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid #e8e8e8;
+        }
+
+        .doc-content {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .doc-section {
+            padding: 1rem;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .doc-section p {
+            color: #4a5568;
+            line-height: 1.6;
+            font-size: 1rem;
+        }
+
+        .call-list {
+            list-style: disc !important;
+            padding-left: 1.5rem;
+            color: #4a5568;
+        }
+
+        .call-list li {
+            margin-bottom: 0.5rem;
+            line-height: 1.5;
+        }
+    
+        .doc-pre {
+            width: 100%;
+            background-color: #ffffff;
+            border: 1px solid #e8e8e8;
+            border-radius: 6px;
+            padding: 1rem;
+            font-size: 0.95rem;
+            color: #2d3748;
+            line-height: 1.6;
+            overflow-x: auto;
+            margin-top: 0.5rem;
+        }
+
+        /* 响应式适配（手机端） */
+        @media (max-width: 768px) {
+            body {
+                flex-direction: column; /* 小屏改为上下布局 */
+                gap: 1rem;
+            }
+            #apiList {
+                width: 100%; /* 手机端占满宽度 */
+                min-width: unset;
+            }
+            #testWindow {
+                min-height: 400px;
+            }
+            h2 {
+                font-size: 1.3rem;
+            }
+            h3 {
+                font-size: 1.15rem;
+            }
+            .request-line {
+                gap: 0.8rem;
+            }
+            .base-info {
+                gap: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="apiList"></div>
+    <div id="testWindow">
+        <div id="tabContainer" class="test-tab-container">
+                <span class="test-tab active" data-tab="debug" id="debugTab">调试</span>
+                <span class="test-tab" data-tab="design" id="designTab">设计</span>
+                <span class="test-tab" data-tab="preview" id="previewTab">预览</span>
+        </div>
+        <div id="subWindow"></div>
+    </div>
+    
+    <script src="detail.js"></script>
+</body>
+</html>

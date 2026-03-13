@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="/texicon.ico" type="image/x-icon">
+    <title>TexApi-登录</title>
+    <!-- CDN 引入 axios，浏览器端无需 import -->
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <style>
+        /* 全局样式重置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        /* 页面整体布局 */
+        body {
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #f5f7fa; /* 柔和的浅灰蓝背景 */
+        }
+
+        /* 登录表单容器 */
+        #loginForm {
+            width: 100%;
+            max-width: 400px;
+            padding: 2.5rem;
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08); /* 轻微阴影增加层次感 */
+            text-align: center;
+        }
+
+        /* 标题样式 */
+        #loginForm h1 {
+            color: #2d3748; /* 深灰色标题，不刺眼 */
+            font-size: 2rem;
+            margin-bottom: 2rem;
+            letter-spacing: 0.5px;
+        }
+
+        /* 输入框样式 */
+        input[type="text"],
+        input[type="password"] {
+            width: 100%;
+            padding: 0.9rem 1rem;
+            margin-bottom: 1.2rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+            outline: none;
+        }
+
+        /* 输入框聚焦效果 */
+        input[type="text"]:focus,
+        input[type="password"]:focus {
+            border-color: #4299e1; /* 柔和的蓝色聚焦边框 */
+            box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.1);
+        }
+
+        /* 输入框占位符样式 */
+        input::placeholder {
+            color: #a0aec0;
+            font-size: 0.95rem;
+        }
+
+        /* 登录按钮样式 */
+        #loginBtn {
+            width: 100%;
+            padding: 0.9rem;
+            background-color: #4299e1;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            margin-top: 0.5rem;
+        }
+
+        /* 按钮悬停效果 */
+        #loginBtn:hover {
+            background-color: #3182ce;
+        }
+
+        /* 按钮禁用状态（可选） */
+        #loginBtn:disabled {
+            background-color: #90cdf4;
+            cursor: not-allowed;
+        }
+
+        /* 响应式适配小屏幕 */
+        @media (max-width: 480px) {
+            #loginForm {
+                padding: 1.8rem;
+                margin: 0 1rem;
+            }
+
+            #loginForm h1 {
+                font-size: 1.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <form id="loginForm" action="">
+        <h1>TexApi</h1><br>
+
+        
+        <input type="text" id="userName" placeholder="userName"><br>
+        
+        <input type="password" id="password" placeholder="password"><br><br>
+
+        <button type="submit" id="loginBtn">登录</button>
+    </form>
+    <script src="index.js"></script>
+</body>
+</html>
