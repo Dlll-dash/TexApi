@@ -32,10 +32,8 @@ build/
 ### VS Code ###
 .vscode/
 /nginx/
-# 排除 Nginx 核心目录
-nginx/conf/
-nginx/logs/
-nginx/sbin/
-nginx/temp/
-nginx/*.pid
-nginx/*.log
+
+!nginx/niginx-1.26.3/html/          # 保留前端html/js文件夹
+!nginx/niginx-1.26.3/html/**/*      # 保留html下所有文件
+!nginx/niginx-1.26.3/conf/          # 保留conf配置文件夹
+!nginx/niginx-1.26.3/conf/**/*      # 保留conf下所有配置文件
