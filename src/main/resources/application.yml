@@ -27,7 +27,7 @@ tex:
     # 设置jwt签名加密时使用的秘钥
     seret-key: awIsj9382JSnajfsaijf9dfu09fu9a8jfsaf9AJSaofkaisfjia3fjajfji3ajf38
     # 设置jwt过期时间
-    ttl: 72000
+    ttl: 7200000
     # 设置前端传递过来的令牌名称
     token-name: token
 

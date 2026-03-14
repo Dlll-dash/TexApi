@@ -1,3 +1,18 @@
+// 添加 axios 响应拦截器来处理 401 错误（token 过期）
+axios.interceptors.response.use(
+    response => response,
+    error => {
+        if (error.response && error.response.status === 401) {
+            // Token 过期，清除存储并跳转到登录页
+            localStorage.removeItem('token');
+            localStorage.removeItem('id');
+            alert('登录已过期，请重新登录');
+            window.location.href = '/index.html';
+        }
+        return Promise.reject(error);
+    }
+);
+
 //解析url参数
 function getUrlParams() {
     const params = {};
@@ -184,15 +199,16 @@ function renderDebug(apiData){
     requestLine.appendChild(submitButton);
     container.appendChild(requestLine);
 
+    // 请求信息标签区
     const requestInfo = document.createElement('div');
     requestInfo.className = "request-info";
 
     const Params= document.createElement('span');
-    Params.className = "test-tab"; // 复用标签样式
+    Params.className = "test-tab active"; // 默认激活
     const Body=document.createElement('span');
-    Body.className = "test-tab"; // 复用标签样式
+    Body.className = "test-tab";
     const Headers=document.createElement('span');
-    Headers.className = "test-tab"; // 复用标签样式
+    Headers.className = "test-tab";
 
     Params.textContent='Params';
     Body.textContent='Body';
@@ -204,27 +220,261 @@ function renderDebug(apiData){
 
     container.appendChild(requestInfo);
     
+    const requestArea = document.createElement('div');
+    requestArea.id = "requestArea";
+    requestArea.className = "request-area";
+    container.appendChild(requestArea);
+    
 
-    //点击事件
+    //Params点击事件
+    Params.onclick=function(){
+        // 切换激活状态
+        requestInfo.querySelectorAll('.test-tab').forEach(tab => tab.classList.remove('active'));
+        Params.classList.add('active');
+        renderParams(requestArea);
+    }
+    //Body点击事件
+    Body.onclick=function(){
+        requestInfo.querySelectorAll('.test-tab').forEach(tab => tab.classList.remove('active'));
+        Body.classList.add('active');
+        renderBody(requestArea);
+    }
+    //Headers点击事件
+    Headers.onclick=function(){
+        requestInfo.querySelectorAll('.test-tab').forEach(tab => tab.classList.remove('active'));
+        Headers.classList.add('active');
+        renderHeaders(requestArea);
+    }
+
+    renderParams(requestArea); // 默认打开Params区
+
+    //发送请求点击事件
     submitButton.onclick = function() {
         console.log(`发送${apiData.requestMethod}请求到：${urlInput.value}`);
         // 可后续补充请求逻辑
         
     };
 
+    
+}
+
+//Params点击事件
+function renderParams(container){
+    container.innerHTML = ""; // 清空
+    //创建Params块
+    const querySpan=document.createElement('span');
+    querySpan.textContent="Query参数";
+    container.appendChild(querySpan);
+
+    const queryArea=document.createElement('div');
+    renderform(queryArea);// 复用formData的渲染函数
+    container.appendChild(queryArea);
+
+    // 响应结果标题
+    const responseTitle = document.createElement('span');
+    responseTitle.textContent = "响应结果：";
+    responseTitle.style.fontWeight = '600';
+    responseTitle.style.color = '#2d3748';
+    responseTitle.style.marginBottom = '0.5rem';
+    responseTitle.style.display = 'block';
+    container.appendChild(responseTitle);
+    
     // 新增响应结果区域，美化调试窗口
     const responseArea = document.createElement('div');
     responseArea.className = "response-area";
-    const responseTitle = document.createElement('div');
-    responseTitle.textContent = "响应结果：";
-    responseTitle.className = "response-title";
     const responseContent = document.createElement('pre');
     responseContent.className = "response-content";
     responseContent.textContent = "尚未发送请求";
-    responseArea.appendChild(responseTitle);
+    responseContent.style.color = "#adabab";// 默认提示文字颜色
     responseArea.appendChild(responseContent);
+
     container.appendChild(responseArea);
+    
 }
+
+//Body点击事件
+function renderBody(container){
+    container.innerHTML = ""; // 清空
+    //创建Body块
+    const bodyTitle = document.createElement('span');
+    bodyTitle.textContent = "请求体格式";
+    bodyTitle.style.fontWeight = '600';
+    bodyTitle.style.color = '#2d3748';
+    bodyTitle.style.marginBottom = '1rem';
+    bodyTitle.style.display = 'block';
+    container.appendChild(bodyTitle);
+
+    // 格式选择区域
+    const formatContainer = document.createElement('div');
+    formatContainer.style.display = 'flex';
+    formatContainer.style.gap = '0.5rem';
+    formatContainer.style.marginBottom = '1rem';
+
+    const noneSpan = document.createElement('span');
+    noneSpan.textContent = 'none';
+    noneSpan.className = 'body-format-tab active'; // 默认激活
+
+    const formDataSpan = document.createElement('span');
+    formDataSpan.textContent = 'form-data';
+    formDataSpan.className = 'body-format-tab';
+
+    const jsonSpan = document.createElement('span');
+    jsonSpan.textContent = 'json';
+    jsonSpan.className = 'body-format-tab';
+
+    const urlencodedSpan = document.createElement('span');
+    urlencodedSpan.textContent = 'x-www-form-urlencoded';
+    urlencodedSpan.className = 'body-format-tab';
+
+    formatContainer.appendChild(noneSpan);
+    formatContainer.appendChild(formDataSpan);
+    formatContainer.appendChild(jsonSpan);
+    formatContainer.appendChild(urlencodedSpan);
+
+    container.appendChild(formatContainer);
+
+    // 内容区域
+    const contentDiv = document.createElement('div');
+    contentDiv.className = 'body-content';
+    contentDiv.innerHTML = "<div class='empty-tip'>该请求没有Body</div>"; // 默认无Body
+
+    container.appendChild(contentDiv);
+
+    // 点击事件
+    noneSpan.onclick = function(){
+        formatContainer.querySelectorAll('.body-format-tab').forEach(tab => tab.classList.remove('active'));
+        noneSpan.classList.add('active');
+        contentDiv.innerHTML = "<div class='empty-tip'>该请求没有Body</div>";
+    };
+
+    formDataSpan.onclick = function(){
+        formatContainer.querySelectorAll('.body-format-tab').forEach(tab => tab.classList.remove('active'));
+        formDataSpan.classList.add('active');
+        renderform(contentDiv);
+    };
+
+    jsonSpan.onclick = function(){
+        formatContainer.querySelectorAll('.body-format-tab').forEach(tab => tab.classList.remove('active'));
+        jsonSpan.classList.add('active');
+        contentDiv.innerHTML = "<textarea placeholder='输入JSON格式的请求体' style='width:100%; height:200px; padding:0.5rem; border:1px solid #e8e8e8; border-radius:6px; font-family:monospace;'></textarea>";
+    };
+
+    urlencodedSpan.onclick = function(){
+        formatContainer.querySelectorAll('.body-format-tab').forEach(tab => tab.classList.remove('active'));
+        urlencodedSpan.classList.add('active');
+        renderform(contentDiv);
+    };
+}
+
+//Headers点击事件
+function renderHeaders(container){
+    container.innerHTML = ""; // 清空
+    //创建Headers块
+    const headerArea=document.createElement('div');
+    renderform(headerArea); // 复用formData的渲染函数
+    container.appendChild(headerArea);
+}
+
+//统一创建表单函数
+function renderform(container){
+    container.innerHTML = "";
+
+    //创建formData列表
+    const ul=document.createElement('ul');
+    ul.id='formDataList';
+
+    const textli=document.createElement('li');
+    const keySpan=document.createElement('span');
+    keySpan.textContent='参数名';
+    keySpan.className = 'param-label';
+    const valueSpan=document.createElement('span');
+    valueSpan.textContent='参数值';
+    valueSpan.className = 'param-label';
+    //调整与输入框左对齐
+    keySpan.style.minWidth = '245px';
+    const typeSpan=document.createElement('span');
+    typeSpan.textContent='类型';
+    typeSpan.className = 'param-label';
+    typeSpan.style.marginLeft = '240px';
+    const explainSpan=document.createElement('span');
+    explainSpan.textContent='说明';
+    explainSpan.className = 'param-label';
+    explainSpan.style.marginLeft = '55px';
+
+    textli.appendChild(keySpan);
+    textli.appendChild(valueSpan);
+    textli.appendChild(typeSpan);
+    textli.appendChild(explainSpan);
+
+    ul.appendChild(textli);
+
+    //更新删除按钮状态函数
+    function updateRemoveButtons() {
+        const formDataItems = ul.querySelectorAll('li:not(:first-child)');
+        const itemCount = formDataItems.length;
+        
+        formDataItems.forEach((item, index) => {
+            const removeBtn = item.querySelector('.remove-btn');
+            if (removeBtn) {
+                    // 数量>1时显示所有删除按钮，数量=1时隐藏
+                    removeBtn.style.display = itemCount > 1 ? 'inline-block' : 'none';
+                }
+            });
+    }
+    //添加formData项
+    function addFormDataItem(){
+        const formDataLi=document.createElement('li');
+        const keyInput=document.createElement('input');
+        const valueInput=document.createElement('input');
+        const typeInput=document.createElement('input');
+        const explainInput=document.createElement('input');
+        const removeButton=document.createElement('button');
+
+        keyInput.placeholder="添加参数";
+        keyInput.className = 'param-name-input';
+        valueInput.className = 'param-value-input';
+        typeInput.className = 'type-input';
+        explainInput.className = 'explain-input';
+        removeButton.textContent=' - ';
+        removeButton.className = 'remove-btn';
+        removeButton.style.display = 'none'; // 默认隐藏，至少保留一个参数项
+
+        formDataLi.appendChild(keyInput);
+        formDataLi.appendChild(valueInput);
+        formDataLi.appendChild(typeInput);
+        formDataLi.appendChild(explainInput);
+        formDataLi.appendChild(removeButton);
+        
+        
+        ul.appendChild(formDataLi);
+
+        updateRemoveButtons(); // 添加新项后更新删除按钮显示
+        
+
+        // 删除按钮点击事件
+        removeButton.onclick = function(){
+            ul.removeChild(formDataLi);
+            // 删除后重新更新删除按钮显示
+            updateRemoveButtons();
+        };
+        
+    }
+    addFormDataItem(); // 初始化一个参数项
+    container.appendChild(ul);
+    
+    // 添加按钮放在ul下面
+    const addButtonContainer = document.createElement('div');
+    addButtonContainer.className = 'add-button-container';
+    const addButton = document.createElement('button');
+    addButton.textContent = '+';
+    addButton.className = 'add-btn';
+    addButton.onclick = function(){
+        addFormDataItem();
+    };
+    addButtonContainer.appendChild(addButton);
+    container.appendChild(addButtonContainer);
+}
+
 
 /**
  * 渲染设计窗口（美化补全）

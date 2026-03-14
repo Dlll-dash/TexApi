@@ -1,5 +1,20 @@
 console.log('脚本已加载');
 
+// 添加 axios 响应拦截器来处理 401 错误（token 过期）
+axios.interceptors.response.use(
+    response => response,
+    error => {
+        if (error.response && error.response.status === 401) {
+            // Token 过期，清除存储并跳转到登录页
+            localStorage.removeItem('token');
+            localStorage.removeItem('id');
+            alert('登录已过期，请重新登录');
+            window.location.href = '/index.html';
+        }
+        return Promise.reject(error);
+    }
+);
+
 // 替换为更稳定的DOMContentLoaded事件
 document.addEventListener('DOMContentLoaded', async function () {
     // 获取并校验ID

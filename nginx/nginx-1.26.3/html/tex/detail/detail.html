@@ -178,12 +178,13 @@
             color: #718096;
             font-size: 1rem;
             font-weight: 500;
+            border-bottom: 2px solid transparent;
         }
 
         /* 激活的标签样式 */
         .test-tab.active {
-            background-color: #4299e1;
-            color: #ffffff;
+            color: #4299e1;
+            border-bottom-color: #4299e1;
         }
 
         .test-tab:hover:not(.active) {
@@ -249,17 +250,17 @@
         .request-info {
             display: flex;
             gap: 0.5rem;
-            border-bottom: 1px solid #e8e8e8;
             padding-bottom: 0.5rem;
             margin: 1rem 0;
         }
 
         /* 响应区域样式 */
         .response-area {
-            width: 100%;
-            background-color: #f8f9fa;
-            border-radius: 8px;
-            padding: 1rem;
+            padding: 0.5rem;
+            background-color: #ffffff;
+            border-radius: 6px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            margin-top: 0.5rem;
         }
 
         .response-title {
@@ -272,11 +273,10 @@
         .response-content {
             width: 100%;
             background-color: #ffffff;
-            border: 1px solid #e8e8e8;
             border-radius: 6px;
             padding: 1rem;
             font-size: 0.95rem;
-            color: #2d3748;
+            color: #282a2d;
             line-height: 1.6;
             overflow-x: auto;
         }
@@ -418,7 +418,150 @@
             margin-top: 0.5rem;
         }
 
-        /* 响应式适配（手机端） */
+        /* 请求详情区域 */
+        .request-area {
+            flex: 1;
+            padding: 1rem;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            margin-top: 0.5rem;
+        }
+
+        /* 参数/头列表样式 */
+        #paramsList, #headersList, #formDataList, #xwwwList {
+            list-style: none;
+            padding: 0;
+            margin: 0.5rem 0;
+        }
+
+        #paramsList li, #headersList li, #formDataList li,#xwwwList li {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+            padding: 0.5rem;
+            background-color: #ffffff;
+            border-radius: 6px;
+            margin-bottom: 0.5rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        #paramsList li:first-child, #headersList li:first-child,#formDataList li:first-child,#xwwwList li:first-child {
+            background-color: #f8f9fa;
+            font-weight: 600;
+            color: #2d3748;
+            box-shadow: none;
+        }
+
+        #paramsList input, #headersList input, #formDataList input,#xwwwList input {
+            padding: 0.5rem;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            border: 1px solid transparent;
+            transition: border-color 0.3s ease;
+        }
+
+        #paramsList input:hover, #headersList input:hover,#formDataList input:hover,#xwwwList input:hover {
+            border-color: #e8e8e8;
+        }
+
+        .param-label, .header-label, .type-label, .explain-label {
+            /*min-width: 120px;*/
+            text-align: left;
+        }
+
+        .param-name-input {
+            flex: 160 1 0;
+            min-width: 160px;
+        }
+
+        .param-value-input {
+            flex: 192 1 0;
+            min-width: 192px;
+        }
+
+        .type-input {
+            flex: 48 1 0;
+            min-width: 48px;
+        }
+
+        .explain-input {
+            flex: 192 1 0;
+            min-width: 192px;
+        }
+
+        .header-name-input {
+            flex: 160 1 0;
+            min-width: 160px;
+        }
+
+        .header-value-input {
+            flex: 192 1 0;
+            min-width: 192px;
+        }
+
+        #paramsList button, #headersList button,#formDataList button,#xwwwList button {
+            padding: 0.5rem 0.8rem;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: background-color 0.2s;
+        }
+
+        .add-btn {
+            padding: 0.5rem 0.8rem;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: background-color 0.2s;
+            margin-right: 4px;
+            background-color: #4299e1;
+            color: white;
+        }
+
+        .add-btn:hover {
+            background-color: #3182ce;
+        }
+
+        .remove-btn {
+            background-color: #e53e3e;
+            color: white;
+        }
+
+        .remove-btn:hover {
+            background-color: #c53030;
+        }
+
+        /* Body 格式标签样式 */
+        .body-format-tab {
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: #718096;
+            font-size: 0.9rem;
+            font-weight: 500;
+            background-color: #ffffff;
+            border: 1px solid #e8e8e8;
+        }
+
+        .body-format-tab.active {
+            background-color: #4299e1;
+            color: #ffffff;
+            border-color: #4299e1;
+        }
+
+        .body-format-tab:hover:not(.active) {
+            color: #4299e1;
+            background-color: #f0f7ff;
+            border-color: #4299e1;
+        }
+
+        .add-button-container {
+            margin-top: 0.5rem;
+            text-align: right;
+        }
         @media (max-width: 768px) {
             body {
                 flex-direction: column; /* 小屏改为上下布局 */
