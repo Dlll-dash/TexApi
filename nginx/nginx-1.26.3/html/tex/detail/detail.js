@@ -177,11 +177,7 @@ function renderDebug(apiData){
 
     submitButton.textContent='发送'; 
     submitButton.className = "submit-btn";
-    //点击事件
-    submitButton.onclick = function() {
-        console.log(`发送${apiData.requestMethod}请求到：${urlInput.value}`);
-        // 可后续补充请求逻辑
-    };
+    
 
     requestLine.appendChild(methodSpan);
     requestLine.appendChild(urlInput);
@@ -207,6 +203,14 @@ function renderDebug(apiData){
     requestInfo.appendChild(Headers);
 
     container.appendChild(requestInfo);
+    
+
+    //点击事件
+    submitButton.onclick = function() {
+        console.log(`发送${apiData.requestMethod}请求到：${urlInput.value}`);
+        // 可后续补充请求逻辑
+        
+    };
 
     // 新增响应结果区域，美化调试窗口
     const responseArea = document.createElement('div');
@@ -460,7 +464,7 @@ window.onload = async function () {
         console.log("准备发送请求..");
     const res= await axios.get(`http://localhost/tex/api/list/${id}`,{
         headers: {
-                'Authorization': 'Bearer '+ localStorage.getItem('token') 
+                'token': localStorage.getItem('token') 
             }
         });  
         const data=res.data.data;

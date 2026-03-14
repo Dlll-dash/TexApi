@@ -13,6 +13,8 @@ public class JwtProperties {
      * 生成jwt令牌相关配置
      */
     private String SeretKey;
+
     private long Ttl;
+
     private String TokenName;
 }

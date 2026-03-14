@@ -65,7 +65,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         // 请求接口（路径参数）
         const res = await axios.get(`http://localhost/tex/project/list/${id}`, {
             headers: {
-            'Authorization': 'Bearer '+ localStorage.getItem('token') 
+            'token': localStorage.getItem('token') 
             }
         });
         console.log("Response:", res.data.data);
