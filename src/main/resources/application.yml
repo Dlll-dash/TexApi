@@ -14,20 +14,27 @@ spring:
     username: ${tex.username}
     password: ${tex.password}
 mybatis:
-  mybatis:
-    #mapper配置文件
-    mapper-locations: classpath:mapper/*.xml
-    type-aliases-package: com.tex.texapi.pojo.entity
+  mapper-locations: classpath*:mapper/**/*.xml    # mapper 映射文件路径
+  type-aliases-package: com.tex.texapi.pojo.entity  # 实体类别名包
+  configuration:  # mybatis 内置配置（缩进 2 个空格，隶属于 mybatis）
+    map-underscore-to-camel-case: true  # 下划线转驼峰（缩进 4 个空格）
 
-  configuration:
-    map-underscore-to-camel-case: true
+# 日志配置（和 mybatis 同级，不能嵌套在 mybatis 里）
+logging:
+  level:  # 日志级别配置（缩进 2 个空格）
+    com.tex.texapi:  # 你的项目包名（缩进 4 个空格）
+      mapper: debug   # mapper 层打印 debug 日志（缩进 6 个空格）
+      service: info   # service 层打印 info 日志
+      controller: info  # controller 层打印 info 日志
+
+
 
 tex:
   jwt:
     # 设置jwt签名加密时使用的秘钥
     seret-key: awIsj9382JSnajfsaijf9dfu09fu9a8jfsaf9AJSaofkaisfjia3fjajfji3ajf38
     # 设置jwt过期时间
-    ttl: 7200000
+    ttl: 72000000
     # 设置前端传递过来的令牌名称
     token-name: token
 

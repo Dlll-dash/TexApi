@@ -1,0 +1,25 @@
+package com.tex.texapi.pojo.entity;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class Params {
+    //主键
+    Long id;
+    //参数名
+    String name;
+    //参数值
+    String value;
+    //参数类型
+    String type;
+    //说明
+    String explanation;
+    //所属接口id
+    Long apiId;
+}

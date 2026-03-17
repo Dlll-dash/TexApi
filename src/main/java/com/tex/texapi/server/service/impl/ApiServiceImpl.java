@@ -1,8 +1,11 @@
 package com.tex.texapi.server.service.impl;
 
+import com.tex.texapi.pojo.dto.AddParamDTO;
 import com.tex.texapi.pojo.entity.Api;
+import com.tex.texapi.pojo.entity.Params;
 import com.tex.texapi.server.mapper.ApiMapper;
 import com.tex.texapi.server.service.ApiService;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -21,6 +24,20 @@ public class ApiServiceImpl implements ApiService {
     @Override
     public List<Api> list(Long id) {
         List<Api> list=apiMapper.list(id);
+        return list;
+    }
+
+    @Override
+    public Params addParam(AddParamDTO addParamDTO) {
+        Params param=new Params();
+        BeanUtils.copyProperties(addParamDTO,param);
+        apiMapper.addParam(param);
+        return param;
+    }
+
+    @Override
+    public List<Params> getParams(Long id) {
+        List<Params>list=apiMapper.getParams(id);
         return list;
     }
 }

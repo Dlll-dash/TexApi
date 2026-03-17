@@ -2,5 +2,9 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="com.tex.texapi.server.mapper.ApiMapper">
-
+    <insert id="addParam" parameterType="com.tex.texapi.pojo.entity.Params" keyProperty="id" useGeneratedKeys="true">
+        insert into request_params (name, value, type, explanation, api_id)
+                                    VALUES
+                                (#{param.name},#{param.value},#{param.type},#{param.explanation},#{param.apiId});
+    </insert>
 </mapper>

@@ -42,6 +42,13 @@ const methodBackroundColors = {
     'DEFAULT': '#433e3e53'
 };
 
+const requestDataType = {
+    'Param': 'param',
+    'Body-formData': 'formData',
+    'Body-json': 'json',
+    'Body-urlencoded': 'urlencoded',
+    'Header': 'header'
+};
 
 /**
  * 渲染接口列表
@@ -223,6 +230,7 @@ function renderDebug(apiData){
     const requestArea = document.createElement('div');
     requestArea.id = "requestArea";
     requestArea.className = "request-area";
+    requestArea.dataset.apiId= apiData.id; // 存储当前接口id，后续发送请求时可以用到
     container.appendChild(requestArea);
     
 
@@ -267,16 +275,24 @@ function renderParams(container){
     container.appendChild(querySpan);
 
     const queryArea=document.createElement('div');
+    queryArea.dataset.type = requestDataType.Param; // 标记数据类型，方便发送请求时区分
     renderform(queryArea);// 复用formData的渲染函数
     container.appendChild(queryArea);
 
+    /**获取输入参数名按钮：只有输入了参数名才算创建一个参数项，避免一开始就创建一个空参数项了
+    const paramNameInputs = container.querySelectorAll('.param-name-input');
+    paramNameInputs.forEach(input => {
+        //提交请求：添加新的Param
+                //获取返回结果
+                //设置行dataset为id(Param参数的id)
+        
+    });
+    **/
+
     // 响应结果标题
     const responseTitle = document.createElement('span');
+    responseTitle.className = "response-title";
     responseTitle.textContent = "响应结果：";
-    responseTitle.style.fontWeight = '600';
-    responseTitle.style.color = '#2d3748';
-    responseTitle.style.marginBottom = '0.5rem';
-    responseTitle.style.display = 'block';
     container.appendChild(responseTitle);
     
     // 新增响应结果区域，美化调试窗口
@@ -350,6 +366,7 @@ function renderBody(container){
     formDataSpan.onclick = function(){
         formatContainer.querySelectorAll('.body-format-tab').forEach(tab => tab.classList.remove('active'));
         formDataSpan.classList.add('active');
+        contentDiv.dataset.type = requestDataType[Body-formData]; // 标记数据类型，方便发送请求时区分
         renderform(contentDiv);
     };
 
@@ -357,6 +374,9 @@ function renderBody(container){
         formatContainer.querySelectorAll('.body-format-tab').forEach(tab => tab.classList.remove('active'));
         jsonSpan.classList.add('active');
         contentDiv.innerHTML = "<textarea placeholder='输入JSON格式的请求体' style='width:100%; height:200px; padding:0.5rem; border:1px solid #e8e8e8; border-radius:6px; font-family:monospace;'></textarea>";
+        //设置监听
+
+        // 可以在这里添加JSON输入的验证和请求发送逻辑
     };
 
     urlencodedSpan.onclick = function(){
@@ -445,7 +465,76 @@ function renderform(container){
         formDataLi.appendChild(explainInput);
         formDataLi.appendChild(removeButton);
         
+        //监听鼠标离开事件
+        formDataLi.addEventListener('focusout', function(e) {
+            // 只有当离开的元素是输入框时才进行验证，避免过早验证
+            if(e.target.tagName.toLowerCase() != 'input') {
+                return;
+            }
+            //获取输入：参数名不为空
+            if (!keyInput.value.trim()) {
+                keyInput.style.borderColor = 'red';
+                keyInput.focus(); // 让输入框重新获得焦点，提示用户输入
+                keyInput.placeholder = "参数名不能为空";
+            } else {
+                keyInput.style.borderColor = '';
+                const paramName = keyInput.value.trim();
+                const paramValue = valueInput.value.trim();
+                const paramType = typeInput.value.trim();
+                const paramExplain = explainInput.value.trim();
+                const apiId= document.getElementById('requestArea').dataset.apiId; // 获取当前接口id
+                //console.log(`参数名：${paramName}，参数值：${paramValue}，类型：${paramType}，说明：${paramExplain}, 接口id：${apiId}`);
+                const param=[paramName, paramValue, paramType, paramExplain,apiId];
+                //发送请求函数：dataType = requestDataType.Param , ... 用来组成url
+                const dataType=container.dataset.type; // 从容器dataset获取数据类型，之前点击不同参数类型时已经设置好了
+                
+                sendRequest(param,formDataLi.dataset.id,dataType) //如果id为空则代表是添加，如果不为空则代表是修改
+                .then(res => {
+                    console.log('请求成功：', res);
+                    // 设置行dataset为id(返回的参数id)，方便后续修改
+                    formDataLi.dataset.id = res.data.data.id; // 根据后端返回结构调整
+                    // 可以根据需要更新界面，比如显示一个成功提示
+                    alert('参数保存成功');
+                })
+                .catch(err => {
+                    console.error('请求失败详情：', err);
+                    const errMsg = err.response?.data?.msg || err.message || '网络错误/后端接口未响应';
+                    alert('操作失败：' + errMsg);
+                });
+            }
+        });
         
+        async function sendRequest(param, id, dataType) {
+            // 这里可以根据dataType来区分是Params、Headers还是Body的参数，构造不同的请求数据结构
+            const requestData = {
+                name: param[0],
+                value: param[1],
+                type: param[2],
+                explaination: param[3],
+                apiId: param[4]
+            };
+
+            const method = id ? 'put' : 'post'; // 有id是修改，无id是添加
+            let url = `http://localhost/tex/api/${dataType}`;
+            if (id) {
+                url += `/${id}`; // 拼接id，如 /api/params/123
+            }
+
+            try{
+                const res= await axios({
+                    url: url,
+                    method: method, 
+                    data: requestData,
+                    headers: {
+                        'token': localStorage.getItem('token') 
+                    }
+                });
+                return res; // 根据后端返回结构调整
+            }catch(err){
+                throw new Error(`请求失败：${err.response?.data?.message || err.message}`);
+            }
+        }
+
         ul.appendChild(formDataLi);
 
         updateRemoveButtons(); // 添加新项后更新删除按钮显示

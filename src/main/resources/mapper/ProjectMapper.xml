@@ -3,8 +3,5 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="com.tex.texapi.server.mapper.ProjectMapper">
 
-    <select id="getProjectList" resultType="com.tex.texapi.pojo.entity.Project">
 
-
-    </select>
 </mapper>
