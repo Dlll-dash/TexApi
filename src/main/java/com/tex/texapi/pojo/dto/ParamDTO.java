@@ -4,7 +4,7 @@ package com.tex.texapi.pojo.dto;
 import lombok.Data;
 
 @Data
-public class AddParamDTO {
+public class ParamDTO {
     //参数名
     String name;
     //参数值

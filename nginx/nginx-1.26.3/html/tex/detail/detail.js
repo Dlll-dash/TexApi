@@ -44,9 +44,9 @@ const methodBackroundColors = {
 
 const requestDataType = {
     'Param': 'param',
-    'Body-formData': 'formData',
-    'Body-json': 'json',
-    'Body-urlencoded': 'urlencoded',
+    'FormData': 'formData',
+    'Json': 'json',
+    'Urlencoded': 'urlencoded',
     'Header': 'header'
 };
 
@@ -366,13 +366,14 @@ function renderBody(container){
     formDataSpan.onclick = function(){
         formatContainer.querySelectorAll('.body-format-tab').forEach(tab => tab.classList.remove('active'));
         formDataSpan.classList.add('active');
-        contentDiv.dataset.type = requestDataType[Body-formData]; // 标记数据类型，方便发送请求时区分
+        contentDiv.dataset.type = requestDataType.FormData; // 标记数据类型，方便发送请求时区分
         renderform(contentDiv);
     };
 
     jsonSpan.onclick = function(){
         formatContainer.querySelectorAll('.body-format-tab').forEach(tab => tab.classList.remove('active'));
         jsonSpan.classList.add('active');
+        contentDiv.dataset.type = requestDataType.Json; // 标记数据类型，方便发送请求时区分
         contentDiv.innerHTML = "<textarea placeholder='输入JSON格式的请求体' style='width:100%; height:200px; padding:0.5rem; border:1px solid #e8e8e8; border-radius:6px; font-family:monospace;'></textarea>";
         //设置监听
 
@@ -382,6 +383,7 @@ function renderBody(container){
     urlencodedSpan.onclick = function(){
         formatContainer.querySelectorAll('.body-format-tab').forEach(tab => tab.classList.remove('active'));
         urlencodedSpan.classList.add('active');
+        contentDiv.dataset.type = requestDataType.Urlencoded; // 标记数据类型，方便发送请求时区分
         renderform(contentDiv);
     };
 }
@@ -410,16 +412,16 @@ function renderform(container){
     const valueSpan=document.createElement('span');
     valueSpan.textContent='参数值';
     valueSpan.className = 'param-label';
+    valueSpan.style.marginLeft = '11.25rem';
     //调整与输入框左对齐
-    keySpan.style.minWidth = '245px';
     const typeSpan=document.createElement('span');
     typeSpan.textContent='类型';
     typeSpan.className = 'param-label';
-    typeSpan.style.marginLeft = '240px';
+    typeSpan.style.marginLeft = '13.75rem';
     const explainSpan=document.createElement('span');
     explainSpan.textContent='说明';
     explainSpan.className = 'param-label';
-    explainSpan.style.marginLeft = '55px';
+    explainSpan.style.marginLeft = '3rem';
 
     textli.appendChild(keySpan);
     textli.appendChild(valueSpan);
@@ -437,12 +439,12 @@ function renderform(container){
             const removeBtn = item.querySelector('.remove-btn');
             if (removeBtn) {
                     // 数量>1时显示所有删除按钮，数量=1时隐藏
-                    removeBtn.style.display = itemCount > 1 ? 'inline-block' : 'none';
+                    removeBtn.style.visibility = itemCount > 1 ? 'visible' : 'hidden';
                 }
             });
     }
     //添加formData项
-    function addFormDataItem(){
+    function addFormDataItem(Data){
         const formDataLi=document.createElement('li');
         const keyInput=document.createElement('input');
         const valueInput=document.createElement('input');
@@ -457,7 +459,16 @@ function renderform(container){
         explainInput.className = 'explain-input';
         removeButton.textContent=' - ';
         removeButton.className = 'remove-btn';
-        removeButton.style.display = 'none'; // 默认隐藏，至少保留一个参数项
+        removeButton.style.visibility = 'hidden'; // 默认隐藏，至少保留一个参数项
+
+        if(Data){
+            // 如果传入了Data参数，说明是编辑已有参数，需要预填充输入框
+            keyInput.value=Data[0] || '';
+            valueInput.value=Data[1] || '';
+            typeInput.value=Data[2] || '';
+            explainInput.value=Data[3] || '';
+            formDataLi.dataset.id = Data[4]; // 设置行dataset为id(返回的参数id)，方便后续修改
+        }
 
         formDataLi.appendChild(keyInput);
         formDataLi.appendChild(valueInput);
@@ -484,15 +495,17 @@ function renderform(container){
                 const paramExplain = explainInput.value.trim();
                 const apiId= document.getElementById('requestArea').dataset.apiId; // 获取当前接口id
                 //console.log(`参数名：${paramName}，参数值：${paramValue}，类型：${paramType}，说明：${paramExplain}, 接口id：${apiId}`);
-                const param=[paramName, paramValue, paramType, paramExplain,apiId];
+                const param=[paramName, paramValue, paramType, paramExplain, apiId];
                 //发送请求函数：dataType = requestDataType.Param , ... 用来组成url
                 const dataType=container.dataset.type; // 从容器dataset获取数据类型，之前点击不同参数类型时已经设置好了
-                
-                sendRequest(param,formDataLi.dataset.id,dataType) //如果id为空则代表是添加，如果不为空则代表是修改
+                const method = formDataLi.dataset.id ? 'put' : 'post'; // 有id是修改，无id是添加
+                sendRequest(param,formDataLi.dataset.id,dataType,method) //如果id为空则代表是添加，如果不为空则代表是修改
                 .then(res => {
                     console.log('请求成功：', res);
                     // 设置行dataset为id(返回的参数id)，方便后续修改
+                    if(res.data && res.data.data && res.data.data.id) {
                     formDataLi.dataset.id = res.data.data.id; // 根据后端返回结构调整
+                    }
                     // 可以根据需要更新界面，比如显示一个成功提示
                     alert('参数保存成功');
                 })
@@ -504,36 +517,7 @@ function renderform(container){
             }
         });
         
-        async function sendRequest(param, id, dataType) {
-            // 这里可以根据dataType来区分是Params、Headers还是Body的参数，构造不同的请求数据结构
-            const requestData = {
-                name: param[0],
-                value: param[1],
-                type: param[2],
-                explaination: param[3],
-                apiId: param[4]
-            };
-
-            const method = id ? 'put' : 'post'; // 有id是修改，无id是添加
-            let url = `http://localhost/tex/api/${dataType}`;
-            if (id) {
-                url += `/${id}`; // 拼接id，如 /api/params/123
-            }
-
-            try{
-                const res= await axios({
-                    url: url,
-                    method: method, 
-                    data: requestData,
-                    headers: {
-                        'token': localStorage.getItem('token') 
-                    }
-                });
-                return res; // 根据后端返回结构调整
-            }catch(err){
-                throw new Error(`请求失败：${err.response?.data?.message || err.message}`);
-            }
-        }
+        
 
         ul.appendChild(formDataLi);
 
@@ -542,13 +526,86 @@ function renderform(container){
 
         // 删除按钮点击事件
         removeButton.onclick = function(){
+            //console.log('删除参数项，id：', formDataLi.dataset.id);
+            // 如果该项有id，说明已经保存过，需要发送删除请求
+            if(formDataLi.dataset.id) {
+                const dataType=container.dataset.type;
+                sendRequest(null, formDataLi.dataset.id, dataType, 'DELETE')
+            }
             ul.removeChild(formDataLi);
             // 删除后重新更新删除按钮显示
             updateRemoveButtons();
         };
         
     }
-    addFormDataItem(); // 初始化一个参数项
+
+    //通用发送接口请求函数 id是参数项在数据库的主键id
+    async function sendRequest(param, id, dataType, method) {
+            // 这里可以根据dataType来区分是Params、Headers还是Body的参数，构造不同的请求数据结构
+
+            let requestData = {}; // 默认undefined，GET请求不需要请求体
+            if(param){
+                requestData = {
+                    name: param[0],
+                    value: param[1],
+                    type: param[2],
+                    explaination: param[3],
+                    apiId: param[4]
+                };
+            }
+            let url = `http://localhost/tex/api/${dataType}`;
+            if(method==='GET'){
+                url += `/list`;
+            }
+            else if(method === 'DELETE') {
+                url += `/delete`;
+            }
+            if (id) {
+                url += `/${id}`; // 拼接id，如 /api/params/123
+            }
+
+            try{
+                const axiosConfig = {
+                    url: url,
+                    method: method,
+                    headers: {
+                        'token': localStorage.getItem('token') 
+                    }
+                };
+                if(method !== 'GET'&& method !== 'DELETE') {
+                    axiosConfig.data = requestData; // 非GET、DELETE请求才有请求体
+                }
+                const res= await axios(axiosConfig);
+                return res; // 根据后端返回结构调整
+            }catch(err){
+                throw new Error(`请求失败：${err.response?.data?.message || err.message}`);
+            }
+        }
+    let isListEmpty=true;
+    try{
+        const requestDataType = container.dataset.type; // 从容器dataset获取数据类型，之前点击不同参数类型时已经设置好了
+        const apiId= document.getElementById('requestArea').dataset.apiId;// 获取当前接口id
+        sendRequest(null, apiId, requestDataType, 'GET') // 获取已有参数列表，传入null让函数构造一个空请求体
+        .then(res => {
+        console.log('获取参数列表成功：', res);
+        const paramsList = res.data.data || [];
+        if(paramsList.length > 0) {
+            paramsList.forEach(param => {
+                const paramData = [param.name, param.value, param.type, param.explaination, param.id]; //后端返回每个param参数的id，用来初始化
+                addFormDataItem(paramData); // 传入参数数据，预填充输入框
+            });
+        }
+        else{
+            addFormDataItem(null); // 初始化一个参数项
+        }
+        
+    })
+    }catch(err){
+        console.error('获取参数列表失败详情：', err);
+        const errMsg = err.response?.data?.msg || err.message || '网络错误/后端接口未响应';
+        alert('获取参数列表失败：' + errMsg);
+    };
+
     container.appendChild(ul);
     
     // 添加按钮放在ul下面
@@ -562,8 +619,8 @@ function renderform(container){
     };
     addButtonContainer.appendChild(addButton);
     container.appendChild(addButtonContainer);
+    
 }
-
 
 /**
  * 渲染设计窗口（美化补全）

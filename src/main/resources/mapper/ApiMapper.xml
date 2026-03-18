@@ -5,6 +5,15 @@
     <insert id="addParam" parameterType="com.tex.texapi.pojo.entity.Params" keyProperty="id" useGeneratedKeys="true">
         insert into request_params (name, value, type, explanation, api_id)
                                     VALUES
-                                (#{param.name},#{param.value},#{param.type},#{param.explanation},#{param.apiId});
+                                (#{name},#{value},#{type},#{explanation},#{apiId});
     </insert>
+    <update id="updateParam">
+        update request_params set
+                <!--因为请求参数的可以为空，所以修改成什么值就改成什么值就行，不判null-->
+                name = #{name},
+                value = #{value},
+                type = #{type},
+                explanation = #{explanation}
+        where id = #{id}
+    </update>
 </mapper>
