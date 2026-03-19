@@ -43,7 +43,7 @@ const methodBackroundColors = {
 };
 
 const requestDataType = {
-    'Param': 'param',
+    'Query': 'query',
     'FormData': 'formData',
     'Json': 'json',
     'Urlencoded': 'urlencoded',
@@ -275,19 +275,10 @@ function renderParams(container){
     container.appendChild(querySpan);
 
     const queryArea=document.createElement('div');
-    queryArea.dataset.type = requestDataType.Param; // 标记数据类型，方便发送请求时区分
+    queryArea.dataset.type = requestDataType.Query; // 标记数据类型，方便发送请求时区分
     renderform(queryArea);// 复用formData的渲染函数
     container.appendChild(queryArea);
 
-    /**获取输入参数名按钮：只有输入了参数名才算创建一个参数项，避免一开始就创建一个空参数项了
-    const paramNameInputs = container.querySelectorAll('.param-name-input');
-    paramNameInputs.forEach(input => {
-        //提交请求：添加新的Param
-                //获取返回结果
-                //设置行dataset为id(Param参数的id)
-        
-    });
-    **/
 
     // 响应结果标题
     const responseTitle = document.createElement('span');
@@ -393,6 +384,7 @@ function renderHeaders(container){
     container.innerHTML = ""; // 清空
     //创建Headers块
     const headerArea=document.createElement('div');
+    headerArea.dataset.type = requestDataType.Header; // 标记数据类型，方便发送请求时区分
     renderform(headerArea); // 复用formData的渲染函数
     container.appendChild(headerArea);
 }
@@ -484,27 +476,40 @@ function renderform(container){
             }
             //获取输入：参数名不为空
             if (!keyInput.value.trim()) {
+
                 keyInput.style.borderColor = 'red';
-                keyInput.focus(); // 让输入框重新获得焦点，提示用户输入
+
+                // 让输入框重新获得焦点，提示用户输入
+                keyInput.focus(); 
                 keyInput.placeholder = "参数名不能为空";
+
             } else {
                 keyInput.style.borderColor = '';
                 const paramName = keyInput.value.trim();
                 const paramValue = valueInput.value.trim();
                 const paramType = typeInput.value.trim();
                 const paramExplain = explainInput.value.trim();
-                const apiId= document.getElementById('requestArea').dataset.apiId; // 获取当前接口id
+
+                // 获取当前接口id
+                const apiId= document.getElementById('requestArea').dataset.apiId; 
+
                 //console.log(`参数名：${paramName}，参数值：${paramValue}，类型：${paramType}，说明：${paramExplain}, 接口id：${apiId}`);
                 const param=[paramName, paramValue, paramType, paramExplain, apiId];
-                //发送请求函数：dataType = requestDataType.Param , ... 用来组成url
-                const dataType=container.dataset.type; // 从容器dataset获取数据类型，之前点击不同参数类型时已经设置好了
-                const method = formDataLi.dataset.id ? 'put' : 'post'; // 有id是修改，无id是添加
-                sendRequest(param,formDataLi.dataset.id,dataType,method) //如果id为空则代表是添加，如果不为空则代表是修改
+
+                //发送请求函数：dataType = requestDataType.Query , ... 用来组成url
+                const dataType=container.dataset.type;
+
+                // 有id是修改，无id是添加
+                const method = formDataLi.dataset.id ? 'put' : 'post'; 
+                
+                //如果id为空则代表是添加，如果不为空则代表是修改
+                sendRequest(param,formDataLi.dataset.id,dataType,method) 
                 .then(res => {
                     console.log('请求成功：', res);
                     // 设置行dataset为id(返回的参数id)，方便后续修改
                     if(res.data && res.data.data && res.data.data.id) {
-                    formDataLi.dataset.id = res.data.data.id; // 根据后端返回结构调整
+                    // 根据后端返回结构调整
+                    formDataLi.dataset.id = res.data.data.id; 
                     }
                     // 可以根据需要更新界面，比如显示一个成功提示
                     alert('参数保存成功');
@@ -517,8 +522,6 @@ function renderform(container){
             }
         });
         
-        
-
         ul.appendChild(formDataLi);
 
         updateRemoveButtons(); // 添加新项后更新删除按钮显示
@@ -526,6 +529,7 @@ function renderform(container){
 
         // 删除按钮点击事件
         removeButton.onclick = function(){
+
             //console.log('删除参数项，id：', formDataLi.dataset.id);
             // 如果该项有id，说明已经保存过，需要发送删除请求
             if(formDataLi.dataset.id) {
@@ -543,17 +547,18 @@ function renderform(container){
     async function sendRequest(param, id, dataType, method) {
             // 这里可以根据dataType来区分是Params、Headers还是Body的参数，构造不同的请求数据结构
 
-            let requestData = {}; // 默认undefined，GET请求不需要请求体
+            let requestData = {}; 
             if(param){
                 requestData = {
                     name: param[0],
                     value: param[1],
                     type: param[2],
                     explaination: param[3],
-                    apiId: param[4]
+                    apiId: param[4],
+                    formatType: dataType
                 };
             }
-            let url = `http://localhost/tex/request/${dataType}`;
+            let url = `http://localhost/tex/request/param`;
             if(method==='GET'){
                 url += `/list`;
             }
@@ -575,25 +580,37 @@ function renderform(container){
                 if(method !== 'GET'&& method !== 'DELETE') {
                     axiosConfig.data = requestData; // 非GET、DELETE请求才有请求体
                 }
+                else if(method === 'GET'){
+                    axiosConfig.params = {
+                        formatType: dataType, // 传递数据类型，后端根据这个参数来区分返回哪个接口的参数列表
+                    };
+                }
+
                 const res= await axios(axiosConfig);
                 return res; // 根据后端返回结构调整
             }catch(err){
                 throw new Error(`请求失败：${err.response?.data?.message || err.message}`);
             }
         }
-    let isListEmpty=true;
     try{
+
         const requestDataType = container.dataset.type; // 从容器dataset获取数据类型，之前点击不同参数类型时已经设置好了
         const apiId= document.getElementById('requestArea').dataset.apiId;// 获取当前接口id
+
         sendRequest(null, apiId, requestDataType, 'GET') // 获取已有参数列表，传入null让函数构造一个空请求体
         .then(res => {
-        console.log('获取参数列表成功：', res);
-        const paramsList = res.data.data || [];
-        if(paramsList.length > 0) {
-            paramsList.forEach(param => {
-                const paramData = [param.name, param.value, param.type, param.explaination, param.id]; //后端返回每个param参数的id，用来初始化
-                addFormDataItem(paramData); // 传入参数数据，预填充输入框
-            });
+        
+            console.log('获取参数列表成功：', res);
+            const paramsList = res.data.data || [];
+
+            if(paramsList.length > 0) {
+                paramsList.forEach(param => {
+                    //遍历每个参数项，渲染输入框，预填充数据
+                    const paramData = [param.name, param.value, param.type, param.explaination, param.id]; //后端返回每个param参数的id，用来初始化
+                    
+                    addFormDataItem(paramData); // 传入参数数据，预填充输入框
+                });
+
         }
         else{
             addFormDataItem(null); // 初始化一个参数项
@@ -601,8 +618,10 @@ function renderform(container){
         
     })
     }catch(err){
+
         console.error('获取参数列表失败详情：', err);
         const errMsg = err.response?.data?.msg || err.message || '网络错误/后端接口未响应';
+
         alert('获取参数列表失败：' + errMsg);
     };
 

@@ -18,6 +18,8 @@ public class Params {
     String value;
     //参数类型
     String type;
+    //参数格式
+    String formatType;
     //说明
     String explanation;
     //所属接口id

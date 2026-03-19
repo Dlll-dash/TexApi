@@ -3,9 +3,9 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="com.tex.texapi.server.mapper.RequestParamsMapper">
     <insert id="addParam" keyProperty="id" useGeneratedKeys="true">
-        insert into request_params (name, value, type, explanation, api_id)
+        insert into request_params (name, value, type, explanation, api_id, format_type)
                                     VALUES
-                                (#{name},#{value},#{type},#{explanation},#{apiId});
+                                (#{name},#{value},#{type},#{explanation},#{apiId},#{formatType});
     </insert>
     <update id="updateParam">
         update request_params set
@@ -17,18 +17,4 @@
         where id = #{id}
     </update>
 
-    <insert id="addFormData" keyProperty="id" useGeneratedKeys="true">
-        insert into request_body (name, value, type, explanation, api_id, format_type)
-        VALUES
-            (#{name},#{value},#{type},#{explanation},#{apiId},#{formatType});
-    </insert>
-    <update id="updateFormData">
-        update request_body set
-        <!--因为请求参数的可以为空，所以修改成什么值就改成什么值就行，不判null-->
-        name = #{name},
-        value = #{value},
-        type = #{type},
-        explanation = #{explanation}
-        where id = #{id}
-    </update>
 </mapper>

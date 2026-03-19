@@ -14,6 +14,8 @@ public class ParamDTO {
     String type;
     //说明
     String explanation;
+    //参数格式
+    String formatType;
     //所属接口id
     Long apiId;
 }
