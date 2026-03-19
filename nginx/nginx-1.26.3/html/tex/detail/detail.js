@@ -553,7 +553,7 @@ function renderform(container){
                     apiId: param[4]
                 };
             }
-            let url = `http://localhost/tex/api/${dataType}`;
+            let url = `http://localhost/tex/request/${dataType}`;
             if(method==='GET'){
                 url += `/list`;
             }

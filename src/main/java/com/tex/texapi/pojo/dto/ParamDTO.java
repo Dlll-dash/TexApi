@@ -4,6 +4,7 @@ package com.tex.texapi.pojo.dto;
 import lombok.Data;
 
 @Data
+//参数实体类: 包括了Param,Body,Header等参数类型
 public class ParamDTO {
     //参数名
     String name;

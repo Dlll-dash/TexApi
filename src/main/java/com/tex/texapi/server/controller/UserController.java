@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/tex/user")
 @Slf4j
+// 用户相关接口
 public class UserController {
     @Autowired
     private UserService userService;

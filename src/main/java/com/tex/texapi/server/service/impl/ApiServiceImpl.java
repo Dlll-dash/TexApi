@@ -27,46 +27,5 @@ public class ApiServiceImpl implements ApiService {
         return list;
     }
 
-    /**
-     * 添加Query参数
-     * @param paramDTO
-     * @return
-     */
-    @Override
-    public Params addParam(ParamDTO paramDTO) {
-        Params param=new Params();
-        BeanUtils.copyProperties(paramDTO,param);
-        apiMapper.addParam(param);
-        return param;
-    }
-    /**
-     * 获取Query参数列表
-     * @param id
-     * @return
-     */
-    @Override
-    public List<Params> getParams(Long id) {
-        List<Params>list=apiMapper.getParams(id);
-        return list;
-    }
-    /**
-     * 修改Query参数
-     * @param paramDTO
-     */
-    @Override
-    public void upadateParam(ParamDTO paramDTO,Long id) {
-        Params param=new Params();
-        BeanUtils.copyProperties(paramDTO,param);
-        param.setId(id);
-        apiMapper.updateParam(param);
-    }
 
-    /**
-     * 删除Query参数
-     * @param id
-     */
-    @Override
-    public void deleteParam(Long id) {
-        apiMapper.deleteById(id);
-    }
 }
