@@ -27,5 +27,8 @@ public class ApiServiceImpl implements ApiService {
         return list;
     }
 
-
+    @Override
+    public void updateApi(Api api) {
+        apiMapper.updateApi(api);
+    }
 }

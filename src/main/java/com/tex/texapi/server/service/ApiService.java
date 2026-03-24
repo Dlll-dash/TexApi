@@ -14,5 +14,9 @@ public interface ApiService {
      */
     List<Api> list(Long id);
 
-
+    /**
+     * 更新接口信息
+     * @param api
+     */
+    void updateApi(Api api);
 }

@@ -164,6 +164,48 @@ function renderTestWindow(apiData){
 }
 
 /**
+ * Api相关的请求发送函数
+ * @param {接口数据} apiData 
+ * @param {请求方法} method 
+ */
+async function sendApiRequest(apiData,method){
+    
+    let requestData = {};
+    if(method === 'POST' || method === 'PUT') {
+        // 构造请求体数据，具体结构根据后端接口要求调整
+        requestData = apiData; // 这里直接使用apiData作为请求体，后面也可以根据需要构造更具体的数据结构
+    }
+    let url = `http://localhost/tex/api`;
+    if(method ==='POST'){
+        url += `/add`;
+    }else if(method === 'PUT') {
+        url += `/update`; // 假设更新需要接口id
+    }else if(method === 'DELETE') {
+        url += `/delete/${apiData.id}`; // 假设删除需要接口id
+    }
+
+    try{
+        const axiosConfig = {
+            url: url,
+            method: method,
+            headers: {
+                'token': localStorage.getItem('token') 
+            }
+        };
+        if(method !== 'GET'&& method !== 'DELETE') {
+            axiosConfig.data = requestData; // 非GET、DELETE请求才有请求体
+        }
+
+        const res= await axios(axiosConfig);
+        return res; // 根据后端返回结构调整
+    }catch(err){
+        throw new Error(`请求失败：${err.response?.data?.message || err.message}`);
+    }
+}
+
+
+
+/**
  * 渲染调试窗口
  * @param {传入单个api} apiData 
  */
@@ -196,6 +238,11 @@ function renderDebug(apiData){
     urlInput.value=apiData.requestUrl || '';
     urlInput.className='url';
     urlInput.placeholder = "接口请求地址";
+    urlInput.addEventListener('blur',function(){
+        apiData.requestUrl= urlInput.value.trim(); // 更新接口数据中的url字段，后续发送请求时可以用到
+        sendApiRequest(apiData,'PUT') // 发送更新接口的请求，保持数据同步
+        alert('接口URL已更新'); 
+    });
 
     submitButton.textContent='发送'; 
     submitButton.className = "submit-btn";
@@ -496,11 +543,11 @@ function renderform(container){
                 //console.log(`参数名：${paramName}，参数值：${paramValue}，类型：${paramType}，说明：${paramExplain}, 接口id：${apiId}`);
                 const param=[paramName, paramValue, paramType, paramExplain, apiId];
 
-                //发送请求函数：dataType = requestDataType.Query , ... 用来组成url
+                //发送请求函数：dataType = requestDataType.Query , ... 作为url的参数
                 const dataType=container.dataset.type;
 
                 // 有id是修改，无id是添加
-                const method = formDataLi.dataset.id ? 'put' : 'post'; 
+                const method = formDataLi.dataset.id ? 'PUT' : 'POST'; 
                 
                 //如果id为空则代表是添加，如果不为空则代表是修改
                 sendRequest(param,formDataLi.dataset.id,dataType,method) 

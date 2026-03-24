@@ -3,4 +3,29 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="com.tex.texapi.server.mapper.ApiMapper">
 
+    <update id="updateApi">
+        update api set
+                <if test="apiName!=null and apiName !=''">
+                    api_name = #{apiName},
+                </if>
+                <if test="requestMethod!=null and requestMethod !=''">
+                    request_method = #{requestMethod},
+                </if>
+                <if test="requestUrl!=null and requestUrl !=''">
+                    request_url = #{requestUrl},
+                </if>
+                <if test="requestHeader!=null">
+                    request_header = #{requestHeader},
+                </if>
+                <if test="requestParam!=null">
+                    request_param = #{requestParam},
+                </if>
+                <if test="responseExample!=null">
+                    response_example = #{responseExample},
+                </if>
+                <if test="status!=null">
+                    status = #{status}
+                </if>
+        where id = #{id}
+    </update>
 </mapper>

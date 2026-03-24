@@ -20,4 +20,9 @@ public interface ApiMapper {
     @Select("select * from api where project_id=#{id} order by status desc")
     List<Api> list(Long id);
 
+    /**
+     * 更新api信息
+     * @param api
+     */
+    void updateApi(Api api);
 }

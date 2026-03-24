@@ -32,5 +32,18 @@ public class ApiController {
         return Result.success(list);
     }
 
+    @PutMapping("/update")
+    public Result updateApi(@RequestBody Api api){
+        log.info("更新接口：{}",api);
+        apiService.updateApi(api);
+        return Result.success();
+    }
+
+     @PostMapping("/add")
+    public Result addApi(@RequestBody Api api) {
+         log.info("添加接口：{}", api);
+         //apiService.addApi(api);
+         return Result.success();
+     }
 
 }

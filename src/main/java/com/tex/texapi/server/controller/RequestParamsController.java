@@ -18,8 +18,6 @@ public class RequestParamsController {
     @Autowired
     private RequestParamsService requestParamsService;
 
-
-    //Query参数相关
     @PostMapping("/param")
     public Result<Params> addParam(@RequestBody ParamDTO paramDTO){
         log.info("添加参数：{}", paramDTO);
