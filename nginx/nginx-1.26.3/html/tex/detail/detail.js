@@ -246,7 +246,16 @@ function renderDebug(apiData){
 
     submitButton.textContent='发送'; 
     submitButton.className = "submit-btn";
-    
+    submitButton.addEventListener('click', function() {
+        //点击发送请求按钮的事件处理逻辑
+        url=urlInput.value.trim();
+        if(!url) {
+            alert('请求URL不能为空');
+            return;
+        }
+        
+
+    })
 
     requestLine.appendChild(methodSpan);
     requestLine.appendChild(urlInput);
@@ -469,7 +478,7 @@ function renderform(container){
 
     ul.appendChild(textli);
 
-    //更新删除按钮状态函数
+    /*更新删除按钮状态函数(可选)
     function updateRemoveButtons() {
         const formDataItems = ul.querySelectorAll('li:not(:first-child)');
         const itemCount = formDataItems.length;
@@ -481,7 +490,8 @@ function renderform(container){
                     removeBtn.style.visibility = itemCount > 1 ? 'visible' : 'hidden';
                 }
             });
-    }
+    }*/
+
     //添加formData项
     function addFormDataItem(Data){
         const formDataLi=document.createElement('li');
@@ -498,7 +508,7 @@ function renderform(container){
         explainInput.className = 'explain-input';
         removeButton.textContent=' - ';
         removeButton.className = 'remove-btn';
-        removeButton.style.visibility = 'hidden'; // 默认隐藏，至少保留一个参数项
+        removeButton.style.visibility = 'visible'; 
 
         if(Data){
             // 如果传入了Data参数，说明是编辑已有参数，需要预填充输入框
@@ -571,7 +581,7 @@ function renderform(container){
         
         ul.appendChild(formDataLi);
 
-        updateRemoveButtons(); // 添加新项后更新删除按钮显示
+        //updateRemoveButtons(); // 添加新项后更新删除按钮显示
         
 
         // 删除按钮点击事件
@@ -585,7 +595,7 @@ function renderform(container){
             }
             ul.removeChild(formDataLi);
             // 删除后重新更新删除按钮显示
-            updateRemoveButtons();
+            //updateRemoveButtons();
         };
         
     }
