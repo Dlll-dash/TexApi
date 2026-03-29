@@ -2,6 +2,7 @@ package com.tex.texapi.server.controller;
 
 import com.tex.texapi.common.result.Result;
 import com.tex.texapi.pojo.dto.ParamDTO;
+import com.tex.texapi.pojo.dto.RequestDTO;
 import com.tex.texapi.pojo.entity.Api;
 import com.tex.texapi.pojo.entity.Params;
 import com.tex.texapi.server.service.ApiService;
@@ -46,4 +47,10 @@ public class ApiController {
          return Result.success();
      }
 
+     @PostMapping("/send")
+     public Result<String> send(@RequestBody RequestDTO requestDTO){
+        log.info("发送请求：{}",requestDTO);
+        String response=apiService.send(requestDTO);
+        return Result.success(response);
+     }
 }

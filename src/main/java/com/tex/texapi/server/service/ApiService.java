@@ -1,8 +1,7 @@
 package com.tex.texapi.server.service;
 
-import com.tex.texapi.pojo.dto.ParamDTO;
+import com.tex.texapi.pojo.dto.RequestDTO;
 import com.tex.texapi.pojo.entity.Api;
-import com.tex.texapi.pojo.entity.Params;
 
 import java.util.List;
 
@@ -19,4 +18,12 @@ public interface ApiService {
      * @param api
      */
     void updateApi(Api api);
+
+    /**
+     * 向指定接口发送请求
+     *
+     * @param requestDTO
+     * @return
+     */
+    String send(RequestDTO requestDTO);
 }

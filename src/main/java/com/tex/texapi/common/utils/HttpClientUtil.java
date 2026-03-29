@@ -38,10 +38,12 @@ public class HttpClientUtil {
     /**
      * GET请求
      * @param url
+     * @param headers
      */
-    public static Response doGET(String url) throws IOException {
+    public static Response doGET(String url,Headers headers) throws IOException {
         Request request=new Request.Builder()
                 .url(url)
+                .headers(headers)
                 .get()
                 .build();
         return executeRequest(request);
@@ -51,41 +53,46 @@ public class HttpClientUtil {
     /**
      * POST请求
      * @param url
-     * @param jsonBody
+     * @param body
+     * @param headers
      */
-    public static Response doPOST(String url, String jsonBody){
-        RequestBody body=RequestBody.create(jsonBody,MediaType.parse("application/json"));
+    public static Response doPOST(String url, RequestBody body,Headers headers) throws IOException {
+
         Request request=new Request.Builder()
                 .url(url)
+                .headers(headers)
                 .post(body)
                 .build();
 
-        return doPOST(url, jsonBody);
+        return executeRequest(request);
     }
 
     /**
      * PUT请求
      * @param url
-     * @param jsonBody
+     * @param body
+     * @param headers
      */
-    public static Response doPUT(String url, String jsonBody){
-        RequestBody body=RequestBody.create(jsonBody,MediaType.parse("application/json"));
-        Request request=new Request.Builder()
+    public static Response doPUT(String url, RequestBody body,Headers headers) throws IOException {
+         Request request=new Request.Builder()
                 .url(url)
+                .headers(headers)
                 .put(body)
                 .build();
-        return doPUT(url, jsonBody);
+        return executeRequest(request);
     }
 
     /**
      * DELETE请求
      * @param url
+     * @param headers
      */
-    public static Response doDELETE(String url){
+    public static Response doDELETE(String url,Headers headers) throws IOException {
         Request request=new Request.Builder()
                 .url(url)
+                .headers(headers)
                 .delete()
                 .build();
-        return doDELETE(url);
+        return executeRequest(request);
     }
 }

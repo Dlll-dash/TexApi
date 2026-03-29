@@ -1,16 +1,47 @@
-// 添加 axios 响应拦截器来处理 401 错误（token 过期）
+
+
+// 请求拦截器
+axios.interceptors.request.use(
+  config => {
+      const token = localStorage.getItem('token');
+      if (token) {
+        config.headers['token'] = token;
+      }
+    console.log('✅ 请求发出：', config.url); // 关键调试
+      return config;
+  },
+  error => {
+    console.error('❌ 请求错误：', error);
+    return Promise.reject(error);
+  }
+);
+
+// 响应拦截器
 axios.interceptors.response.use(
-    response => response,
-    error => {
-        if (error.response && error.response.status === 401) {
-            // Token 过期，清除存储并跳转到登录页
-            localStorage.removeItem('token');
-            localStorage.removeItem('id');
-            alert('登录已过期，请重新登录');
-            window.location.href = '/index.html';
-        }
-        return Promise.reject(error);
+  response => {
+    const res = response;
+    console.log('✅ 请求成功：', response.config.url, res.data);
+
+    // 成功直接返回
+    if ([200, 0, 1].includes(res.data.code)) {
+      return res;
     }
+
+    console.warn('⚠️ 业务错误：', res);
+    return Promise.reject(res);
+  },
+  error => {
+    console.error('❌ 响应异常：', error);
+
+    if (error.response?.status === 401) {
+      localStorage.removeItem('token');
+      localStorage.removeItem('id');
+      alert('登录已过期，请重新登录');
+      location.href = '/index.html';
+    }
+
+    return Promise.reject(error);
+  }
 );
 
 //解析url参数
@@ -44,6 +75,7 @@ const methodBackroundColors = {
 
 const requestDataType = {
     'Query': 'query',
+    'None': null,
     'FormData': 'formData',
     'Json': 'json',
     'Urlencoded': 'urlencoded',
@@ -247,13 +279,29 @@ function renderDebug(apiData){
     submitButton.textContent='发送'; 
     submitButton.className = "submit-btn";
     submitButton.addEventListener('click', function() {
-        //点击发送请求按钮的事件处理逻辑
-        url=urlInput.value.trim();
-        if(!url) {
-            alert('请求URL不能为空');
-            return;
-        }
         
+        console.log(`接口${apiData.id}发送${apiData.requestMethod}请求到：${urlInput.value}`);
+        //发送请求，告诉后端apiId为xxx的接口要发送请求了，在后端向指定接口发送请求
+        axios.post(`http://localhost/tex/api/send`,{
+            
+            apiId: apiData.id,
+            contentType: localStorage.getItem('contentType') || requestDataType.None // 发送当前选择的请求体格式，后端根据这个参数来区分请求体数据结构
+        
+        }).then(res => {
+            // 更新响应区域
+            const responseContent = document.querySelector('.response-content');
+            if (responseContent) {
+                responseContent.textContent = JSON.stringify(res, null, 2);
+                responseContent.style.color = "#000"; // 正常颜色
+            }
+        }).catch(err => {
+            // 更新响应区域显示错误
+            const responseContent = document.querySelector('.response-content');
+            if (responseContent) {
+                responseContent.textContent = `错误: ${err.response?.data?.message || err.message || '未知错误'}`;
+                responseContent.style.color = "#ff0000"; // 错误颜色
+            }
+        });
 
     })
 
@@ -312,12 +360,7 @@ function renderDebug(apiData){
 
     renderParams(requestArea); // 默认打开Params区
 
-    //发送请求点击事件
-    submitButton.onclick = function() {
-        console.log(`发送${apiData.requestMethod}请求到：${urlInput.value}`);
-        // 可后续补充请求逻辑
-        
-    };
+    
 
     
 }
@@ -375,7 +418,7 @@ function renderBody(container){
 
     const noneSpan = document.createElement('span');
     noneSpan.textContent = 'none';
-    noneSpan.className = 'body-format-tab active'; // 默认激活
+    noneSpan.className = 'body-format-tab'; 
 
     const formDataSpan = document.createElement('span');
     formDataSpan.textContent = 'form-data';
@@ -389,30 +432,19 @@ function renderBody(container){
     urlencodedSpan.textContent = 'x-www-form-urlencoded';
     urlencodedSpan.className = 'body-format-tab';
 
-    formatContainer.appendChild(noneSpan);
-    formatContainer.appendChild(formDataSpan);
-    formatContainer.appendChild(jsonSpan);
-    formatContainer.appendChild(urlencodedSpan);
-
-    container.appendChild(formatContainer);
-
-    // 内容区域
-    const contentDiv = document.createElement('div');
-    contentDiv.className = 'body-content';
-    contentDiv.innerHTML = "<div class='empty-tip'>该请求没有Body</div>"; // 默认无Body
-
-    container.appendChild(contentDiv);
-
     // 点击事件
     noneSpan.onclick = function(){
         formatContainer.querySelectorAll('.body-format-tab').forEach(tab => tab.classList.remove('active'));
         noneSpan.classList.add('active');
+        localStorage.setItem('contentType',requestDataType.None ); // 存储当前选择的请求体格式，后续发送请求时可以用到
         contentDiv.innerHTML = "<div class='empty-tip'>该请求没有Body</div>";
     };
 
     formDataSpan.onclick = function(){
         formatContainer.querySelectorAll('.body-format-tab').forEach(tab => tab.classList.remove('active'));
         formDataSpan.classList.add('active');
+        localStorage.setItem('contentType',requestDataType.FormData ); // 存储当前选择的请求体格式，后续发送请求时可以用到
+
         contentDiv.dataset.type = requestDataType.FormData; // 标记数据类型，方便发送请求时区分
         renderform(contentDiv);
     };
@@ -420,6 +452,7 @@ function renderBody(container){
     jsonSpan.onclick = function(){
         formatContainer.querySelectorAll('.body-format-tab').forEach(tab => tab.classList.remove('active'));
         jsonSpan.classList.add('active');
+        localStorage.setItem('contentType',requestDataType.Json ); // 存储当前选择的请求体格式，后续发送请求时可以用到
         contentDiv.dataset.type = requestDataType.Json; // 标记数据类型，方便发送请求时区分
         contentDiv.innerHTML = "<textarea placeholder='输入JSON格式的请求体' style='width:100%; height:200px; padding:0.5rem; border:1px solid #e8e8e8; border-radius:6px; font-family:monospace;'></textarea>";
         //设置监听
@@ -430,9 +463,38 @@ function renderBody(container){
     urlencodedSpan.onclick = function(){
         formatContainer.querySelectorAll('.body-format-tab').forEach(tab => tab.classList.remove('active'));
         urlencodedSpan.classList.add('active');
+        localStorage.setItem('contentType',requestDataType.Urlencoded ); // 存储当前选择的请求体格式，后续发送请求时可以用到
         contentDiv.dataset.type = requestDataType.Urlencoded; // 标记数据类型，方便发送请求时区分
         renderform(contentDiv);
     };
+
+
+    formatContainer.appendChild(noneSpan);
+    formatContainer.appendChild(formDataSpan);
+    formatContainer.appendChild(jsonSpan);
+    formatContainer.appendChild(urlencodedSpan);
+
+    container.appendChild(formatContainer);
+
+    // 内容区域
+    const contentDiv = document.createElement('div');
+    contentDiv.className = 'body-content';
+    const contentType=localStorage.getItem('contentType') || requestDataType.None; // 从本地存储获取之前选择的请求体格式，默认为none
+    console.log("当前请求体格式：", contentType);
+
+    // 根据之前选择的请求体格式，默认展示对应的内容
+    if(contentType === requestDataType.FormData) {
+        formDataSpan.click(); 
+    } else if(contentType === requestDataType.Json) {
+        jsonSpan.click();
+    } else if(contentType === requestDataType.Urlencoded) {
+        urlencodedSpan.click();
+    } else {
+        noneSpan.click();
+    }
+    container.appendChild(contentDiv);
+
+    
 }
 
 //Headers点击事件
@@ -933,14 +995,14 @@ window.onload = async function () {
 
     //发送请求，获取接口列表 id：项目id
     try{
-        console.log("准备发送请求..");
+    console.log("准备发送请求..");
     const res= await axios.get(`http://localhost/tex/api/list/${id}`,{
         headers: {
                 'token': localStorage.getItem('token') 
             }
         });  
-        const data=res.data.data;
-        renderApiList(data);
+    const data=res.data.data;
+    renderApiList(data);
     }catch(err){
         console.error('失败详情：', err);
         const errMsg = err.response?.data?.msg || err.message || '网络错误/后端接口未响应';
@@ -953,5 +1015,5 @@ window.onload = async function () {
                 <div class="error-tip">项目获取失败：${errMsg}</div>
             `;
         }
-    }
+}
 };

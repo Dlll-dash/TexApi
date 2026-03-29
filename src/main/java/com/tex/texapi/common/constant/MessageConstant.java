@@ -12,4 +12,5 @@ public class MessageConstant {
     public static final String SERVER_ERROR="服务器异常";
     public static final String NETWORK_ERROR="网络异常";
     public static final String REQUEST_FAILED="请求失败";
+    public static final String API_FORBIDDEN="接口维护中";
 }

@@ -25,4 +25,12 @@ public interface ApiMapper {
      * @param api
      */
     void updateApi(Api api);
+
+    /**
+     * 根据id获取api
+     * @param id
+     * @return
+     */
+    @Select("select * from api where id=#{id}")
+    Api getById(Long id);
 }
