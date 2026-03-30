@@ -540,19 +540,20 @@ function renderform(container){
 
     ul.appendChild(textli);
 
-    /*更新删除按钮状态函数(可选)
+    //更新删除按钮状态函数(可选)
     function updateRemoveButtons() {
         const formDataItems = ul.querySelectorAll('li:not(:first-child)');
-        const itemCount = formDataItems.length;
-        
-        formDataItems.forEach((item, index) => {
+
+        //有值的参数项才显示删除按钮
+        formDataItems.forEach((item) => {
             const removeBtn = item.querySelector('.remove-btn');
-            if (removeBtn) {
-                    // 数量>1时显示所有删除按钮，数量=1时隐藏
-                    removeBtn.style.visibility = itemCount > 1 ? 'visible' : 'hidden';
+            item.querySelectorAll('input').forEach(input =>{
+                if(input.value.trim()!='') {
+                    removeBtn.style.visibility = 'visible';
                 }
             });
-    }*/
+        })
+    }
 
     //添加formData项
     function addFormDataItem(Data){
@@ -570,11 +571,15 @@ function renderform(container){
         explainInput.className = 'explain-input';
         removeButton.textContent=' - ';
         removeButton.className = 'remove-btn';
-        removeButton.style.visibility = 'visible'; 
+        removeButton.style.visibility = 'hidden'; // 默认隐藏，只有输入内容后才显示
 
         if(Data){
             // 如果传入了Data参数，说明是编辑已有参数，需要预填充输入框
             keyInput.value=Data[0] || '';
+            if(!keyInput.value.trim()) {
+                keyInput.placeholder= "参数名";
+                keyInput.style.outline = '1px solid #e53e3e';
+            }
             valueInput.value=Data[1] || '';
             typeInput.value=Data[2] || '';
             explainInput.value=Data[3] || '';
@@ -593,16 +598,28 @@ function renderform(container){
             if(e.target.tagName.toLowerCase() != 'input') {
                 return;
             }
-            //获取输入：参数名不为空
-            if (!keyInput.value.trim()) {
+        
 
-                keyInput.style.borderColor = 'red';
+            if(keyInput.value.trim()||valueInput.value.trim()||typeInput.value.trim()||explainInput.value.trim()) {
+                
+                if (!keyInput.value.trim()&&(valueInput.value.trim()||typeInput.value.trim()||explainInput.value.trim())) {
+                    //console.log('参数名不能为空');
+                    keyInput.style.outline = "1px solid #e53e3e";
+                    keyInput.style.outlineOffset = "0";
+                    keyInput.placeholder= "参数名";
+                }else{
+                    //恢复默认
+                    keyInput.style.outline = '';
+                    keyInput.placeholder= "添加参数";
+                }
 
-                // 让输入框重新获得焦点，提示用户输入
-                keyInput.focus(); 
-                keyInput.placeholder = "参数名不能为空";
+                //新增一个参数项
+                if(!formDataLi.dataset.id){
+                    // 只有当前行没有id，说明是新添加的行，才添加新的空行
+                    addFormDataItem(null); 
+                }
+                
 
-            } else {
                 keyInput.style.borderColor = '';
                 const paramName = keyInput.value.trim();
                 const paramValue = valueInput.value.trim();
@@ -643,7 +660,7 @@ function renderform(container){
         
         ul.appendChild(formDataLi);
 
-        //updateRemoveButtons(); // 添加新项后更新删除按钮显示
+        updateRemoveButtons(); // 添加新项后更新删除按钮显示
         
 
         // 删除按钮点击事件
@@ -655,9 +672,16 @@ function renderform(container){
                 const dataType=container.dataset.type;
                 sendRequest(null, formDataLi.dataset.id, dataType, 'DELETE')
             }
-            ul.removeChild(formDataLi);
+            
+            const formatList=ul.querySelectorAll('li:not(:first-child)');
+            if(formatList.length > 1) {
+                ul.removeChild(formDataLi);
+            }else{
+                // 只有一个参数项时，清空输入框内容但不删除
+                formDataLi.querySelectorAll('input').forEach(input => input.value = '');
+            }
             // 删除后重新更新删除按钮显示
-            //updateRemoveButtons();
+            updateRemoveButtons();
         };
         
     }
@@ -728,10 +752,10 @@ function renderform(container){
                     const paramData = [param.name, param.value, param.type, param.explaination, param.id]; //后端返回每个param参数的id，用来初始化
                     
                     addFormDataItem(paramData); // 传入参数数据，预填充输入框
+                    addFormDataItem(null); // 每个已有参数项后面都添加一个新的空行，方便用户继续添加新参数
                 });
 
-        }
-        else{
+        }else{
             addFormDataItem(null); // 初始化一个参数项
         }
         
@@ -746,7 +770,7 @@ function renderform(container){
 
     container.appendChild(ul);
     
-    // 添加按钮放在ul下面
+    /* 添加按钮放在ul下面
     const addButtonContainer = document.createElement('div');
     addButtonContainer.className = 'add-button-container';
     const addButton = document.createElement('button');
@@ -757,7 +781,7 @@ function renderform(container){
     };
     addButtonContainer.appendChild(addButton);
     container.appendChild(addButtonContainer);
-    
+    */
 }
 
 /**
