@@ -25,13 +25,25 @@ public class RequestParamsController {
         return Result.success(param);
     }
 
-    @GetMapping("/param/list/{id}")
-    public Result<List> getParams(@PathVariable Long id,String formatType){
-        log.info("获取参数列表:{}",id);
-        List<Params>list=requestParamsService.getParams(id,formatType);
+    /**
+     * 获取参数列表
+     * @param apiId 接口id
+     * @param formatType
+     * @return
+     */
+    @GetMapping("/param/list/{apiId}")
+    public Result<List> getParams(@PathVariable Long apiId,String formatType){
+        log.info("获取参数列表:{}",apiId);
+        List<Params>list=requestParamsService.getParams(apiId,formatType);
         return Result.success(list);
     }
 
+    /**
+     * 更新参数
+     * @param paramDTO
+     * @param id
+     * @return
+     */
     @PutMapping("/param/{id}")
     public Result updateParam(@RequestBody ParamDTO paramDTO,@PathVariable Long id){
         log.info("更新参数：{}, {}",id,paramDTO);

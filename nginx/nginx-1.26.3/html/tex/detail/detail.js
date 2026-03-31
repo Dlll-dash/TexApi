@@ -193,6 +193,8 @@ function renderTestWindow(apiData){
 
     //默认打开debug区
     renderDebug(apiData);
+    
+
 }
 
 /**
@@ -331,6 +333,7 @@ function renderDebug(apiData){
 
     container.appendChild(requestInfo);
     
+    
     const requestArea = document.createElement('div');
     requestArea.id = "requestArea";
     requestArea.className = "request-area";
@@ -454,10 +457,52 @@ function renderBody(container){
         jsonSpan.classList.add('active');
         localStorage.setItem('contentType',requestDataType.Json ); // 存储当前选择的请求体格式，后续发送请求时可以用到
         contentDiv.dataset.type = requestDataType.Json; // 标记数据类型，方便发送请求时区分
-        contentDiv.innerHTML = "<textarea placeholder='输入JSON格式的请求体' style='width:100%; height:200px; padding:0.5rem; border:1px solid #e8e8e8; border-radius:6px; font-family:monospace;'></textarea>";
-        //设置监听
+        contentDiv.innerHTML = "<textarea placeholder='输入JSON格式的请求体' class='json-input'></textarea>";
+         const apiId= document.getElementById('requestArea').dataset.apiId; // 获取当前接口id
 
-        // 可以在这里添加JSON输入的验证和请求发送逻辑
+        //获取已有的Json数据并预填充
+        sendRequest(null, apiId, requestDataType.Json, 'GET')
+        .then(res => {
+            if(res.data) {
+                const jsonString=res.data.data[0].value;
+                console.log('获取已有Json数据成功：', jsonString);
+                console.log('结果类型：', typeof(jsonString));
+                contentDiv.querySelector('.json-input').value = jsonString; 
+                contentDiv.dataset.id= res.data.data[0].id; // 存储json数据的id，方便后续更新
+            }
+        });
+
+        
+        
+        //设置监听
+        contentDiv.querySelector('.json-input').addEventListener('blur', function() {
+            const jsonString = this.value.trim();
+           
+            if(jsonString) {
+                const param=[
+                    'jsonBody',
+                    jsonString,
+                    requestDataType.Json,
+                    '',
+                    apiId
+                ];
+
+                //只有一个Json
+                if(!contentDiv.dataset.id) {
+                    sendRequest(param,null,requestDataType.Json, 'POST')
+                    .then(res => {
+                        alert('Json保存成功');
+                        if(res.data && res.data.data && res.data.data.id) {
+                            contentDiv.dataset.id = res.data.data.id;
+                        }
+                    })
+                }else{
+                    alert('Json更新成功');
+                    sendRequest(param, contentDiv.dataset.id, requestDataType.Json, 'PUT');
+                }
+            }
+        });
+        
     };
 
     urlencodedSpan.onclick = function(){
@@ -506,6 +551,65 @@ function renderHeaders(container){
     renderform(headerArea); // 复用formData的渲染函数
     container.appendChild(headerArea);
 }
+
+
+/**
+ * 参数表单通用发送接口请求函数
+ *  @param {请求体数组} param 
+ *  @param {(GET)接口 id/(其他)参数 id} id
+ *  @param {数据类型,Params,Headers,Body..} dataType
+ *  @param {请求方法} method
+ **/
+async function sendRequest(param, id, dataType, method) {
+        // 这里可以根据dataType来区分是Params、Headers还是Body的参数，构造不同的请求数据结构
+
+        let requestData = {}; 
+        if(param){
+            requestData = {
+                name: param[0],
+                value: param[1],
+                type: param[2],
+                explaination: param[3],
+                apiId: param[4],
+                formatType: dataType
+            };
+        }
+        let url = `http://localhost/tex/request/param`;
+        if(method==='GET'){
+            url += `/list`;
+        }
+        else if(method === 'DELETE') {
+            url += `/delete`;
+        }
+        if (id) {
+            url += `/${id}`; // 拼接id，如 /api/params/123
+        }
+
+        try{
+            const axiosConfig = {
+                url: url,
+                method: method,
+                headers: {
+                    'token': localStorage.getItem('token') 
+                }
+            };
+            if(method !== 'GET'&& method !== 'DELETE') {
+                axiosConfig.data = requestData; // 非GET、DELETE请求才有请求体
+            }
+            else if(method === 'GET'){
+                axiosConfig.params = {
+                    formatType: dataType, // 传递数据类型，后端根据这个参数来区分返回哪个接口的参数列表
+                };
+            }
+
+            const res= await axios(axiosConfig);
+            return res; // 根据后端返回结构调整
+        }catch(err){
+            throw new Error(`请求失败：${err.response?.data?.message || err.message}`);
+        }
+    }
+
+
 
 //统一创建表单函数
 function renderform(container){
@@ -644,16 +748,16 @@ function renderform(container){
                     console.log('请求成功：', res);
                     // 设置行dataset为id(返回的参数id)，方便后续修改
                     if(res.data && res.data.data && res.data.data.id) {
-                    // 根据后端返回结构调整
-                    formDataLi.dataset.id = res.data.data.id; 
+                        // 根据后端返回结构调整
+                        formDataLi.dataset.id = res.data.data.id; 
                     }
                     // 可以根据需要更新界面，比如显示一个成功提示
-                    alert('参数保存成功');
+                    //alert('参数保存成功');
                 })
                 .catch(err => {
                     console.error('请求失败详情：', err);
                     const errMsg = err.response?.data?.msg || err.message || '网络错误/后端接口未响应';
-                    alert('操作失败：' + errMsg);
+                    //alert('操作失败：' + errMsg);
                 });
             }
         });
@@ -686,55 +790,7 @@ function renderform(container){
         
     }
 
-    //通用发送接口请求函数 id是参数项在数据库的主键id
-    async function sendRequest(param, id, dataType, method) {
-            // 这里可以根据dataType来区分是Params、Headers还是Body的参数，构造不同的请求数据结构
-
-            let requestData = {}; 
-            if(param){
-                requestData = {
-                    name: param[0],
-                    value: param[1],
-                    type: param[2],
-                    explaination: param[3],
-                    apiId: param[4],
-                    formatType: dataType
-                };
-            }
-            let url = `http://localhost/tex/request/param`;
-            if(method==='GET'){
-                url += `/list`;
-            }
-            else if(method === 'DELETE') {
-                url += `/delete`;
-            }
-            if (id) {
-                url += `/${id}`; // 拼接id，如 /api/params/123
-            }
-
-            try{
-                const axiosConfig = {
-                    url: url,
-                    method: method,
-                    headers: {
-                        'token': localStorage.getItem('token') 
-                    }
-                };
-                if(method !== 'GET'&& method !== 'DELETE') {
-                    axiosConfig.data = requestData; // 非GET、DELETE请求才有请求体
-                }
-                else if(method === 'GET'){
-                    axiosConfig.params = {
-                        formatType: dataType, // 传递数据类型，后端根据这个参数来区分返回哪个接口的参数列表
-                    };
-                }
-
-                const res= await axios(axiosConfig);
-                return res; // 根据后端返回结构调整
-            }catch(err){
-                throw new Error(`请求失败：${err.response?.data?.message || err.message}`);
-            }
-        }
+    
     try{
 
         const requestDataType = container.dataset.type; // 从容器dataset获取数据类型，之前点击不同参数类型时已经设置好了

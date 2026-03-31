@@ -19,13 +19,12 @@ public interface RequestParamsMapper {
 
     /**
      * 根据接口id获取请求参数列表
-     *
-     * @param id
+     * @param apiId 接口id
      * @param formatType
      * @return
      */
-    @Select("select * from request_params where api_id=#{id} and format_type=#{formatType}")
-    List<Params> getParams(Long id, String formatType);
+    @Select("select * from request_params where api_id=#{apiId} and format_type=#{formatType}")
+    List<Params> getParams(Long apiId, String formatType);
 
     /**
      * 修改请求参数
@@ -36,7 +35,6 @@ public interface RequestParamsMapper {
 
     /**
      * 根据id删除请求参数
-     *
      * @param id
      */
     @Delete("delete from request_params where id = #{id}")

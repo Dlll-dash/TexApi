@@ -1,5 +1,6 @@
 package com.tex.texapi.server.service.impl;
 
+import com.tex.texapi.common.constant.MessageConstant;
 import com.tex.texapi.pojo.dto.ParamDTO;
 import com.tex.texapi.pojo.entity.Params;
 import com.tex.texapi.server.mapper.RequestParamsMapper;
@@ -24,22 +25,27 @@ public class RequestParamsServiceImpl implements RequestParamsService {
     public Params addParam(ParamDTO paramDTO) {
         Params param=new Params();
         BeanUtils.copyProperties(paramDTO,param);
+        if(param.getName()==null||param.getName().isEmpty()){
+            throw new IllegalArgumentException(MessageConstant.PARAM_NAME_EMPTY);
+        }
         requestParamsMapper.addParam(param);
         return param;
     }
     /**
      * 获取参数列表
-     * @param id
+     * @param apiId 接口id
+     * @param formatType
      * @return
      */
     @Override
-    public List<Params> getParams(Long id,String formatType) {
-        List<Params>list=requestParamsMapper.getParams(id,formatType);
+    public List<Params> getParams(Long apiId,String formatType) {
+        List<Params>list=requestParamsMapper.getParams(apiId,formatType);
         return list;
     }
     /**
      * 修改参数
      * @param paramDTO
+     * @param id 参数id
      */
     @Override
     public void upadateParam(ParamDTO paramDTO,Long id) {
