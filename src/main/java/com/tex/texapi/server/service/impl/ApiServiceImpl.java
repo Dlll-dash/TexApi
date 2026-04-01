@@ -93,13 +93,9 @@ public class ApiServiceImpl implements ApiService {
         }else if(contentType.equals(Request.Json)){
 
             //json构建
-            Map<String,String> mp=bodyParams.stream()
-                    .collect(Collectors.toMap(
-                            Params::getName,
-                            Params::getValue
-                    ));
-            String jsonStr=mp.toString();
+            String jsonStr=bodyParams.get(0).getValue();
             requestBody=RequestBody.create(jsonStr,MediaType.parse("application/json"));
+
         }else if(contentType.equals(Request.Urlencoded)){
 
             //x-www-urlencode构建

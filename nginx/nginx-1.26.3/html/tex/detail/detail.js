@@ -137,11 +137,15 @@ function renderApiList(apiData){
         li.appendChild(nameSpan);
         //创建点击事件
         li.onclick=function(){
+            // 移除其他项的active类
+            ul.querySelectorAll('li').forEach(sibling => sibling.classList.remove('active'));
+            li.classList.add('active'); // 添加点击效果
             renderTestWindow(item);
-        }
+        };
         ul.appendChild(li);
     });
     //默认打开第一个接口
+    ul.firstChild.classList.add('active'); 
     renderTestWindow(apiData[0]);
 }
 
@@ -673,7 +677,7 @@ function renderform(container){
         valueInput.className = 'param-value-input';
         typeInput.className = 'type-input';
         explainInput.className = 'explain-input';
-        removeButton.textContent=' - ';
+        removeButton.innerHTML = '<i class="bi bi-dash-lg"></i>';
         removeButton.className = 'remove-btn';
         removeButton.style.visibility = 'hidden'; // 默认隐藏，只有输入内容后才显示
 
@@ -770,24 +774,41 @@ function renderform(container){
         // 删除按钮点击事件
         removeButton.onclick = function(){
 
-            //console.log('删除参数项，id：', formDataLi.dataset.id);
-            // 如果该项有id，说明已经保存过，需要发送删除请求
-            if(formDataLi.dataset.id) {
-                const dataType=container.dataset.type;
-                sendRequest(null, formDataLi.dataset.id, dataType, 'DELETE')
-            }
-            
-            const formatList=ul.querySelectorAll('li:not(:first-child)');
-            if(formatList.length > 1) {
-                ul.removeChild(formDataLi);
+            if(this.dataset.confirmed === true) {
+                //console.log('删除参数项，id：', formDataLi.dataset.id);
+                // 如果该项有id，说明已经保存过，需要发送删除请求
+                if(formDataLi.dataset.id) {
+                    const dataType=container.dataset.type;
+                    sendRequest(null, formDataLi.dataset.id, dataType, 'DELETE')
+                }
+                const formatList=ul.querySelectorAll('li:not(:first-child)');
+                if(formatList.length > 1) {
+                    ul.removeChild(formDataLi);
+                }else{
+
+                    // 只有一个参数项时，清空输入框内容但不删除
+                    formDataLi.querySelectorAll('input').forEach(input => input.value = '');
+                    this.dataset.confirmed = false; // 重置删除确认状态
+                }
+                // 删除后重新更新删除按钮显示
+                updateRemoveButtons();
             }else{
-                // 只有一个参数项时，清空输入框内容但不删除
-                formDataLi.querySelectorAll('input').forEach(input => input.value = '');
+                //第一次点击，进入确认状态
+                this.classList.add('active');
+                setTimeout(() => {
+                this.innerHTML = '<i class="bi bi-x-lg"></i>';
+                }, 200);
+                this.dataset.confirmed = true;
             }
-            // 删除后重新更新删除按钮显示
-            updateRemoveButtons();
         };
-        
+        removeButton.addEventListener('mouseout', function() {
+            //如果点击一次后移开鼠标，则取消删除确认状态，避免误操作
+            this.classList.remove('active');
+            this.dataset.confirmed = false;
+            setTimeout(() => {
+            this.innerHTML = '<i class="bi bi-dash-lg"></i>';
+            }, 200);
+        });
     }
 
     
