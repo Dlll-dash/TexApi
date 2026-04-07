@@ -57,6 +57,8 @@ function getUrlParams() {
     return params;
 }
 
+const methodlist= ['GET', 'POST', 'PUT', 'DELETE'];
+
 const methodColors = {
     'GET': '#09ff01',
     'POST': '#ff9901',
@@ -125,7 +127,8 @@ function renderApiList(apiData){
 
         methodSpan.textContent=item.requestMethod;
         methodSpan.className='method';
-    
+        
+
         nameSpan.textContent=item.apiName;
         nameSpan.className='name';
         
@@ -266,12 +269,62 @@ function renderDebug(apiData){
 
     methodSpan.textContent=apiData.requestMethod;
     methodSpan.className='methodValue';
+    
 
-    // 复用请求方法颜色逻辑,但是url前的方法标签颜色有背景色加圆角，不想再单独去加一个样式了，就直接在这里加了，只有这里用
+    // 复用请求方法颜色逻辑
     methodSpan.style.color = methodColors[apiData.requestMethod] || methodColors['DEFAULT'];
     methodSpan.style.backgroundColor = methodBackroundColors[apiData.requestMethod] || methodBackroundColors['DEFAULT'];
-    methodSpan.style.padding = '0.6rem 1.3rem'; // 增加内边距
-    methodSpan.style.borderRadius = '4px'; // 圆角
+
+    const optionList=document.createElement('ul');
+    optionList.className = "option-list";
+
+    // 创建下拉选项列表
+    methodlist.forEach(method => {
+
+        const option=document.createElement('li');
+
+        option.className = "option-item";
+
+        option.textContent=method;
+        option.style.color = methodColors[method] || methodColors['DEFAULT'];
+
+        //下拉选项点击事件
+        option.addEventListener('click', () => {
+
+            // 更新接口数据中的请求方法
+            apiData.requestMethod = option.textContent; 
+
+            // 更新界面显示的请求方法
+            methodSpan.textContent = apiData.requestMethod; 
+            methodSpan.style.color = methodColors[apiData.requestMethod] || methodColors['DEFAULT'];
+            methodSpan.style.backgroundColor = methodBackroundColors[apiData.requestMethod] || methodBackroundColors['DEFAULT'];
+
+            // 更新接口数据中的请求方法后，发送更新接口的请求，保持数据同步
+            sendApiRequest(apiData, 'PUT');
+
+            optionList.style.display = 'none'; // 隐藏选项列表
+
+        });
+
+        optionList.appendChild(option);
+
+    });
+    requestLine.appendChild(optionList); // 将选项列表添加到请求行容器中
+
+    // 请求方法点击事件
+    methodSpan.addEventListener('click', function(e){
+
+        e.stopPropagation(); // 阻止事件冒泡，避免触发li的点击事件
+        optionList.style.display = optionList.style.display === 'block' ? 'none' : 'block';
+
+    });
+
+    // 点击页面其他地方关闭下拉框
+    document.addEventListener('click', () => {
+        optionList.style.display = 'none';
+    });
+
+
 
     urlInput.value=apiData.requestUrl || '';
     urlInput.className='url';
@@ -279,7 +332,7 @@ function renderDebug(apiData){
     urlInput.addEventListener('blur',function(){
         apiData.requestUrl= urlInput.value.trim(); // 更新接口数据中的url字段，后续发送请求时可以用到
         sendApiRequest(apiData,'PUT') // 发送更新接口的请求，保持数据同步
-        alert('接口URL已更新'); 
+        //alert('接口URL已更新'); 
     });
 
     submitButton.textContent='发送'; 
@@ -367,9 +420,6 @@ function renderDebug(apiData){
 
     renderParams(requestArea); // 默认打开Params区
 
-    
-
-    
 }
 
 //Params点击事件

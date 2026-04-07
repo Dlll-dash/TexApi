@@ -122,8 +122,42 @@
             font-size: 1.1rem; 
             margin-right: 8px; /* 和副文字留间距 */
             min-width: 70px;
+            max-height: 200px;
             text-align: center;
+            padding : 0.6rem 1.3rem; /* 增加内边距*/
+            border-radius : 4px; /* 圆角*/
+            cursor: pointer; /* 鼠标指针 */
+             /* 过渡效果 */
+             transition: all 0.2s ease;
         }
+        .methodValue:hover {
+            opacity: 0.8;
+        }
+
+        
+
+        .option-list {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background-color: #ffffff;
+            border: 1px solid #e8e8e8;
+            border-radius: 6px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            display: none; /* 默认隐藏 */
+            transition: all 0.2s ease;
+        }
+        .option-item {
+            font-weight: 600; /* 加粗 */
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+        .option-item:hover {
+            background-color: #f5f7fa;
+        }
+
         /* 副文字样式（弱化） */
         .name{
             font-weight: 400; /* 常规粗细 */
@@ -208,6 +242,7 @@
 
         /* 请求行样式 */
         .request-line {
+            position: relative;
             display: flex;
             gap: 1rem;
             align-items: center;
@@ -514,23 +549,7 @@
             font-size: 0.9rem;
             transition: background-color 0.2s;
         }
-        /*
-        .add-btn {
-            padding: 0.5rem 0.8rem;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 0.9rem;
-            transition: background-color 0.2s;
-            margin-right: 4px;
-            background-color: #4299e1;
-            color: white;
-        }
-
-        .add-btn:hover {
-            background-color: #3182ce;
-        }
-        */
+        
 
         .remove-btn {
             background-color: #f5f7fa;
