@@ -84,6 +84,20 @@ const requestDataType = {
     'Header': 'header'
 };
 
+const debugFormConfig = [
+    {key: 'name',label: '参数名',className: 'param-name-input', placeholder: '添加参数'},
+    {key: 'value',label: '参数值',className: 'param-value-input', placeholder: '',marginLeft: '11.25rem'},
+    {key: 'type',label: '类型',className: 'type-input', placeholder: '',marginLeft: '13.75rem'},
+    {key: 'explaination',label: '说明',className: 'explain-input', placeholder: '',marginLeft: '3rem'}
+];
+
+const designFormConfig = [
+    {key: 'name',label: '参数名',className: 'param-name-input', placeholder: '添加参数'},
+    {key: 'type',label: '类型',className: 'type-input', placeholder: '',marginLeft: '11rem'},
+    {key: 'value',label: '参数值',className: 'param-value-input', placeholder: '',marginLeft: '2.75rem'},
+    {key: 'explaination',label: '说明',className: 'explain-input', placeholder: '',marginLeft: '13.5rem'}
+];
+
 /**
  * 渲染接口列表
  * @param {传入api列表} apiData 
@@ -177,7 +191,9 @@ function renderTestWindow(apiData){
         // 切换标签样式
         tabContainer.querySelectorAll('span').forEach(tab => tab.classList.remove('active'));
         debugSpan.classList.add('active');
-        renderDebug(apiData);
+        renderDebug(apiData,debugFormConfig);
+        renderResponse(container);
+
     };
 
     const designSpan=document.getElementById('designTab');
@@ -187,7 +203,13 @@ function renderTestWindow(apiData){
     designSpan.onclick=function(){
         tabContainer.querySelectorAll('span').forEach(tab => tab.classList.remove('active'));
         designSpan.classList.add('active');
-        renderDesign(apiData);
+
+        // 切换到非调试区时移除响应区域，保持界面简洁
+        if(document.getElementById('responseArea')) {
+            container.removeChild(document.getElementById('responseArea'));
+        }
+
+        renderDesign(apiData,designFormConfig);
     };
 
     const previewSpan=document.getElementById('previewTab');
@@ -195,12 +217,17 @@ function renderTestWindow(apiData){
     previewSpan.onclick=function(){
         tabContainer.querySelectorAll('span').forEach(tab => tab.classList.remove('active'));
         previewSpan.classList.add('active');
+
+        // 切换到非调试区时移除响应区域，保持界面简洁
+        if(document.getElementById('responseArea')) {
+            container.removeChild(document.getElementById('responseArea'));
+        }
+
         renderPreview(apiData);
     };
 
     //默认打开debug区
-    renderDebug(apiData);
-    
+    debugSpan.click();
 
 }
 
@@ -244,13 +271,14 @@ async function sendApiRequest(apiData,method){
     }
 }
 
-
-
 /**
  * 渲染调试窗口
  * @param {传入单个api} apiData 
+ * @param {传入配置对象} config 
  */
-function renderDebug(apiData){
+function renderDebug(apiData,config){
+    console.log("配置：",config);
+
     const container=document.getElementById('subWindow');
     if(!container) {
         console.log("subWindow容器为空");
@@ -309,7 +337,7 @@ function renderDebug(apiData){
         optionList.appendChild(option);
 
     });
-    requestLine.appendChild(optionList); // 将选项列表添加到请求行容器中
+    
 
     // 请求方法点击事件
     methodSpan.addEventListener('click', function(e){
@@ -367,8 +395,10 @@ function renderDebug(apiData){
     requestLine.appendChild(methodSpan);
     requestLine.appendChild(urlInput);
     requestLine.appendChild(submitButton);
-    container.appendChild(requestLine);
+    requestLine.appendChild(optionList); // 将选项列表添加到请求行容器中
 
+    container.appendChild(requestLine);
+    
     // 请求信息标签区
     const requestInfo = document.createElement('div');
     requestInfo.className = "request-info";
@@ -403,27 +433,57 @@ function renderDebug(apiData){
         // 切换激活状态
         requestInfo.querySelectorAll('.test-tab').forEach(tab => tab.classList.remove('active'));
         Params.classList.add('active');
-        renderParams(requestArea);
+        //console.log("配置：",config);
+        renderParams(requestArea,config);
     }
     //Body点击事件
     Body.onclick=function(){
         requestInfo.querySelectorAll('.test-tab').forEach(tab => tab.classList.remove('active'));
         Body.classList.add('active');
-        renderBody(requestArea);
+        renderBody(requestArea,config);
     }
     //Headers点击事件
     Headers.onclick=function(){
         requestInfo.querySelectorAll('.test-tab').forEach(tab => tab.classList.remove('active'));
         Headers.classList.add('active');
-        renderHeaders(requestArea);
+        renderHeaders(requestArea,config);
     }
 
-    renderParams(requestArea); // 默认打开Params区
-
+    renderParams(requestArea,config); // 默认打开Params区
+    //renderResponse(requestArea); 
 }
 
-//Params点击事件
-function renderParams(container){
+function renderResponse(container){
+
+    if(document.getElementById('responseArea')) {
+        return; // 已经渲染过了就不重复渲染
+    }
+
+    const responseDiv=document.createElement('div');
+    responseDiv.className = "response-container";
+    responseDiv.id="responseArea";
+    // 响应结果标题
+    const responseTitle = document.createElement('span');
+    responseTitle.className = "response-title";
+    responseTitle.textContent = "响应结果：";
+    responseDiv.appendChild(responseTitle);
+    
+    // 新增响应结果区域，美化调试窗口
+    const responseArea = document.createElement('div');
+    responseArea.className = "response-area";
+    const responseContent = document.createElement('pre');
+    responseContent.className = "response-content";
+    responseContent.textContent = "点击发送按钮后显示响应结果";
+    responseContent.style.color = "#adabab";// 默认提示文字颜色
+
+    responseArea.appendChild(responseContent);
+    responseDiv.appendChild(responseArea);
+
+    container.appendChild(responseDiv);
+}
+
+//渲染Params参数列表
+function renderParams(container,config){
     container.innerHTML = ""; // 清空
     //创建Params块
     const querySpan=document.createElement('span');
@@ -432,31 +492,13 @@ function renderParams(container){
 
     const queryArea=document.createElement('div');
     queryArea.dataset.type = requestDataType.Query; // 标记数据类型，方便发送请求时区分
-    renderform(queryArea);// 复用formData的渲染函数
+    renderform(queryArea,config);// 复用formData的渲染函数
     container.appendChild(queryArea);
-
-
-    // 响应结果标题
-    const responseTitle = document.createElement('span');
-    responseTitle.className = "response-title";
-    responseTitle.textContent = "响应结果：";
-    container.appendChild(responseTitle);
-    
-    // 新增响应结果区域，美化调试窗口
-    const responseArea = document.createElement('div');
-    responseArea.className = "response-area";
-    const responseContent = document.createElement('pre');
-    responseContent.className = "response-content";
-    responseContent.textContent = "尚未发送请求";
-    responseContent.style.color = "#adabab";// 默认提示文字颜色
-    responseArea.appendChild(responseContent);
-
-    container.appendChild(responseArea);
     
 }
 
-//Body点击事件
-function renderBody(container){
+//渲染Body参数列表
+function renderBody(container,config){
     container.innerHTML = ""; // 清空
     //创建Body块
     const bodyTitle = document.createElement('span');
@@ -503,7 +545,7 @@ function renderBody(container){
         localStorage.setItem('contentType',requestDataType.FormData ); // 存储当前选择的请求体格式，后续发送请求时可以用到
 
         contentDiv.dataset.type = requestDataType.FormData; // 标记数据类型，方便发送请求时区分
-        renderform(contentDiv);
+        renderform(contentDiv,config);
     };
 
     jsonSpan.onclick = function(){
@@ -564,7 +606,7 @@ function renderBody(container){
         urlencodedSpan.classList.add('active');
         localStorage.setItem('contentType',requestDataType.Urlencoded ); // 存储当前选择的请求体格式，后续发送请求时可以用到
         contentDiv.dataset.type = requestDataType.Urlencoded; // 标记数据类型，方便发送请求时区分
-        renderform(contentDiv);
+        renderform(contentDiv,config);
     };
 
 
@@ -596,13 +638,13 @@ function renderBody(container){
     
 }
 
-//Headers点击事件
-function renderHeaders(container){
+//渲染Headers列表
+function renderHeaders(container,config){
     container.innerHTML = ""; // 清空
     //创建Headers块
     const headerArea=document.createElement('div');
     headerArea.dataset.type = requestDataType.Header; // 标记数据类型，方便发送请求时区分
-    renderform(headerArea); // 复用formData的渲染函数
+    renderform(headerArea,config); // 复用formData的渲染函数
     container.appendChild(headerArea);
 }
 
@@ -664,10 +706,11 @@ async function sendRequest(param, id, dataType, method) {
     }
 
 
-
 //统一创建表单函数
-function renderform(container){
+function renderform(container,config){
     container.innerHTML = "";
+    // container.style.opacity = '0';
+    // container.style.transition = 'opacity 0.3s ease';
 
     //创建formData列表
     const ul=document.createElement('ul');
@@ -680,21 +723,30 @@ function renderform(container){
     const valueSpan=document.createElement('span');
     valueSpan.textContent='参数值';
     valueSpan.className = 'param-label';
-    valueSpan.style.marginLeft = '11.25rem';
+    
     //调整与输入框左对齐
     const typeSpan=document.createElement('span');
     typeSpan.textContent='类型';
     typeSpan.className = 'param-label';
-    typeSpan.style.marginLeft = '13.75rem';
+
     const explainSpan=document.createElement('span');
     explainSpan.textContent='说明';
     explainSpan.className = 'param-label';
-    explainSpan.style.marginLeft = '3rem';
 
-    textli.appendChild(keySpan);
-    textli.appendChild(valueSpan);
-    textli.appendChild(typeSpan);
-    textli.appendChild(explainSpan);
+    config.forEach(item => {
+        if(item.key === 'name') {
+            textli.appendChild(keySpan);
+        }else if(item.key === 'value') {
+            valueSpan.style.marginLeft=item.marginLeft;
+            textli.appendChild(valueSpan);
+        }else if(item.key === 'type') {
+            typeSpan.style.marginLeft=item.marginLeft;
+            textli.appendChild(typeSpan);
+        }else if(item.key === 'explaination') {
+            explainSpan.style.marginLeft=item.marginLeft;
+            textli.appendChild(explainSpan);
+        }
+    });
 
     ul.appendChild(textli);
 
@@ -733,23 +785,38 @@ function renderform(container){
 
         if(Data){
             // 如果传入了Data参数，说明是编辑已有参数，需要预填充输入框
-            keyInput.value=Data[0] || '';
+            keyInput.value=Data.name || '';
             if(!keyInput.value.trim()) {
                 keyInput.placeholder= "参数名";
                 keyInput.style.outline = '1px solid #e53e3e';
             }
-            valueInput.value=Data[1] || '';
-            typeInput.value=Data[2] || '';
-            explainInput.value=Data[3] || '';
-            formDataLi.dataset.id = Data[4]; // 设置行dataset为id(返回的参数id)，方便后续修改
+            valueInput.value=Data.value || '';
+            typeInput.value=Data.type || '';
+            explainInput.value=Data.explaination || '';
+            formDataLi.dataset.id = Data.id; // 设置行dataset为id(返回的参数id)，方便后续修改
         }
 
-        formDataLi.appendChild(keyInput);
-        formDataLi.appendChild(valueInput);
-        formDataLi.appendChild(typeInput);
-        formDataLi.appendChild(explainInput);
+        config.forEach(item => {
+            if(item.key === 'name') {
+
+                formDataLi.appendChild(keyInput);
+
+            }else if(item.key === 'value') {
+
+                formDataLi.appendChild(valueInput);
+
+            }else if(item.key === 'type') {
+
+                formDataLi.appendChild(typeInput);
+
+            }else if(item.key === 'explaination') {
+
+                formDataLi.appendChild(explainInput);
+
+            }
+        });
         formDataLi.appendChild(removeButton);
-        
+
         //监听鼠标离开事件
         formDataLi.addEventListener('focusout', function(e) {
             // 只有当离开的元素是输入框时才进行验证，避免过早验证
@@ -808,11 +875,7 @@ function renderform(container){
                     // 可以根据需要更新界面，比如显示一个成功提示
                     //alert('参数保存成功');
                 })
-                .catch(err => {
-                    console.error('请求失败详情：', err);
-                    const errMsg = err.response?.data?.msg || err.message || '网络错误/后端接口未响应';
-                    //alert('操作失败：' + errMsg);
-                });
+                
             }
         });
         
@@ -820,12 +883,13 @@ function renderform(container){
 
         updateRemoveButtons(); // 添加新项后更新删除按钮显示
         
-
+        removeButton.dataset.confirmed = 'false'; // 初始化删除确认状态
         // 删除按钮点击事件
-        removeButton.onclick = function(){
-
-            if(this.dataset.confirmed === true) {
-                //console.log('删除参数项，id：', formDataLi.dataset.id);
+        removeButton.onclick = function(e){
+            e.stopPropagation(); // 阻止事件冒泡，避免触发li的点击事件
+            console.log('点击删除按钮，当前确认状态：', removeButton.dataset.confirmed);
+            if(removeButton.dataset.confirmed === 'true') {
+                console.log('删除参数项，id：', formDataLi.dataset.id);
                 // 如果该项有id，说明已经保存过，需要发送删除请求
                 if(formDataLi.dataset.id) {
                     const dataType=container.dataset.type;
@@ -838,17 +902,18 @@ function renderform(container){
 
                     // 只有一个参数项时，清空输入框内容但不删除
                     formDataLi.querySelectorAll('input').forEach(input => input.value = '');
-                    this.dataset.confirmed = false; // 重置删除确认状态
+                    removeButton.dataset.confirmed = 'false'; // 重置删除确认状态
                 }
                 // 删除后重新更新删除按钮显示
                 updateRemoveButtons();
             }else{
                 //第一次点击，进入确认状态
-                this.classList.add('active');
+                removeButton.classList.add('active');
                 setTimeout(() => {
-                this.innerHTML = '<i class="bi bi-x-lg"></i>';
+                removeButton.innerHTML = '<i class="bi bi-x-lg"></i>';
                 }, 200);
-                this.dataset.confirmed = true;
+                removeButton.dataset.confirmed = 'true';
+
             }
         };
         removeButton.addEventListener('mouseout', function() {
@@ -876,15 +941,21 @@ function renderform(container){
             if(paramsList.length > 0) {
                 paramsList.forEach(param => {
                     //遍历每个参数项，渲染输入框，预填充数据
-                    const paramData = [param.name, param.value, param.type, param.explaination, param.id]; //后端返回每个param参数的id，用来初始化
-                    
+                    const paramData = {
+                        name: param.name, 
+                        value: param.value, 
+                        type: param.type, 
+                        explaination: param.explaination, 
+                        id: param.id
+                    }; //后端返回每个param参数的id，用来初始化
+
                     addFormDataItem(paramData); // 传入参数数据，预填充输入框
-                    addFormDataItem(null); // 每个已有参数项后面都添加一个新的空行，方便用户继续添加新参数
+                    
                 });
 
-        }else{
-            addFormDataItem(null); // 初始化一个参数项
         }
+        addFormDataItem(null); // 初始化一个参数项
+        
         
     })
     }catch(err){
@@ -896,27 +967,26 @@ function renderform(container){
     };
 
     container.appendChild(ul);
-    
-    /* 添加按钮放在ul下面
-    const addButtonContainer = document.createElement('div');
-    addButtonContainer.className = 'add-button-container';
-    const addButton = document.createElement('button');
-    addButton.textContent = '+';
-    addButton.className = 'add-btn';
-    addButton.onclick = function(){
-        addFormDataItem();
-    };
-    addButtonContainer.appendChild(addButton);
-    container.appendChild(addButtonContainer);
-    */
+    // setTimeout(() => {
+    //     container.style.opacity=1;
+    // },0); // 先隐藏容器，等内容渲染完成后再显示，避免闪烁
 }
+
 
 /**
  * 渲染设计窗口（美化补全）
  * @param {传入单个api} apiData 
+ * @param {传入配置对象} config 
  */
-function renderDesign(apiData){
+function renderDesign(apiData,config){
+    
     const container=document.getElementById('subWindow');
+    container.innerHTML = "";
+    container.className = "design-container";
+    // 复用调试窗口的接口基本信息展示部分，保持设计窗口和调试窗口风格一致
+    renderDebug(apiData,config); 
+
+    /*
     if(!container) {
         console.log("subWindow容器为空");
         return;
@@ -1022,7 +1092,7 @@ function renderDesign(apiData){
         paramsDesign.appendChild(paramsTable);
     }
     container.appendChild(paramsDesign);
-
+    */
     // 响应格式设计区域
     const responseDesign = document.createElement('div');
     responseDesign.className = "response-design";
