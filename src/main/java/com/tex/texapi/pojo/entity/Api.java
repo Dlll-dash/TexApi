@@ -44,4 +44,10 @@ public class Api {
 
     //状态 0禁用 1启用
     Integer status;
+
+    //接口说明
+    String explanation;
+
+    //责任人
+    Long inChargeUser;
 }

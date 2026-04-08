@@ -86,8 +86,8 @@ const requestDataType = {
 
 const debugFormConfig = [
     {key: 'name',label: '参数名',className: 'param-name-input', placeholder: '添加参数'},
-    {key: 'value',label: '参数值',className: 'param-value-input', placeholder: '',marginLeft: '11.25rem'},
-    {key: 'type',label: '类型',className: 'type-input', placeholder: '',marginLeft: '13.75rem'},
+    {key: 'value',label: '参数值',className: 'param-value-input', placeholder: '',marginLeft: '11rem'},
+    {key: 'type',label: '类型',className: 'type-input', placeholder: '',marginLeft: '13.4rem'},
     {key: 'explaination',label: '说明',className: 'explain-input', placeholder: '',marginLeft: '3rem'}
 ];
 
@@ -97,6 +97,18 @@ const designFormConfig = [
     {key: 'value',label: '示例值',className: 'param-value-input', placeholder: '',marginLeft: '2.75rem'},
     {key: 'explaination',label: '说明',className: 'explain-input', placeholder: '',marginLeft: '13.5rem'}
 ];
+
+const statusColors = {
+    0: '#3e9ae5',//开发中
+    1: '#e53e3e',//维护中
+    2: '#48bb78'//已发布
+};
+
+const statusText = {
+    0: '开发中',
+    1: '维护中',
+    2: '已发布'
+};
 
 /**
  * 渲染接口列表
@@ -289,6 +301,7 @@ function renderDebug(apiData,config){
 
     // 创建请求行容器
     const requestLine = document.createElement('div');
+    requestLine.id = "requestLine";
     requestLine.className = "request-line";
 
     const methodSpan=document.createElement('span');
@@ -402,6 +415,7 @@ function renderDebug(apiData,config){
     // 请求信息标签区
     const requestInfo = document.createElement('div');
     requestInfo.className = "request-info";
+    requestInfo.id = "requestInfo";
 
     const Params= document.createElement('span');
     Params.className = "test-tab active"; // 默认激活
@@ -505,7 +519,7 @@ function renderBody(container,config){
     // const bodyTitle = document.createElement('span');
     // bodyTitle.textContent = "请求体格式";
     // bodyTitle.className = 'body-label';
-    
+
     // container.appendChild(bodyTitle);
 
     // 格式选择区域
@@ -988,119 +1002,75 @@ function renderDesign(apiData,config){
     container.className = "design-container";
     // 复用调试窗口的接口基本信息展示部分，保持设计窗口和调试窗口风格一致
     renderDebug(apiData,config); 
+    const requestLine = document.getElementById('requestInfo');
 
-    /*
-    if(!container) {
-        console.log("subWindow容器为空");
-        return;
-    }
-    container.innerHTML="";//清空原有内容
-    container.className = "design-container"; // 新增容器类名
+    const apiInfoArea = document.createElement('div');
+    apiInfoArea.className = "api-info-area";
 
-    // 创建设计标题
-    const designTitle = document.createElement('h3');
-    designTitle.textContent = `接口设计：${apiData.apiName || '未命名接口'}`;
-    designTitle.className = "design-title";
-    container.appendChild(designTitle);
+    const apiTitleDiv = document.createElement('div');
+    apiTitleDiv.className = "api-title-div";    
 
-    // 接口基本信息
-    const baseInfo = document.createElement('div');
-    baseInfo.className = "base-info";
+    const apiName = document.createElement('input');
+    apiName.value = apiData.apiName || '未命名接口';
+    apiName.className = "api-name-input";
     
-    // 请求方法
-    const methodItem = document.createElement('div');
-    methodItem.className = "info-item";
-    const methodLabel = document.createElement('span');
-    methodLabel.textContent = "请求方法：";
-    methodLabel.className = "info-label";
-    const methodValue = document.createElement('span');
-    methodValue.textContent = apiData.requestMethod || '未知';
-    methodValue.className = "info-value";
-    // 复用请求方法颜色逻辑
-    methodValue.style.color = methodColors[apiData.requestMethod] || methodColors['DEFAULT'];
-    methodValue.style.fontWeight = 'bold'; // 可选：加粗突出
-    methodItem.appendChild(methodLabel);
-    methodItem.appendChild(methodValue);
-    
-    // 请求路径
-    const urlItem = document.createElement('div');
-    urlItem.className = "info-item";
-    const urlLabel = document.createElement('span');
-    urlLabel.textContent = "请求路径：";
-    urlLabel.className = "info-label";
-    const urlValue = document.createElement('span');
-    urlValue.textContent = apiData.requestUrl || '未配置';
-    urlValue.className = "info-value";
-    urlItem.appendChild(urlLabel);
-    urlItem.appendChild(urlValue);
+    const statusSpan = document.createElement('span');
+    statusSpan.className = 'status-span';
+    const statusLight= document.createElement('span');
+    statusLight.innerHTML = '&#9679;  '; // 圆形符号
 
-    baseInfo.appendChild(methodItem);
-    baseInfo.appendChild(urlItem);
-    container.appendChild(baseInfo);
-
-    // 请求参数设计区域
-    const paramsDesign = document.createElement('div');
-    paramsDesign.className = "params-design";
-    const paramsTitle = document.createElement('div');
-    paramsTitle.textContent = "请求参数：";
-    paramsTitle.className = "params-title";
-    paramsDesign.appendChild(paramsTitle);
-
-    // 处理参数为空的情况
-    if (!apiData.requestParams || Object.keys(apiData.requestParams).length === 0) {
-        const emptyTip = document.createElement('div');
-        emptyTip.className = "empty-tip";
-        emptyTip.textContent = "暂无请求参数配置";
-        paramsDesign.appendChild(emptyTip);
-    } else {
-        // 生成参数表格（模拟）
-        const paramsTable = document.createElement('table');
-        paramsTable.className = "params-table";
-        // 表头
-        const thead = document.createElement('thead');
-        const headerTr = document.createElement('tr');
-        const headers = ['参数名', '类型', '是否必填', '说明'];
-        headers.forEach(headerText => {
-            const th = document.createElement('th');
-            th.textContent = headerText;
-            headerTr.appendChild(th);
-        });
-        thead.appendChild(headerTr);
-        paramsTable.appendChild(thead);
-
-        // 表体（模拟遍历参数，保持风格一致）
-        const tbody = document.createElement('tbody');
-        Object.entries(apiData.requestParams || {}).forEach(([key, param]) => {
-            const tr = document.createElement('tr');
-            // 参数名
-            const nameTd = document.createElement('td');
-            nameTd.textContent = key;
-            // 类型
-            const typeTd = document.createElement('td');
-            typeTd.textContent = param.type || 'string';
-            // 是否必填
-            const requiredTd = document.createElement('td');
-            requiredTd.textContent = param.required ? '是' : '否';
-            // 说明
-            const descTd = document.createElement('td');
-            descTd.textContent = param.desc || '无';
-
-            tr.appendChild(nameTd);
-            tr.appendChild(typeTd);
-            tr.appendChild(requiredTd);
-            tr.appendChild(descTd);
-            tbody.appendChild(tr);
-        });
-        paramsTable.appendChild(tbody);
-        paramsDesign.appendChild(paramsTable);
+    if(!apiData.status) {
+        throw new Error('接口状态未定义');
     }
-    container.appendChild(paramsDesign);
-    */
+
+    // 根据状态设置颜色
+    statusLight.style.color =statusColors[apiData.status]; 
+
+    const statusTextSpan = document.createElement('span');
+    statusTextSpan.textContent = statusText[apiData.status];
+
+    statusSpan.appendChild(statusLight);
+    statusSpan.appendChild(statusTextSpan);
+    
+
+    apiTitleDiv.appendChild(apiName);
+    apiTitleDiv.appendChild(statusSpan);
+    const apiExplanationDiv = document.createElement('div');
+    apiExplanationDiv.className = "api-explanation-div";
+
+    const apiExplanation =document.createElement('textarea');
+    apiExplanation.className = "api-explanation-input";
+    apiExplanation.placeholder = "说明";
+    apiExplanation.value = apiData.explanation || '';
+    apiExplanationDiv.appendChild(apiExplanation);
+
+    const apiInChargeUserDiv = document.createElement('div');
+    apiInChargeUserDiv.className = "api-incharge-user-div";
+
+    const apiInChargeUserLabel = document.createElement('span');
+    apiInChargeUserLabel.textContent = "责任人";
+    apiInChargeUserLabel.className = "api-incharge-user-label";
+
+    const apiInChargeUser= document.createElement('input');
+    apiInChargeUser.className = "api-incharge-user-input";
+
+    //TODO 返回数据中将责任人id转名字
+    apiInChargeUser.value = apiData.inChargeUser || '';
+    apiInChargeUserDiv.appendChild(apiInChargeUserLabel);
+    apiInChargeUserDiv.appendChild(apiInChargeUser);
+
+    apiInfoArea.appendChild(apiTitleDiv);
+    apiInfoArea.appendChild(apiExplanationDiv);
+    apiInfoArea.appendChild(apiInChargeUserDiv);
+
+    container.insertBefore(apiInfoArea, requestLine); // 将接口信息区域插入到请求行上方
+
+
     // 响应格式设计区域
     const responseDesign = document.createElement('div');
     responseDesign.className = "response-design";
     const responseTitle = document.createElement('div');
-    responseTitle.textContent = "响应格式：";
+    responseTitle.textContent = "返回响应";
     responseTitle.className = "params-title";
     responseDesign.appendChild(responseTitle);
 
