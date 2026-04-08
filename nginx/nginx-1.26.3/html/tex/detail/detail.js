@@ -94,7 +94,7 @@ const debugFormConfig = [
 const designFormConfig = [
     {key: 'name',label: '参数名',className: 'param-name-input', placeholder: '添加参数'},
     {key: 'type',label: '类型',className: 'type-input', placeholder: '',marginLeft: '11rem'},
-    {key: 'value',label: '参数值',className: 'param-value-input', placeholder: '',marginLeft: '2.75rem'},
+    {key: 'value',label: '示例值',className: 'param-value-input', placeholder: '',marginLeft: '2.75rem'},
     {key: 'explaination',label: '说明',className: 'explain-input', placeholder: '',marginLeft: '13.5rem'}
 ];
 
@@ -488,6 +488,7 @@ function renderParams(container,config){
     //创建Params块
     const querySpan=document.createElement('span');
     querySpan.textContent="Query参数";
+    querySpan.className = 'query-label';
     container.appendChild(querySpan);
 
     const queryArea=document.createElement('div');
@@ -500,14 +501,12 @@ function renderParams(container,config){
 //渲染Body参数列表
 function renderBody(container,config){
     container.innerHTML = ""; // 清空
-    //创建Body块
-    const bodyTitle = document.createElement('span');
-    bodyTitle.textContent = "请求体格式";
-    bodyTitle.style.fontWeight = '600';
-    bodyTitle.style.color = '#2d3748';
-    bodyTitle.style.marginBottom = '1rem';
-    bodyTitle.style.display = 'block';
-    container.appendChild(bodyTitle);
+    // //创建Body块
+    // const bodyTitle = document.createElement('span');
+    // bodyTitle.textContent = "请求体格式";
+    // bodyTitle.className = 'body-label';
+    
+    // container.appendChild(bodyTitle);
 
     // 格式选择区域
     const formatContainer = document.createElement('div');
@@ -709,8 +708,8 @@ async function sendRequest(param, id, dataType, method) {
 //统一创建表单函数
 function renderform(container,config){
     container.innerHTML = "";
-    // container.style.opacity = '0';
-    // container.style.transition = 'opacity 0.3s ease';
+    container.style.opacity = '0';
+    container.style.transition = 'opacity 0.2s ease';
 
     //创建formData列表
     const ul=document.createElement('ul');
@@ -718,31 +717,35 @@ function renderform(container,config){
 
     const textli=document.createElement('li');
     const keySpan=document.createElement('span');
-    keySpan.textContent='参数名';
+    // keySpan.textContent='参数名';
     keySpan.className = 'param-label';
     const valueSpan=document.createElement('span');
-    valueSpan.textContent='参数值';
+    // valueSpan.textContent='参数值';
     valueSpan.className = 'param-label';
     
     //调整与输入框左对齐
     const typeSpan=document.createElement('span');
-    typeSpan.textContent='类型';
+    // typeSpan.textContent='类型';
     typeSpan.className = 'param-label';
 
     const explainSpan=document.createElement('span');
-    explainSpan.textContent='说明';
+    // explainSpan.textContent='说明';
     explainSpan.className = 'param-label';
 
     config.forEach(item => {
         if(item.key === 'name') {
+            keySpan.textContent = item.label;
             textli.appendChild(keySpan);
         }else if(item.key === 'value') {
+            valueSpan.textContent = item.label;
             valueSpan.style.marginLeft=item.marginLeft;
             textli.appendChild(valueSpan);
         }else if(item.key === 'type') {
+            typeSpan.textContent = item.label;
             typeSpan.style.marginLeft=item.marginLeft;
             textli.appendChild(typeSpan);
         }else if(item.key === 'explaination') {
+            explainSpan.textContent = item.label;
             explainSpan.style.marginLeft=item.marginLeft;
             textli.appendChild(explainSpan);
         }
@@ -967,9 +970,9 @@ function renderform(container,config){
     };
 
     container.appendChild(ul);
-    // setTimeout(() => {
-    //     container.style.opacity=1;
-    // },0); // 先隐藏容器，等内容渲染完成后再显示，避免闪烁
+    setTimeout(() => {
+        container.style.opacity=1;
+    },0); // 先隐藏容器，等内容渲染完成后再显示，避免闪烁
 }
 
 
