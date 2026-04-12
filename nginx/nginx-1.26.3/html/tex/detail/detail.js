@@ -1,114 +1,11 @@
 
-
-// 请求拦截器
-axios.interceptors.request.use(
-  config => {
-      const token = localStorage.getItem('token');
-      if (token) {
-        config.headers['token'] = token;
-      }
-    console.log('✅ 请求发出：', config.url); // 关键调试
-      return config;
-  },
-  error => {
-    console.error('❌ 请求错误：', error);
-    return Promise.reject(error);
-  }
-);
-
-// 响应拦截器
-axios.interceptors.response.use(
-  response => {
-    const res = response;
-    console.log('✅ 请求成功：', response.config.url, res.data);
-
-    // 成功直接返回
-    if ([200, 0, 1].includes(res.data.code)) {
-      return res;
-    }
-
-    console.warn('⚠️ 业务错误：', res);
-    return Promise.reject(res);
-  },
-  error => {
-    console.error('❌ 响应异常：', error);
-
-    if (error.response?.status === 401) {
-      localStorage.removeItem('token');
-      localStorage.removeItem('id');
-      alert('登录已过期，请重新登录');
-      location.href = '/index.html';
-    }
-
-    return Promise.reject(error);
-  }
-);
-
-//解析url参数
-function getUrlParams() {
-    const params = {};
-    const search = window.location.search.slice(1); // 获取?后的部分
-    if (search) {
-        search.split('&').forEach(item => {
-            const [key, value] = item.split('=');
-            params[key] = decodeURIComponent(value || '');
-        });
-    }
-    return params;
-}
-
-const methodlist= ['GET', 'POST', 'PUT', 'DELETE'];
-
-const methodColors = {
-    'GET': '#09ff01',
-    'POST': '#ff9901',
-    'PUT': '#0ab9fe',
-    'DELETE': '#ff0101',
-    'DEFAULT': '#666'
-};
-
-const methodBackroundColors = {
-    'GET': '#5cfe5638',
-    'POST': '#f0b8633c',
-    'PUT': '#5fd0fc61',
-    'DELETE': '#f8656563',
-    'DEFAULT': '#433e3e53'
-};
-
-const requestDataType = {
-    'Query': 'query',
-    'None': null,
-    'FormData': 'formData',
-    'Json': 'json',
-    'Urlencoded': 'urlencoded',
-    'Header': 'header'
-};
-
-const debugFormConfig = [
-    {key: 'name',label: '参数名',className: 'param-name-input', placeholder: '添加参数'},
-    {key: 'value',label: '参数值',className: 'param-value-input', placeholder: '',marginLeft: '11rem'},
-    {key: 'type',label: '类型',className: 'type-input', placeholder: '',marginLeft: '13.4rem'},
-    {key: 'explaination',label: '说明',className: 'explain-input', placeholder: '',marginLeft: '3rem'}
-];
-
-const designFormConfig = [
-    {key: 'name',label: '参数名',className: 'param-name-input', placeholder: '添加参数'},
-    {key: 'type',label: '类型',className: 'type-input', placeholder: '',marginLeft: '11rem'},
-    {key: 'value',label: '示例值',className: 'param-value-input', placeholder: '',marginLeft: '2.75rem'},
-    {key: 'explaination',label: '说明',className: 'explain-input', placeholder: '',marginLeft: '13.5rem'}
-];
-
-const statusColors = {
-    0: '#3e9ae5',//开发中
-    1: '#e53e3e',//维护中
-    2: '#48bb78'//已发布
-};
-
-const statusText = {
-    0: '开发中',
-    1: '维护中',
-    2: '已发布'
-};
+import { request,getUrlParams } from "../config/AxiosConfig/AxiosConfig.js";
+import { methodlist,methodColors,methodBackroundColors } from "../config/MethodConfig.js";
+import { requestDataType,typeList} from "../config/TypeConfig.js";
+import { debugFormConfig,designFormConfig } from "../config/FormConfig.js";
+import { statusText,statusColors } from "../config/statusConfig.js";
+import { TreeNode } from "../module/BodyTree.js";
+import { getRandomId } from "../utils/RandomUtil.js";
 
 /**
  * 渲染接口列表
@@ -178,7 +75,7 @@ function renderApiList(apiData){
     renderTestWindow(apiData[0]);
 }
 
-/**
+/*
  * 渲染接口测试窗口框架
  * @param {单个api的数据} apiData 
  */
@@ -265,7 +162,7 @@ async function sendApiRequest(apiData,method){
     }
 
     try{
-        const axiosConfig = {
+        const requestConfig = {
             url: url,
             method: method,
             headers: {
@@ -273,10 +170,10 @@ async function sendApiRequest(apiData,method){
             }
         };
         if(method !== 'GET'&& method !== 'DELETE') {
-            axiosConfig.data = requestData; // 非GET、DELETE请求才有请求体
+            requestConfig.data = requestData; // 非GET、DELETE请求才有请求体
         }
 
-        const res= await axios(axiosConfig);
+        const res= await request(requestConfig);
         return res; // 根据后端返回结构调整
     }catch(err){
         throw new Error(`请求失败：${err.response?.data?.message || err.message}`);
@@ -382,7 +279,7 @@ function renderDebug(apiData,config){
         
         console.log(`接口${apiData.id}发送${apiData.requestMethod}请求到：${urlInput.value}`);
         //发送请求，告诉后端apiId为xxx的接口要发送请求了，在后端向指定接口发送请求
-        axios.post(`http://localhost/tex/api/send`,{
+        request.post(`http://localhost/tex/api/send`,{
             
             apiId: apiData.id,
             contentType: localStorage.getItem('contentType') || requestDataType.None // 发送当前选择的请求体格式，后端根据这个参数来区分请求体数据结构
@@ -678,7 +575,7 @@ async function sendRequest(param, id, dataType, method) {
                 name: param[0],
                 value: param[1],
                 type: param[2],
-                explaination: param[3],
+                explanation: param[3],
                 apiId: param[4],
                 formatType: dataType
             };
@@ -695,7 +592,7 @@ async function sendRequest(param, id, dataType, method) {
         }
 
         try{
-            const axiosConfig = {
+            const requestConfig = {
                 url: url,
                 method: method,
                 headers: {
@@ -703,15 +600,15 @@ async function sendRequest(param, id, dataType, method) {
                 }
             };
             if(method !== 'GET'&& method !== 'DELETE') {
-                axiosConfig.data = requestData; // 非GET、DELETE请求才有请求体
+                requestConfig.data = requestData; // 非GET、DELETE请求才有请求体
             }
             else if(method === 'GET'){
-                axiosConfig.params = {
+                requestConfig.params = {
                     formatType: dataType, // 传递数据类型，后端根据这个参数来区分返回哪个接口的参数列表
                 };
             }
 
-            const res= await axios(axiosConfig);
+            const res= await request(requestConfig);
             return res; // 根据后端返回结构调整
         }catch(err){
             throw new Error(`请求失败：${err.response?.data?.message || err.message}`);
@@ -758,7 +655,7 @@ function renderform(container,config){
             typeSpan.textContent = item.label;
             typeSpan.style.marginLeft=item.marginLeft;
             textli.appendChild(typeSpan);
-        }else if(item.key === 'explaination') {
+        }else if(item.key === 'explanation') {
             explainSpan.textContent = item.label;
             explainSpan.style.marginLeft=item.marginLeft;
             textli.appendChild(explainSpan);
@@ -809,8 +706,8 @@ function renderform(container,config){
             }
             valueInput.value=Data.value || '';
             typeInput.value=Data.type || '';
-            explainInput.value=Data.explaination || '';
-            formDataLi.dataset.id = Data.id; // 设置行dataset为id(返回的参数id)，方便后续修改
+            explainInput.value=Data.explanation || '';
+            formDataLi.dataset.id = Data.id;  //设置行dataset为id(返回的参数id)，方便后续修改
         }
 
         config.forEach(item => {
@@ -826,7 +723,7 @@ function renderform(container,config){
 
                 formDataLi.appendChild(typeInput);
 
-            }else if(item.key === 'explaination') {
+            }else if(item.key === 'explanation') {
 
                 formDataLi.appendChild(explainInput);
 
@@ -843,13 +740,17 @@ function renderform(container,config){
         
 
             if(keyInput.value.trim()||valueInput.value.trim()||typeInput.value.trim()||explainInput.value.trim()) {
-                
+                //存在输入框不为空
                 if (!keyInput.value.trim()&&(valueInput.value.trim()||typeInput.value.trim()||explainInput.value.trim())) {
+                    //参数名输入框为空
+
                     //console.log('参数名不能为空');
                     keyInput.style.outline = "1px solid #e53e3e";
                     keyInput.style.outlineOffset = "0";
                     keyInput.placeholder= "参数名";
                 }else{
+                    //参数名不为空
+
                     //恢复默认
                     keyInput.style.outline = '';
                     keyInput.placeholder= "添加参数";
@@ -857,7 +758,7 @@ function renderform(container,config){
 
                 //新增一个参数项
                 if(!formDataLi.dataset.id){
-                    // 只有当前行没有id，说明是新添加的行，才添加新的空行
+                    // 只有当前行没有id，说明是新输入的行，才添加新的空行。有id则不反复添加空行，保证始终只有一个空行
                     addFormDataItem(null); 
                 }
                 
@@ -953,7 +854,7 @@ function renderform(container,config){
         .then(res => {
         
             console.log('获取参数列表成功：', res);
-            const paramsList = res.data.data || [];
+            const paramsList = res.data.data || {};
 
             if(paramsList.length > 0) {
                 paramsList.forEach(param => {
@@ -962,7 +863,7 @@ function renderform(container,config){
                         name: param.name, 
                         value: param.value, 
                         type: param.type, 
-                        explaination: param.explaination, 
+                        explanation: param.explanation, 
                         id: param.id
                     }; //后端返回每个param参数的id，用来初始化
 
@@ -997,10 +898,15 @@ function renderform(container,config){
  */
 function renderDesign(apiData,config){
     
+    
+
+
     const container=document.getElementById('subWindow');
     container.innerHTML = "";
     container.className = "design-container";
-    // 复用调试窗口的接口基本信息展示部分，保持设计窗口和调试窗口风格一致
+    container.dataset.apiId=apiData.id;
+
+    // 复用调试窗口的接口基本信息展示部分（url，请求参数），保持设计窗口和调试窗口风格一致
     renderDebug(apiData,config); 
     const requestLine = document.getElementById('requestInfo');
 
@@ -1054,7 +960,7 @@ function renderDesign(apiData,config){
     const apiInChargeUser= document.createElement('input');
     apiInChargeUser.className = "api-incharge-user-input";
 
-    //TODO 返回数据中将责任人id转名字
+    //TODO apiData返回数据中将责任人id转名字
     apiInChargeUser.value = apiData.inChargeUser || '';
     apiInChargeUserDiv.appendChild(apiInChargeUserLabel);
     apiInChargeUserDiv.appendChild(apiInChargeUser);
@@ -1065,6 +971,10 @@ function renderDesign(apiData,config){
 
     container.insertBefore(apiInfoArea, requestLine); // 将接口信息区域插入到请求行上方
 
+    //发送GET请求，获取到响应数据
+    //如果value有数据就设置responseBodyContainer.dataset.responseId
+    //如果响应数据不为空，就把Info部分重新赋值
+    //如果为空就按默认的来
 
     // 响应格式设计区域
     const responseDesign = document.createElement('div');
@@ -1074,18 +984,389 @@ function renderDesign(apiData,config){
     responseTitle.className = "params-title";
     responseDesign.appendChild(responseTitle);
 
-    const responseContent = document.createElement('pre');
-    responseContent.className = "response-content";
-    // 格式化响应示例（模拟）
-    const responseExample = apiData.responseExample || {
-        code: 200,
-        msg: "请求成功",
-        data: {}
-    };
-    responseContent.textContent = JSON.stringify(responseExample, null, 2);
-    responseDesign.appendChild(responseContent);
+    const responseLabel=document.createElement('span');
+    responseLabel.className='response-label';
+    //暂时先限定只有200状态码
+    responseLabel.textContent='200 成功';
+    
+    responseDesign.appendChild(responseLabel);
+
+    
+
+    //响应信息栏
+    const responseInfoSpan=document.createElement('span');
+    responseInfoSpan.className='response-info-span';
+
+    //HTTP 状态码
+    const responseCodeSpan=document.createElement('span');
+    const responseCodeLabel=document.createElement('span');
+    const responseCode=document.createElement('input');
+
+    responseCodeSpan.className='response-code-span';
+    responseCodeLabel.className='response-code-label';
+    responseCode.className='response-code-input';
+
+    responseCodeLabel.textContent='HTTP状态码: '
+    responseCode.value='200';
+    
+    responseCodeSpan.appendChild(responseCodeLabel);
+    responseCodeSpan.appendChild(responseCode);
+    responseInfoSpan.appendChild(responseCodeSpan);
+
+    //返回状态名称
+    const responseNameSpan=document.createElement('span');
+    const responseNameLabel=document.createElement('span');
+    const responseName=document.createElement('input');
+
+    responseNameSpan.className='response-name-span';
+    responseNameLabel.className='response-name-label';
+    responseName.className='response-name-input';
+
+    responseNameLabel.textContent='名称: ';
+    responseName.value='成功';
+
+    responseNameSpan.appendChild(responseNameLabel);
+    responseNameSpan.appendChild(responseName);
+    responseInfoSpan.appendChild(responseNameSpan);
+
+    //内容格式
+    const responseContentTypeSpan=document.createElement('span');
+    const responseContentTypeLabel=document.createElement('span');
+    const responseContentType=document.createElement('input');
+
+    responseContentTypeSpan.className='response-content-type-span';
+    responseContentTypeLabel.className='response-content-type-label';
+    responseContentType.className='response-content-type-input';
+
+    responseContentTypeLabel.textContent='内容格式: ';
+    responseContentType.value='JSON';
+
+    responseContentTypeSpan.appendChild(responseContentTypeLabel);
+    responseContentTypeSpan.appendChild(responseContentType);
+    responseInfoSpan.appendChild(responseContentTypeSpan);
+
+    responseDesign.appendChild(responseInfoSpan);
+
+    //响应Body
+    
+    //响应Body容器
+    const responseBodyArea=document.createElement('div');
+    responseBodyArea.className='response-body-area';
+
+    const responseBodyTitle=document.createElement('span');
+    responseBodyTitle.className='response-body-title';
+    responseBodyTitle.textContent='Body';
+
+    responseBodyArea.appendChild(responseBodyTitle);
+
+    //Body节点树表格
+    const responseBodyContainer=document.createElement('div');
+    //设置容器的接口id，方便渲染表格时发送请求
+    responseBodyContainer.dataset.apiId=apiData.id;
+    responseBodyContainer.className='response-body-container';
+
+    renderBodyNodeForm(responseBodyContainer);
+    
+    responseBodyArea.appendChild(responseBodyContainer);
+
+    responseDesign.appendChild(responseBodyArea);
     container.appendChild(responseDesign);
 }
+
+//渲染Body节点树表格
+function renderBodyNodeForm(container){
+
+    
+    //console.log('渲染节点树表格...');
+    container.innerHTML = "";
+    container.style.opacity = '0';
+    container.style.transition = 'opacity 0.2s ease';
+
+    //创建Body节点表
+    const ul=document.createElement('ul');
+    ul.id='BodyNodeForm';
+
+
+    //添加节点项
+    function addFormDataItem(Data){
+        //如果是根节点初始化（Data为null）
+        //修改keyInput的value为"根节点",禁用该输入框
+        //修改类型为Object
+        //删除按钮隐藏
+        const is_root=(Data===null);
+        const apiId=container.dataset.apiId;
+
+        const formDataLi=document.createElement('li');
+        const keyInput=document.createElement('input');
+        const valueInput=document.createElement('input');
+        const typeInput=document.createElement('input');
+        const explainInput=document.createElement('input');
+
+        const addButton=document.createElement('button');
+        const removeButton=document.createElement('button');
+
+        //生成随机id
+        formDataLi.id=getRandomId();
+
+        keyInput.placeholder="字段名";
+        keyInput.className = 'param-name-input';
+        if(is_root){
+            keyInput.value="根节点";
+            keyInput.className='param-root';
+            //根节点字段名设置只读
+            keyInput.readOnly=true;
+        }
+
+        valueInput.placeholder='示例值';
+        valueInput.className = 'param-value-input';
+
+        typeInput.placeholder='类型';
+        typeInput.className = 'type-input';
+
+        if(is_root){
+            //根节点类型默认Object
+            typeInput.value=typeList.object;
+        }
+
+        explainInput.placeholder='说明';
+        explainInput.className = 'explain-input';
+        
+        addButton.innerHTML='<i class="bi bi-plus-circle"></i>';
+        addButton.className='add-btn';
+
+        removeButton.innerHTML = '<i class="bi bi-dash-lg"></i>';
+        removeButton.className = 'remove-btn';
+    
+        if(is_root){
+            //只有根节点的删除按钮是隐藏的
+            removeButton.style.visibility = 'hidden'; 
+        }
+
+
+        formDataLi.appendChild(keyInput);
+        formDataLi.appendChild(typeInput);
+        formDataLi.appendChild(valueInput);
+        formDataLi.appendChild(explainInput);
+        formDataLi.appendChild(addButton);
+        formDataLi.appendChild(removeButton);
+        
+        //Data除了包含输入框的内容，还要有父节点的id
+        if(!is_root){
+            //非根节点
+
+            //填充数据
+            keyInput.value=Data.name||'';
+            valueInput.value=Data.value||'';
+            typeInput.value=Data.type||'';
+            explainInput.value=Data.explanation||'';
+
+            
+            //获取父节点，在父节点的左内边距上再加一段边距，绑定父节点（绑定父节点id，因为父节点只会有一个，子节点可能有无数个）
+            const parent=document.getElementById(Data.parentId);
+            const input=parent.firstElementChild;
+            //console.log("父节点,id,is_root",parent,Data.parentId);
+            
+            
+            let margin=input.style.marginLeft || 0;
+            //添加左内边距同时，拉回，保证整体排版不变
+            margin=`${parseFloat(margin)+2}rem`;
+
+            keyInput.style.marginLeft=margin;
+            formDataLi.dataset.parentId=Data.parentId;
+
+        }else{
+            //如果是根节点，初始化发送创建请求
+            const url=request.baseURL+`/response/add/${apiId}`;
+            //获取表格转Json数据
+
+            //构建请求体
+
+            //发送POST请求
+        }
+
+        
+
+        //监听鼠标离开事件
+        formDataLi.addEventListener('focusout', function(e) {
+            // 只有当离开的元素是输入框时才进行验证，避免过早验证
+            if(e.target.tagName.toLowerCase() != 'input') {
+                return;
+            }
+        
+
+            if(keyInput.value.trim()||valueInput.value.trim()||typeInput.value.trim()||explainInput.value.trim()) {
+                //有一个输入不为空，即输入了任一输入框
+
+                if (!keyInput.value.trim()&&(valueInput.value.trim()||typeInput.value.trim()||explainInput.value.trim())) {
+                    //参数名输入框为空:
+                    //console.log('参数名不能为空');
+                    keyInput.style.outline = "1px solid #e53e3e";
+                    keyInput.style.outlineOffset = "0";
+                    keyInput.placeholder= "参数名";
+                }else{
+                    //参数名不为空:
+                    //恢复默认
+                    keyInput.style.outline = '';
+                    keyInput.placeholder= "添加参数";
+                }
+                
+
+                //发送请求（只修改，在初始化根节点的时候发送创建请求）
+                // 获取当前接口id
+                const apiId= document.getElementById('requestArea').dataset.apiId; 
+
+                //单条数据发生变化=>将整张表打包成Json字符串发送请求：
+
+                //按照层级构建Json数据，遍历所有列表项，如果有parentId，就在对应父节点id的Json节点push子节点。
+
+                //只发送修改请求
+            }
+        });
+        
+        ul.appendChild(formDataLi);
+
+        //updateRemoveButtons(); // 添加新项后更新删除按钮显示
+        
+        removeButton.dataset.confirmed = 'false'; // 初始化删除确认状态
+        // 删除按钮点击事件
+        removeButton.onclick = function(e){
+            e.stopPropagation(); // 阻止事件冒泡，避免触发li的点击事件
+            console.log('点击删除按钮，当前确认状态：', removeButton.dataset.confirmed);
+            if(removeButton.dataset.confirmed === 'true') {
+                console.log('删除参数项，id：', formDataLi.dataset.id);
+                // 如果该项有id，说明已经保存过，需要发送删除请求
+                if(formDataLi.dataset.id) {
+                    const dataType=container.dataset.type;
+                    sendRequest(null, formDataLi.dataset.id, dataType, 'DELETE')
+                }
+                const formatList=ul.querySelectorAll('li:not(:first-child)');
+                if(formatList.length > 0) {
+
+                    //如果是有子节点，递归删除所有子节点
+
+
+                    ul.removeChild(formDataLi);
+                }else{
+
+                    // 只有一个参数项时，清空输入框内容但不删除
+                    formDataLi.querySelectorAll('input').forEach(input => input.value = '');
+                    removeButton.dataset.confirmed = 'false'; // 重置删除确认状态
+                }
+                // 删除后重新更新删除按钮显示
+                //updateRemoveButtons();
+            }else{
+                //第一次点击，进入确认状态
+                removeButton.classList.add('active');
+                setTimeout(() => {
+                removeButton.innerHTML = '<i class="bi bi-x-lg"></i>';
+                }, 200);
+                removeButton.dataset.confirmed = 'true';
+
+            }
+        };
+        removeButton.addEventListener('mouseout', function() {
+            //如果点击一次后移开鼠标，则取消删除确认状态，避免误操作
+            this.classList.remove('active');
+            this.dataset.confirmed = false;
+            setTimeout(() => {
+            this.innerHTML = '<i class="bi bi-dash-lg"></i>';
+            }, 200);
+        });
+
+        //添加按钮点击事件
+        addButton.onclick = function(e){
+            e.stopPropagation();
+            //检查类型
+            if(typeInput.value==typeList.object){
+                //console.log("object, parentId:",formDataLi.id);
+                //如果是Object就添加子节点，自己作为其父节点
+                addFormDataItem({parentId:formDataLi.id});
+            }else{
+                //如果不是，就添加相邻节点，父节点作为其父节点
+                addFormDataItem({parentId:formDataLi.dataset.parentId});
+            }
+        }
+
+    }
+
+    if(!container.dataset.responseId){
+        //如果没有创建过根节点，就初始化
+        addFormDataItem(null);
+    }
+
+    
+    try{
+        //根据参数类型和接口id获取已有参数列表
+        const requestDataType = container.dataset.type; // 从容器dataset获取参数类型，之前点击不同参数类型时已经设置好了
+        const apiId= document.getElementById('subWindow').dataset.apiId;// 获取当前接口id
+
+        sendRequest(null, apiId, requestDataType, 'GET') // 获取已有参数列表
+        .then(res => {
+            console.log('获取参数列表成功：', res);
+            const param = res.data.data || {};
+
+            container.dataset.responseId=param.id;
+            const jsonStr=param.value;
+            //拆解json，获得参数列表，每一条要包含key,type,value,explanation,parentId
+            
+            //遍历，循环建表
+            addFormDataItem(paramData); // 传入参数数据，预填充输入框
+                
+        })
+    }catch(err){
+
+        console.error('获取参数列表失败详情：', err);
+        const errMsg = err.response?.data?.msg || err.message || '网络错误/后端接口未响应';
+
+        alert('获取参数列表失败：' + errMsg);
+    };
+
+    
+
+    container.appendChild(ul);
+    setTimeout(() => {
+        container.style.opacity=1;
+    },0); // 先隐藏容器，等内容渲染完成后再显示，避免闪烁
+}
+
+/*
+//将表格转为树
+function tableToTree(ul){
+    //存储键值对：id : 节点
+    let map={};
+    ul.querySelectorAll('li').forEach(li=>{
+
+        const data={
+            id:li.id,
+            key:li.keyInput.value,
+            type:li.typeInput.value,
+            value:li.valueInput.value,
+            explanation:li.explainInput,
+        }
+        let node=new TreeNode(data)
+        map[li.id]=node;
+        //从上往下，建立子节点的时候一定有父节点了（除根节点）
+        if(li.parentId){
+            let parent=map[li.parentId];
+            parent.addChild(node);
+        }
+    })
+    //返回id-节点映射
+    return map;
+}
+*/
+
+//把树转为JsonString
+function treeToJsonString(root){
+    return JSON.stringify(TreeNode.toJson(root));
+}
+
+//把jsonString转为树(映射)
+function jsonStringToTree(jsonString){
+    return TreeNode.convertFromJson(jsonString);
+}
+
+
 
 /**
  * 渲染文档预览窗口（美化补全）
@@ -1190,7 +1471,7 @@ window.onload = async function () {
     //发送请求，获取接口列表 id：项目id
     try{
     console.log("准备发送请求..");
-    const res= await axios.get(`http://localhost/tex/api/list/${id}`,{
+    const res= await request.get(`http://localhost/tex/api/list/${id}`,{
         headers: {
                 'token': localStorage.getItem('token') 
             }
