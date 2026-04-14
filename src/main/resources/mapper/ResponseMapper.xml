@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.tex.texapi.server.mapper.ResponseMapper">
+
+
+    <insert id="add" useGeneratedKeys="true" keyProperty="id">
+        insert into response (name, response_code, content_type, response_body, api_id)
+                            VALUES
+                        (#{name},#{responseCode},#{contentType},#{responseBody},#{apiId});
+
+    </insert>
+</mapper>
