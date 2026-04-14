@@ -1,6 +1,6 @@
-import { typeList, typeExampleValue } from "../config/TypeConfig";
-import { getRandomId } from "../utils/RandomUtil";
-import { NodeMapManager } from "./NodeMapManager";
+import { typeList, typeExampleValue } from "../config/TypeConfig.js";
+import { getRandomId } from "../utils/RandomUtil.js";
+import { NodeMapManager } from "./NodeMapManager.js";
 
 const nodeMap=NodeMapManager.getInstance();
 
@@ -55,8 +55,8 @@ class TreeNode {
   // 递归删除所有子节点
   deleteAllChildren() {
 
-    // 递归删除子节点的子节点
-    this.children.forEach(child => {
+    // 复制子节点列表，避免在遍历时修改原数组导致跳过元素
+    [...this.children].forEach(child => {
       child.deleteAllChildren();
       this.deleteChild(child.id);
     });
@@ -110,7 +110,7 @@ class TreeNode {
         obj[child.key] = child.value ?? typeExampleValue[child.type];
       } else {
         // 对象类型递归构建
-        obj[child.key] = TreeNode.toKeyValueJson(child);
+        obj[child.key] = this.toKeyValueJson(child);
       }
     });
 
@@ -156,7 +156,7 @@ class TreeNode {
       } else {
         obj[child.key] = {
           ...baseAttr,
-          value: TreeNode.toFullAttrJson(child)
+          value: this.toFullAttrJson(child)
         };
       }
     });
@@ -169,33 +169,42 @@ class TreeNode {
   //将JSON对象转为树(id : node的映射表)
   static convertFromJson(json){
     
+    // if (!json) return null;
+    // // 允许传入字符串或对象
+    // const data = typeof json === "string" ? JSON.parse(json) : json;
+    // if (!data || typeof data !== "object") return null;
 
+    const root = new TreeNode({
+      key: "根节点",
+      type: typeList.object,
+      value: null,
+      explanation: "",
+    });
 
-    function buildTree(data){
-        if(!data||typeof data !== 'object')return;
+    const buildTree = (parent, data) => {
+      if (!data || typeof data !== "object") return;
 
-        for(const [key,item] of Object.entries(data)){
-            const { type,value,explanation } = item;
+      Object.entries(data).forEach(([key, item]) => {
+        if (!item) return;
 
-            const node=new TreeNode({
-                key : key,
-                type : type,
-                value : type == typeList.object ? null : value,
-                explanation : explanation
-            })
+        const node = new TreeNode({
+          key: key,
+          type: item.type || typeList.string,
+          value: item.type === typeList.object ? null : item.value,
+          explanation: item.explanation || "",
+        });
 
+        parent.addChild(node);
 
-            if(type == typeList.object){
-                //继续构建
-                node.addChild(buildTree(node,value));
-            }
-
-            return node;
+        // 递归构建子对象
+        if (node.type === typeList.object && item.value) {
+          buildTree(node, item.value);
         }
+      });
+    };
 
-    }
-    
-    return buildTree(json);
+    buildTree(root, json);
+    return root;
   }
 
 

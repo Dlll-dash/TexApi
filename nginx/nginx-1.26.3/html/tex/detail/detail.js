@@ -5,7 +5,9 @@ import { requestDataType,typeList} from "../config/TypeConfig.js";
 import { debugFormConfig,designFormConfig } from "../config/FormConfig.js";
 import { statusText,statusColors } from "../config/statusConfig.js";
 import { TreeNode } from "../module/BodyTree.js";
-import { getRandomId } from "../utils/RandomUtil.js";
+import { NodeMapManager } from "../module/NodeMapManager.js";
+
+const nodeMap=NodeMapManager.getInstance();
 
 /**
  * 渲染接口列表
@@ -908,7 +910,8 @@ function renderDesign(apiData,config){
 
     // 复用调试窗口的接口基本信息展示部分（url，请求参数），保持设计窗口和调试窗口风格一致
     renderDebug(apiData,config); 
-    const requestLine = document.getElementById('requestInfo');
+    const requestInfo = document.getElementById('requestInfo');
+    const requestLine = requestInfo;
 
     const apiInfoArea = document.createElement('div');
     apiInfoArea.className = "api-info-area";
@@ -971,10 +974,7 @@ function renderDesign(apiData,config){
 
     container.insertBefore(apiInfoArea, requestLine); // 将接口信息区域插入到请求行上方
 
-    //发送GET请求，获取到响应数据
-    //如果value有数据就设置responseBodyContainer.dataset.responseId
-    //如果响应数据不为空，就把Info部分重新赋值
-    //如果为空就按默认的来
+   
 
     // 响应格式设计区域
     const responseDesign = document.createElement('div');
@@ -1063,22 +1063,97 @@ function renderDesign(apiData,config){
     const responseBodyContainer=document.createElement('div');
     //设置容器的接口id，方便渲染表格时发送请求
     responseBodyContainer.dataset.apiId=apiData.id;
+    //console.log('Respons容器接口id：', responseBodyContainer.dataset.apiId);
     responseBodyContainer.className='response-body-container';
 
-    renderBodyNodeForm(responseBodyContainer);
+     //发送GET请求，获取到响应数据
+    request.get(`/response/list/${apiData.id}`)
+    .then(response => {
+
+        if(response.data && response.data.data && response.data.data.length > 0) {
+            const responseData = response.data.data[0];
+            console.log('获取响应数据成功：', responseData);
+            //将responseId存储在responseBodyContainer的dataset中，方便后续更新
+            const responseBodyContainer = document.querySelector('.response-body-container');
+            if(responseBodyContainer) {
+                
+                responseBodyContainer.dataset.responseId = responseData.id;
+                //预填充响应信息
+                const responseCodeInput = document.querySelector('.response-code-input');
+                const responseNameInput = document.querySelector('.response-name-input');
+                const responseContentTypeInput = document.querySelector('.response-content-type-input');
+                if(responseCodeInput) responseCodeInput.value = responseData.responseCode || '';
+                if(responseNameInput) responseNameInput.value = responseData.responseName || '';
+                if(responseContentTypeInput) responseContentTypeInput.value = responseData.contentType || '';
+                
+                //在异步内执行，避免还没拿到数据就渲染表格
+                renderBodyNodeForm(responseBodyContainer);
+            }
+        }else{
+            //如果没有创建过根节点，就初始化
+            const root=new TreeNode({
+                key: '根节点',
+                type: typeList.object,
+                value: null,
+                explanation: null
+            });
+            console.log('初始化根节点：', root);
+
+            //如果是根节点，初始化发送创建请求
+            const url=`/response/add`;
+            //获取表格转Json数据
+            const responseCodeInput = responseCode.value.trim() ? responseCode : null;
+            const responseNameInput = responseName.value.trim() ? responseName : null;
+            const responseContentTypeInput = responseContentType.value.trim() ? responseContentType : null;
+            
+            const jsonStr=treeToJsonString(root);
+            console.log('转换为JSON字符串：', jsonStr);
+
+            //构建请求体
+            const requestBodyData = {
+                apiId: apiData.id,
+                responseCode: responseCodeInput ? responseCodeInput.value.trim() : '',
+                name: responseNameInput ? responseNameInput.value.trim() : '',
+                contentType: responseContentTypeInput ? responseContentTypeInput.value.trim() : '',
+                body: JSON.stringify(jsonStr)
+            };
+
+            //发送POST请求
+            request.post(url, requestBodyData)
+            .then(res => {
+                console.log('根节点创建成功：', res,'responseId:', res.data.data.id);
+                //将返回的responseId存储在容器dataset中，方便后续更新
+                responseBodyContainer.dataset.responseId=res.data.data.id; 
+
+                //在异步内执行，避免还没拿到数据就渲染表格
+                renderBodyNodeForm(responseBodyContainer);
+            })
+        }
+    })
+    //console.log('存储responseId到dataset:',responseBodyContainer.dataset.responseId);
+    
     
     responseBodyArea.appendChild(responseBodyContainer);
 
     responseDesign.appendChild(responseBodyArea);
     container.appendChild(responseDesign);
+
 }
+
 
 //渲染Body节点树表格
 function renderBodyNodeForm(container){
 
     
-    //console.log('渲染节点树表格...');
+    console.log('渲染节点树表格...');
+    const apiId=container.dataset.apiId;
+    const responseId=container.dataset.responseId;
     container.innerHTML = "";
+
+    container.dataset.apiId=apiId; // 确保接口id在dataset中，后续发送请求时可以用到
+    container.dataset.responseId=responseId; // 确保响应id在dataset中，后续发送请求时可以用到
+    console.log('apiId:', container.dataset.apiId, 'responseId:', container.dataset.responseId);
+
     container.style.opacity = '0';
     container.style.transition = 'opacity 0.2s ease';
 
@@ -1089,11 +1164,14 @@ function renderBodyNodeForm(container){
 
     //添加节点项
     function addFormDataItem(Data){
-        //如果是根节点初始化（Data为null）
+        //如果是根节点初始化（Data.parentId为null）
         //修改keyInput的value为"根节点",禁用该输入框
         //修改类型为Object
         //删除按钮隐藏
-        const is_root=(Data===null);
+
+        Data = Data ?? {};
+        //没有父节点就是根节点
+        const is_root=(!Data.parentId);
         const apiId=container.dataset.apiId;
 
         const formDataLi=document.createElement('li');
@@ -1106,12 +1184,12 @@ function renderBodyNodeForm(container){
         const removeButton=document.createElement('button');
 
         //生成随机id
-        formDataLi.id=getRandomId();
+        formDataLi.id=Data.id;
 
         keyInput.placeholder="字段名";
         keyInput.className = 'param-name-input';
         if(is_root){
-            keyInput.value="根节点";
+            keyInput.value=Data.key;
             keyInput.className='param-root';
             //根节点字段名设置只读
             keyInput.readOnly=true;
@@ -1155,7 +1233,7 @@ function renderBodyNodeForm(container){
             //非根节点
 
             //填充数据
-            keyInput.value=Data.name||'';
+            keyInput.value=Data.key||'';
             valueInput.value=Data.value||'';
             typeInput.value=Data.type||'';
             explainInput.value=Data.explanation||'';
@@ -1174,14 +1252,6 @@ function renderBodyNodeForm(container){
             keyInput.style.marginLeft=margin;
             formDataLi.dataset.parentId=Data.parentId;
 
-        }else{
-            //如果是根节点，初始化发送创建请求
-            const url=request.baseURL+`/response/add/${apiId}`;
-            //获取表格转Json数据
-
-            //构建请求体
-
-            //发送POST请求
         }
 
         
@@ -1211,14 +1281,15 @@ function renderBodyNodeForm(container){
                 }
                 
 
-                //发送请求（只修改，在初始化根节点的时候发送创建请求）
-                // 获取当前接口id
-                const apiId= document.getElementById('requestArea').dataset.apiId; 
-
-                //单条数据发生变化=>将整张表打包成Json字符串发送请求：
-
-                //按照层级构建Json数据，遍历所有列表项，如果有parentId，就在对应父节点id的Json节点push子节点。
-
+                //发送请求（只修改body，在初始化根节点的时候发送创建请求）
+                request.put(`/response/update/${apiId}`, {
+                    
+                    contentType: document.querySelector('.response-content-type-input').value.trim(),
+                    body: treeToJsonString(nodeMap.get(formDataLi.id))
+                })
+                .then(res => {
+                    console.log('参数更新成功：', res);
+                }) 
                 //只发送修改请求
             }
         });
@@ -1239,21 +1310,19 @@ function renderBodyNodeForm(container){
                     const dataType=container.dataset.type;
                     sendRequest(null, formDataLi.dataset.id, dataType, 'DELETE')
                 }
-                const formatList=ul.querySelectorAll('li:not(:first-child)');
-                if(formatList.length > 0) {
+                
 
-                    //如果是有子节点，递归删除所有子节点
+                //如果是有子节点，递归删除所有子节点
+                const node=nodeMap.get(formDataLi.id);
+                
 
+                ul.removeChild(formDataLi);
 
-                    ul.removeChild(formDataLi);
-                }else{
-
-                    // 只有一个参数项时，清空输入框内容但不删除
-                    formDataLi.querySelectorAll('input').forEach(input => input.value = '');
-                    removeButton.dataset.confirmed = 'false'; // 重置删除确认状态
+                
+                if(node) {
+                    node.deleteAllChildren();
                 }
-                // 删除后重新更新删除按钮显示
-                //updateRemoveButtons();
+                
             }else{
                 //第一次点击，进入确认状态
                 removeButton.classList.add('active');
@@ -1282,36 +1351,48 @@ function renderBodyNodeForm(container){
                 //如果是Object就添加子节点，自己作为其父节点
                 addFormDataItem({parentId:formDataLi.id});
             }else{
-                //如果不是，就添加相邻节点，父节点作为其父节点
+                //如果不是，就添加相邻节点，自己的父节点作为其父节点
                 addFormDataItem({parentId:formDataLi.dataset.parentId});
             }
         }
 
     }
 
-    if(!container.dataset.responseId){
-        //如果没有创建过根节点，就初始化
-        addFormDataItem(null);
-    }
+    
 
     
     try{
         //根据参数类型和接口id获取已有参数列表
-        const requestDataType = container.dataset.type; // 从容器dataset获取参数类型，之前点击不同参数类型时已经设置好了
-        const apiId= document.getElementById('subWindow').dataset.apiId;// 获取当前接口id
 
-        sendRequest(null, apiId, requestDataType, 'GET') // 获取已有参数列表
+        const apiId= document.getElementById('subWindow').dataset.apiId;// 获取当前接口id
+        
+        
+        request.get(`/response/getResponse/${container.dataset.responseId}`)
         .then(res => {
             console.log('获取参数列表成功：', res);
             const param = res.data.data || {};
 
-            container.dataset.responseId=param.id;
             const jsonStr=param.value;
-            //拆解json，获得参数列表，每一条要包含key,type,value,explanation,parentId
+            //拆解json，获得参数列表，每一条要包含key,type,value,explanation
+            const root=TreeNode.convertFromJson(jsonStr);
+
+            //递归函数
+            function buildForm(parent,root){
+                if(!root) return;
+                const data=root.toPlainObject();
             
-            //遍历，循环建表
-            addFormDataItem(paramData); // 传入参数数据，预填充输入框
-                
+                console.log('parent:', parent, 'root:', root);
+                if(parent){
+                    data.parentId=parent.id;
+                }
+
+                addFormDataItem(data);
+                root.children.forEach(child=>{
+                    buildForm(root,child);
+                })
+
+            }
+            buildForm(null,root);
         })
     }catch(err){
 
@@ -1329,41 +1410,13 @@ function renderBodyNodeForm(container){
     },0); // 先隐藏容器，等内容渲染完成后再显示，避免闪烁
 }
 
-/*
-//将表格转为树
-function tableToTree(ul){
-    //存储键值对：id : 节点
-    let map={};
-    ul.querySelectorAll('li').forEach(li=>{
 
-        const data={
-            id:li.id,
-            key:li.keyInput.value,
-            type:li.typeInput.value,
-            value:li.valueInput.value,
-            explanation:li.explainInput,
-        }
-        let node=new TreeNode(data)
-        map[li.id]=node;
-        //从上往下，建立子节点的时候一定有父节点了（除根节点）
-        if(li.parentId){
-            let parent=map[li.parentId];
-            parent.addChild(node);
-        }
-    })
-    //返回id-节点映射
-    return map;
-}
-*/
+
+
 
 //把树转为JsonString
 function treeToJsonString(root){
-    return JSON.stringify(TreeNode.toJson(root));
-}
-
-//把jsonString转为树(映射)
-function jsonStringToTree(jsonString){
-    return TreeNode.convertFromJson(jsonString);
+    return JSON.stringify(TreeNode.toFullAttrJson(root));
 }
 
 
