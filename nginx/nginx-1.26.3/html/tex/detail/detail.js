@@ -1199,6 +1199,10 @@ function renderBodyNodeForm(container){
 
         valueInput.placeholder='示例值';
         valueInput.className = 'param-value-input';
+        if(is_root){
+            //根节点禁用value输入框，因为Object类型不需要value值
+            valueInput.readOnly=true;
+        }
 
         typeInput.placeholder='类型';
         typeInput.className = 'type-input';
@@ -1279,6 +1283,12 @@ function renderBodyNodeForm(container){
                 return;
             }
         
+            if(typeInput.value.trim()===typeList.object){
+                //如果类型是Object,并且禁用value输入框，因为Object类型不需要value值
+                valueInput.readOnly=true;
+            }else{
+                valueInput.readOnly=false;
+            }
 
             if(keyInput.value.trim()||valueInput.value.trim()||typeInput.value.trim()||explainInput.value.trim()) {
                 //有一个输入不为空，即输入了任一输入框
@@ -1315,7 +1325,7 @@ function renderBodyNodeForm(container){
                     return;
                 }
                 //发送请求（只修改body，在初始化根节点的时候发送创建请求）
-                 console.log('当前树结构：', nodeMap.get(container.dataset.rootId));
+                //console.log('当前树结构：', nodeMap.get(container.dataset.rootId));
                 // console.log('转换为JSON字符串：', treeToJsonString(nodeMap.get(container.dataset.rootId)));
                 // console.log('1293 responseId:', container.dataset.responseId);
                 const data= treeToJsonString(nodeMap.get(container.dataset.rootId));
@@ -1327,7 +1337,7 @@ function renderBodyNodeForm(container){
                     "contentType": null,
                     "responseCode": null
                 }
-                console.log('1298 请求体数据：', requestBodyData);
+                //console.log('1298 请求体数据：', requestBodyData);
                 request.put(`/response/update`, 
                     requestBodyData
                 )
@@ -1414,9 +1424,9 @@ function renderBodyNodeForm(container){
         request.get(`/response/getResponse/${container.dataset.responseId}`)
         .then(res => {
             console.log('获取参数列表成功：', res);
-            const param = res.data.data || {};
+            const data = res.data.data || {};
 
-            const jsonStr=param.responseBody;
+            const jsonStr=data.responseBody;
             console.log('获取到的json：', JSON.parse(jsonStr));
             //拆解json，获得参数列表，每一条要包含key,type,value,explanation
             const root=TreeNode.convertFromJson(JSON.parse(jsonStr));
