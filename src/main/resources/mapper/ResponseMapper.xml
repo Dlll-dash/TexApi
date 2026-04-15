@@ -10,4 +10,20 @@
                         (#{name},#{responseCode},#{contentType},#{responseBody},#{apiId});
 
     </insert>
+    <update id="update">
+        update response set
+                <if test="name!=null and name!='' ">
+                    name = #{name},
+                </if>
+                <if test="responseCode!=null and responseCode!=''">
+                    response_code = #{responseCode},
+                </if>
+                <if test="contentType!=null and contentType!=''">
+                    content_type = #{contentType},
+                </if>
+                <!-- 因为响应体的可以为空，所以修改成什么值就改成什么值就行，不判null -->
+                response_body = #{responseBody}
+
+        where id = #{id}
+    </update>
 </mapper>

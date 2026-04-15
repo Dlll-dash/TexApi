@@ -48,11 +48,24 @@ public class ResponseServiceImpl implements ResponseService {
         return addResponseVO;
     }
 
+    /**
+     * 获取响应参数列表
+     * @param apiId
+     * @return
+     */
     @Override
     public List list(Long apiId) {
 
         List<ResponseListVO> list= responseMapper.getListByApiId(apiId);
         return list;
 
+    }
+
+    /**
+     * 更新响应参数
+     * @param response
+     */
+    public void update(Response response) {
+        responseMapper.update(response);
     }
 }

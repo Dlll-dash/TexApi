@@ -29,4 +29,7 @@ public interface ResponseMapper {
      */
     @Select("select id,name,response_code,content_type from response where api_id=#{apiId}")
     List<ResponseListVO> getListByApiId(Long apiId);
+
+
+    void update(Response response);
 }

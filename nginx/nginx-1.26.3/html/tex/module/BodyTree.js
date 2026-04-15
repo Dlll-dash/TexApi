@@ -20,6 +20,8 @@ class TreeNode {
 
     //存入映射
     nodeMap.set(this.id,this);
+
+    console.log('加入Map映射：', this);
   }
 
   // 添加子节点
@@ -80,7 +82,7 @@ class TreeNode {
   // 提取当前节点属性
   toPlainObject() {
     return {
-      id: this.id,
+      //id: this.id,
       key: this.key,
       type: this.type,
       value: this.value,
@@ -180,7 +182,7 @@ class TreeNode {
       value: null,
       explanation: "",
     });
-
+    nodeMap.set(root.id,root); //存入Map映射
     const buildTree = (parent, data) => {
       if (!data || typeof data !== "object") return;
 
@@ -193,7 +195,7 @@ class TreeNode {
           value: item.type === typeList.object ? null : item.value,
           explanation: item.explanation || "",
         });
-
+        nodeMap.set(node.id,node); //存入Map映射
         parent.addChild(node);
 
         // 递归构建子对象

@@ -1124,7 +1124,7 @@ function renderDesign(apiData,config){
                 console.log('根节点创建成功：', res,'responseId:', res.data.data.id);
                 //将返回的responseId存储在容器dataset中，方便后续更新
                 responseBodyContainer.dataset.responseId=res.data.data.id; 
-
+                responseBodyContainer.dataset.rootId=root.id;
                 //在异步内执行，避免还没拿到数据就渲染表格
                 renderBodyNodeForm(responseBodyContainer);
             })
@@ -1148,11 +1148,13 @@ function renderBodyNodeForm(container){
     console.log('渲染节点树表格...');
     const apiId=container.dataset.apiId;
     const responseId=container.dataset.responseId;
+    const rootId=container.dataset.rootId;
     container.innerHTML = "";
 
     container.dataset.apiId=apiId; // 确保接口id在dataset中，后续发送请求时可以用到
     container.dataset.responseId=responseId; // 确保响应id在dataset中，后续发送请求时可以用到
-    console.log('apiId:', container.dataset.apiId, 'responseId:', container.dataset.responseId);
+    container.dataset.rootId=rootId; // 确保根节点id在dataset中，后续发送请求时可以用到
+    console.log('apiId:', container.dataset.apiId, 'responseId:', container.dataset.responseId,'rootId:', container.dataset.rootId);
 
     container.style.opacity = '0';
     container.style.transition = 'opacity 0.2s ease';
@@ -1252,6 +1254,20 @@ function renderBodyNodeForm(container){
             keyInput.style.marginLeft=margin;
             formDataLi.dataset.parentId=Data.parentId;
 
+            //在树结构中找到父节点，添加当前节点为父节点的子节点
+            const parentNode=nodeMap.get(Data.parentId);
+            if(parentNode) {
+                const newNode = new TreeNode({
+                    key: Data.key,
+                    type: Data.type,
+                    value: Data.value,
+                    explanation: Data.explanation,
+                });
+                parentNode.addChild(newNode);
+                formDataLi.id=newNode.id; // 将生成的节点id赋值给表单行的id，方便后续操作
+            } else {
+                console.error('父节点未找到，无法添加子节点，父节点id：', Data.parentId);
+            }
         }
 
         
@@ -1279,14 +1295,42 @@ function renderBodyNodeForm(container){
                     keyInput.style.outline = '';
                     keyInput.placeholder= "添加参数";
                 }
-                
+                const node=nodeMap.get(formDataLi.id);
+                if(node) {
+                    node.set({
+                        key: keyInput.value.trim(),
+                        value: valueInput.value.trim(),
+                        type: typeInput.value.trim(),
+                        explanation: explainInput.value.trim()
+                    });
+                    console.log('更新节点数据：', node);
+                }else{
+                    console.error('节点未找到，无法更新数据');
+                    return;
+                }
 
+                
+                if(!nodeMap.get(container.dataset.rootId)){
+                    console.error('根节点未找到，无法发送请求');
+                    return;
+                }
                 //发送请求（只修改body，在初始化根节点的时候发送创建请求）
-                request.put(`/response/update/${apiId}`, {
-                    
-                    contentType: document.querySelector('.response-content-type-input').value.trim(),
-                    body: treeToJsonString(nodeMap.get(formDataLi.id))
-                })
+                 console.log('当前树结构：', nodeMap.get(container.dataset.rootId));
+                // console.log('转换为JSON字符串：', treeToJsonString(nodeMap.get(container.dataset.rootId)));
+                // console.log('1293 responseId:', container.dataset.responseId);
+                const data= treeToJsonString(nodeMap.get(container.dataset.rootId));
+                const requestBodyData = {
+                    "id": responseId, //如果有id说明是修改，没有id说明是添加
+                    "apiId": apiId,
+                    "responseBody": data,
+                    "name": null,
+                    "contentType": null,
+                    "responseCode": null
+                }
+                console.log('1298 请求体数据：', requestBodyData);
+                request.put(`/response/update`, 
+                    requestBodyData
+                )
                 .then(res => {
                     console.log('参数更新成功：', res);
                 }) 
@@ -1375,12 +1419,12 @@ function renderBodyNodeForm(container){
             const jsonStr=param.value;
             //拆解json，获得参数列表，每一条要包含key,type,value,explanation
             const root=TreeNode.convertFromJson(jsonStr);
-
+            container.dataset.rootId=root.id;
             //递归函数
             function buildForm(parent,root){
                 if(!root) return;
                 const data=root.toPlainObject();
-            
+                data.id=root.id;
                 console.log('parent:', parent, 'root:', root);
                 if(parent){
                     data.parentId=parent.id;

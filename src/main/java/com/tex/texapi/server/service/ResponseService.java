@@ -1,6 +1,7 @@
 package com.tex.texapi.server.service;
 
 import com.tex.texapi.pojo.dto.AddResponseDTO;
+import com.tex.texapi.pojo.entity.Response;
 import com.tex.texapi.pojo.vo.AddResponseVO;
 import com.tex.texapi.pojo.vo.ResponseVO;
 
@@ -29,4 +30,10 @@ public interface ResponseService {
      * @return
      */
     List list(Long apiId);
+
+    /**
+     * 更新响应参数
+     * @param response
+     */
+    void update(Response response);
 }
