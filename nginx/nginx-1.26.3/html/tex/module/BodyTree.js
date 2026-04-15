@@ -170,7 +170,7 @@ class TreeNode {
 
   //将JSON对象转为树(id : node的映射表)
   static convertFromJson(json){
-    
+    console.log('转换JSON为树，输入数据：', json);
     // if (!json) return null;
     // // 允许传入字符串或对象
     // const data = typeof json === "string" ? JSON.parse(json) : json;
@@ -187,7 +187,7 @@ class TreeNode {
       if (!data || typeof data !== "object") return;
 
       Object.entries(data).forEach(([key, item]) => {
-        if (!item) return;
+        //if (!item) return;
 
         const node = new TreeNode({
           key: key,

@@ -1416,9 +1416,10 @@ function renderBodyNodeForm(container){
             console.log('获取参数列表成功：', res);
             const param = res.data.data || {};
 
-            const jsonStr=param.value;
+            const jsonStr=param.responseBody;
+            console.log('获取到的json：', JSON.parse(jsonStr));
             //拆解json，获得参数列表，每一条要包含key,type,value,explanation
-            const root=TreeNode.convertFromJson(jsonStr);
+            const root=TreeNode.convertFromJson(JSON.parse(jsonStr));
             container.dataset.rootId=root.id;
             //递归函数
             function buildForm(parent,root){
