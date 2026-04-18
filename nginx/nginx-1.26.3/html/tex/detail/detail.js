@@ -985,12 +985,18 @@ function renderDesign(apiData,config){
     responseTitle.className = "params-title";
     responseDesign.appendChild(responseTitle);
 
+    const responseLabelContainer=document.createElement('div');
+    responseLabelContainer.className='response-label-container';
     const responseLabel=document.createElement('span');
     responseLabel.className='response-label';
+    const responseFillLabel=document.createElement('span');
+    responseFillLabel.className='response-fill-label';
     //暂时先限定只有200状态码
     responseLabel.textContent='200 成功';
     
-    responseDesign.appendChild(responseLabel);
+    responseLabelContainer.appendChild(responseLabel);
+    responseLabelContainer.appendChild(responseFillLabel);
+    responseDesign.appendChild(responseLabelContainer);
 
     
 
