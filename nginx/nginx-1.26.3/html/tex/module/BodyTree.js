@@ -36,8 +36,12 @@ class TreeNode {
 
   //查询子节点索引
   findChild(id){
-    const target=nodeMap.get(id);
-    return this.children.indexOf(target);
+    return this.children.findIndex(child => child.id === id);
+  }
+
+  deleteSelf(){
+    //从Map中移除
+    nodeMap.delete(this.id);
   }
 
   //根据id删除子节点
@@ -46,7 +50,7 @@ class TreeNode {
     if(idx!==-1){
       //从Map中移除
       nodeMap.delete(this.children[idx].id);
-
+      //console.log('从Map中删除：', this.children[idx]);
       //从数组中删除
       this.children.splice(idx,1);
     }else{
@@ -190,8 +194,8 @@ class TreeNode {
         //if (!item) return;
 
         const node = new TreeNode({
-          key: key,
-          type: item.type || typeList.string,
+          key: key||'',
+          type: item.type || '',
           value: item.type === typeList.object ? null : item.value,
           explanation: item.explanation || "",
         });

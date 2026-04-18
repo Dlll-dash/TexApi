@@ -9,16 +9,17 @@ import { NodeMapManager } from "../module/NodeMapManager.js";
 
 const nodeMap=NodeMapManager.getInstance();
 
+
 /**
  * 渲染接口列表
  * @param {传入api列表} apiData 
  * @returns 
  */
 function renderApiList(apiData){
-    console.log("渲染界面..");
+    //console.log("渲染界面..");
     const container=document.getElementById('apiList');
     if(!container){
-        console.log("container为空");
+        //console.log("container为空");
         return;
     }
     container.innerHTML= "";
@@ -43,7 +44,7 @@ function renderApiList(apiData){
     container.appendChild(ul);
 
     apiData.forEach(item=>{
-        console.log("表单项：",item);
+        //console.log("表单项：",item);
         const li = document.createElement('li');
         li.className = "api-list-li"; // 新增统一类名
 
@@ -84,14 +85,14 @@ function renderApiList(apiData){
 function renderTestWindow(apiData){
     const container=document.getElementById('testWindow');
     if(!container) {
-        console.log("testWindow容器为空");
+        //console.log("testWindow容器为空");
         return;
     }
 
     // 顶部标签容器，统一样式
     const tabContainer = document.getElementById('tabContainer');
         if(!tabContainer) {
-            console.log("tabContainer容器为空");
+            //console.log("tabContainer容器为空");
             return;
         }
 
@@ -192,7 +193,7 @@ function renderDebug(apiData,config){
 
     const container=document.getElementById('subWindow');
     if(!container) {
-        console.log("subWindow容器为空");
+        //console.log("subWindow容器为空");
         return;
     }
     container.innerHTML="";//清空原有内容
@@ -1185,9 +1186,9 @@ function renderBodyNodeForm(container){
         const addButton=document.createElement('button');
         const removeButton=document.createElement('button');
 
-        //生成随机id
+        
         formDataLi.id=Data.id;
-
+        console.log('渲染节点项，Data:', Data);
         keyInput.placeholder="字段名";
         keyInput.className = 'param-name-input';
         if(is_root){
@@ -1247,34 +1248,49 @@ function renderBodyNodeForm(container){
             
             //获取父节点，在父节点的左内边距上再加一段边距，绑定父节点（绑定父节点id，因为父节点只会有一个，子节点可能有无数个）
             const parent=document.getElementById(Data.parentId);
-            const input=parent.firstElementChild;
+            
+            const input=parent?.firstElementChild;
+            
             //console.log("父节点,id,is_root",parent,Data.parentId);
             
             
-            let margin=input.style.marginLeft || 0;
+            let margin=input?.style.marginLeft || 0;
             //添加左内边距同时，拉回，保证整体排版不变
             margin=`${parseFloat(margin)+2}rem`;
 
             keyInput.style.marginLeft=margin;
             formDataLi.dataset.parentId=Data.parentId;
 
-            //在树结构中找到父节点，添加当前节点为父节点的子节点
-            const parentNode=nodeMap.get(Data.parentId);
-            if(parentNode) {
-                const newNode = new TreeNode({
-                    key: Data.key,
-                    type: Data.type,
-                    value: Data.value,
-                    explanation: Data.explanation,
-                });
-                parentNode.addChild(newNode);
-                formDataLi.id=newNode.id; // 将生成的节点id赋值给表单行的id，方便后续操作
-            } else {
-                console.error('父节点未找到，无法添加子节点，父节点id：', Data.parentId);
-            }
+            // //在树结构中找到父节点，添加当前节点为父节点的子节点
+            // const parentNode=nodeMap.get(Data.parentId);
+            // if(parentNode) {
+            //     const newNode = new TreeNode({
+            //         key: Data.key,
+            //         type: Data.type,
+            //         value: Data.value,
+            //         explanation: Data.explanation,
+            //     });
+            //     parentNode.addChild(newNode);
+            //     formDataLi.id=newNode.id; // 将生成的节点id赋值给表单行的id，方便后续操作
+            // } else {
+            //     console.error('父节点未找到，无法添加子节点，父节点id：', Data.parentId);
+            // }
         }
 
-        
+        function updatateResponseBody(){
+            const data= treeToJsonString(nodeMap.get(container.dataset.rootId));
+
+            const requestBodyData = {
+                "id": responseId, 
+                "apiId": apiId,
+                "responseBody": data
+            };
+            request.put(`/response/update`, 
+                requestBodyData
+            ).then(res => {
+                console.log('参数更新成功：', res);
+            });
+        }
 
         //监听鼠标离开事件
         formDataLi.addEventListener('focusout', function(e) {
@@ -1288,6 +1304,10 @@ function renderBodyNodeForm(container){
                 valueInput.readOnly=true;
             }else{
                 valueInput.readOnly=false;
+            }
+
+            if(keyInput.value.trim()&&!typeInput.value.trim()){
+                typeInput.value=typeList.string; // 如果参数名有输入但类型没有输入，默认类型为string
             }
 
             if(keyInput.value.trim()||valueInput.value.trim()||typeInput.value.trim()||explainInput.value.trim()) {
@@ -1305,6 +1325,8 @@ function renderBodyNodeForm(container){
                     keyInput.style.outline = '';
                     keyInput.placeholder= "添加参数";
                 }
+
+                //在树结构中找到当前节点，更新节点数据
                 const node=nodeMap.get(formDataLi.id);
                 if(node) {
                     node.set({
@@ -1328,23 +1350,7 @@ function renderBodyNodeForm(container){
                 //console.log('当前树结构：', nodeMap.get(container.dataset.rootId));
                 // console.log('转换为JSON字符串：', treeToJsonString(nodeMap.get(container.dataset.rootId)));
                 // console.log('1293 responseId:', container.dataset.responseId);
-                const data= treeToJsonString(nodeMap.get(container.dataset.rootId));
-                const requestBodyData = {
-                    "id": responseId, //如果有id说明是修改，没有id说明是添加
-                    "apiId": apiId,
-                    "responseBody": data,
-                    "name": null,
-                    "contentType": null,
-                    "responseCode": null
-                }
-                //console.log('1298 请求体数据：', requestBodyData);
-                request.put(`/response/update`, 
-                    requestBodyData
-                )
-                .then(res => {
-                    console.log('参数更新成功：', res);
-                }) 
-                //只发送修改请求
+                updatateResponseBody();
             }
         });
         
@@ -1358,25 +1364,30 @@ function renderBodyNodeForm(container){
             e.stopPropagation(); // 阻止事件冒泡，避免触发li的点击事件
             console.log('点击删除按钮，当前确认状态：', removeButton.dataset.confirmed);
             if(removeButton.dataset.confirmed === 'true') {
-                console.log('删除参数项，id：', formDataLi.dataset.id);
-                // 如果该项有id，说明已经保存过，需要发送删除请求
-                if(formDataLi.dataset.id) {
-                    const dataType=container.dataset.type;
-                    sendRequest(null, formDataLi.dataset.id, dataType, 'DELETE')
-                }
+                console.log('删除参数项，id：', formDataLi.id);
                 
 
                 //如果是有子节点，递归删除所有子节点
                 const node=nodeMap.get(formDataLi.id);
-                
 
-                ul.removeChild(formDataLi);
-
+                //从父结点的子节点中删除当前节点
+                const parentNode=nodeMap.get(formDataLi.dataset.parentId);
                 
                 if(node) {
                     node.deleteAllChildren();
                 }
                 
+                if(parentNode) {
+                    parentNode.deleteChild(node.id);
+                }
+
+
+                console.log('删除节点后树结构：', nodeMap.get(container.dataset.rootId));
+                //发送修改请求，修改树结构为删除当前节点后的结构
+                updatateResponseBody();
+                 
+
+                 ul.removeChild(formDataLi);
             }else{
                 //第一次点击，进入确认状态
                 removeButton.classList.add('active');
@@ -1399,15 +1410,37 @@ function renderBodyNodeForm(container){
         //添加按钮点击事件
         addButton.onclick = function(e){
             e.stopPropagation();
+
+            const data={
+                parentId: formDataLi.id,
+            }
             //检查类型
             if(typeInput.value==typeList.object){
-                //console.log("object, parentId:",formDataLi.id);
                 //如果是Object就添加子节点，自己作为其父节点
-                addFormDataItem({parentId:formDataLi.id});
             }else{
                 //如果不是，就添加相邻节点，自己的父节点作为其父节点
-                addFormDataItem({parentId:formDataLi.dataset.parentId});
+                data.parentId=formDataLi.dataset.parentId;
             }
+
+            //在树结构中找到父节点，添加当前节点为父节点的子节点
+            const parentNode=nodeMap.get(data.parentId);
+            if(parentNode) {
+                const newNode = new TreeNode({
+                    key: '',
+                    type: '',
+                    value: '',
+                    explanation: ''
+                });
+                parentNode.addChild(newNode);
+
+                data.id=newNode.id; // 将生成的节点id赋值给data，方便后续操作
+            } else {
+                console.error('父节点未找到，无法添加子节点，父节点id：', Data.parentId);
+            }
+
+            addFormDataItem(data); // 添加新节点表单项
+            updatateResponseBody(); // 添加节点后更新树结构到后端
+
         }
 
     }
@@ -1436,7 +1469,7 @@ function renderBodyNodeForm(container){
                 if(!root) return;
                 const data=root.toPlainObject();
                 data.id=root.id;
-                console.log('parent:', parent, 'root:', root);
+                //console.log('parent:', parent, 'root:', root);
                 if(parent){
                     data.parentId=parent.id;
                 }
