@@ -26,4 +26,18 @@
 
         where id = #{id}
     </update>
+    <update id="updateInfo">
+        update response set
+                <if test="name!=null and name!='' ">
+                    name = #{name},
+                </if>
+                <if test="responseCode!=null and responseCode!=''">
+                    response_code = #{responseCode},
+                </if>
+                <if test="contentType!=null and contentType!=''">
+                    content_type = #{contentType}
+                </if>
+
+        where id = #{id}
+    </update>
 </mapper>

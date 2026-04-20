@@ -1054,6 +1054,51 @@ function renderDesign(apiData,config){
 
     responseDesign.appendChild(responseInfoSpan);
 
+    //监听鼠标离开事件
+    responseInfoSpan.addEventListener('focusout', function(e) {
+        // 只有当离开的元素是输入框时才进行验证，避免过早验证
+        if(e.target.tagName.toLowerCase() != 'input') {
+            return;
+        }
+        if(!container.dataset.responseId) {
+            return;
+        }
+
+        const responseCodeValue = responseCode.value.trim();
+        if(responseCodeValue) {
+            responseCode.style.borderColor = '';
+        }else{
+            responseCode.style.borderColor = '#e53e3e';
+        }
+
+        const responseNameValue = responseName.value.trim();
+        if(responseNameValue) {
+            responseName.style.borderColor = '';
+        }else{
+            responseName.style.borderColor = '#e53e3e';
+        }
+
+        const responseContentTypeValue = responseContentType.value.trim();
+        if(responseContentTypeValue) {
+            responseContentType.style.borderColor = '';
+        }else{
+            responseContentType.style.borderColor = '#e53e3e';
+        }
+
+        const requestBodyData = {
+                "id": container.dataset.responseId,
+                "apiId": apiData.id,
+                "responseCode": responseCodeValue,
+                "name": responseNameValue,
+                "contentType": responseContentTypeValue,
+            };
+
+        request.put('/response/updateInfo', requestBodyData)
+        .then(res => {
+            console.log('响应信息更新成功：', res);
+        });
+    });
+
     //响应Body
     
     //响应Body容器
@@ -1079,19 +1124,18 @@ function renderDesign(apiData,config){
 
         if(response.data && response.data.data && response.data.data.length > 0) {
             const responseData = response.data.data[0];
-            console.log('获取响应数据成功：', responseData);
+            //console.log('获取响应数据成功：', responseData);
             //将responseId存储在responseBodyContainer的dataset中，方便后续更新
             const responseBodyContainer = document.querySelector('.response-body-container');
             if(responseBodyContainer) {
-                
                 responseBodyContainer.dataset.responseId = responseData.id;
+                // 同步存储在设计窗口容器dataset中，方便其他地方使用
+                container.dataset.responseId = responseData.id; 
                 //预填充响应信息
-                const responseCodeInput = document.querySelector('.response-code-input');
-                const responseNameInput = document.querySelector('.response-name-input');
-                const responseContentTypeInput = document.querySelector('.response-content-type-input');
-                if(responseCodeInput) responseCodeInput.value = responseData.responseCode || '';
-                if(responseNameInput) responseNameInput.value = responseData.responseName || '';
-                if(responseContentTypeInput) responseContentTypeInput.value = responseData.contentType || '';
+                //console.log('预填充响应信息：', responseData);
+                if(responseCode) responseCode.value = responseData.responseCode || '';
+                if(responseName) responseName.value = responseData.name || '';
+                if(responseContentType) responseContentType.value = responseData.contentType || '';
                 
                 //在异步内执行，避免还没拿到数据就渲染表格
                 renderBodyNodeForm(responseBodyContainer);
@@ -1109,10 +1153,14 @@ function renderDesign(apiData,config){
             //如果是根节点，初始化发送创建请求
             const url=`/response/add`;
             //获取表格转Json数据
-            const responseCodeInput = responseCode.value.trim() ? responseCode : null;
-            const responseNameInput = responseName.value.trim() ? responseName : null;
-            const responseContentTypeInput = responseContentType.value.trim() ? responseContentType : null;
+            const responseCodeInput = responseData.responseCode;
+            const responseNameInput = responseData.name;
+            const responseContentTypeInput = responseData.contentType;
             
+            if(responseCode) responseCode.value = responseData.responseCode || '';
+            if(responseName) responseName.value = responseData.name || '';
+            if(responseContentType) responseContentType.value = responseData.contentType || '';
+
             const jsonStr=treeToJsonString(root);
             console.log('转换为JSON字符串：', jsonStr);
 
@@ -1130,6 +1178,7 @@ function renderDesign(apiData,config){
             .then(res => {
                 console.log('根节点创建成功：', res,'responseId:', res.data.data.id);
                 //将返回的responseId存储在容器dataset中，方便后续更新
+                container.dataset.responseId = res.data.data.id;
                 responseBodyContainer.dataset.responseId=res.data.data.id; 
                 responseBodyContainer.dataset.rootId=root.id;
                 //在异步内执行，避免还没拿到数据就渲染表格
@@ -1291,7 +1340,7 @@ function renderBodyNodeForm(container){
                 "apiId": apiId,
                 "responseBody": data
             };
-            request.put(`/response/update`, 
+            request.put(`/response/updateBody`, 
                 requestBodyData
             ).then(res => {
                 console.log('参数更新成功：', res);

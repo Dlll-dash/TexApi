@@ -43,10 +43,17 @@ public class ResponseController {
         return Result.success(list);
     }
 
-    @PutMapping("/update")
+    @PutMapping("/updateBody")
     public Result update(@RequestBody Response response){
         log.info("更新响应参数：{}",response);
         responseService.update(response);
+        return Result.success();
+    }
+
+    @PutMapping("/updateInfo")
+    public Result updateInfo(@RequestBody Response response){
+        log.info("更新响应参数信息：{}",response);
+        responseService.updateInfo(response);
         return Result.success();
     }
 }

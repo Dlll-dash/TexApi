@@ -30,6 +30,15 @@ public interface ResponseMapper {
     @Select("select id,name,response_code,content_type from response where api_id=#{apiId}")
     List<ResponseListVO> getListByApiId(Long apiId);
 
-
+    /**
+     * 更新响应参数Body
+     * @param response
+     */
     void update(Response response);
+
+    /**
+     * 更新响应参数信息
+     * @param response
+     */
+    void updateInfo(Response response);
 }

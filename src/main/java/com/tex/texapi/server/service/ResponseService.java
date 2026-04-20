@@ -36,4 +36,10 @@ public interface ResponseService {
      * @param response
      */
     void update(Response response);
+
+    /**
+     * 更新响应参数信息
+     * @param response
+     */
+    void updateInfo(Response response);
 }

@@ -68,4 +68,13 @@ public class ResponseServiceImpl implements ResponseService {
     public void update(Response response) {
         responseMapper.update(response);
     }
+
+    /**
+     * 更新响应参数信息
+     * @param response
+     */
+    @Override
+    public void updateInfo(Response response) {
+        responseMapper.updateInfo(response);
+    }
 }
