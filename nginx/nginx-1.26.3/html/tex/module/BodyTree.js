@@ -21,7 +21,7 @@ class TreeNode {
     //存入映射
     nodeMap.set(this.id,this);
 
-    console.log('加入Map映射：', this);
+    //console.log('加入Map映射：', this);
   }
 
   // 添加子节点

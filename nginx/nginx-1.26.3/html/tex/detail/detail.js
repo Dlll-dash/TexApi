@@ -938,6 +938,7 @@ function renderDesign(apiData,config){
 
     const statusTextSpan = document.createElement('span');
     statusTextSpan.textContent = statusText[apiData.status];
+    statusTextSpan.dataset.status = apiData.status; // 存储状态值，方便后续点击切换状态时使用
 
     statusSpan.appendChild(statusLight);
     statusSpan.appendChild(statusTextSpan);
@@ -962,10 +963,39 @@ function renderDesign(apiData,config){
     apiInChargeUserLabel.className = "api-incharge-user-label";
 
     const apiInChargeUser= document.createElement('input');
+    apiInChargeUser.value= apiData.inChargeUser || '';
     apiInChargeUser.className = "api-incharge-user-input";
 
-    //TODO apiData返回数据中将责任人id转名字
-    apiInChargeUser.value = apiData.inChargeUser || '';
+
+    apiInfoArea.addEventListener('focusout', function(e) {
+        // 只有当离开的元素是输入框时才进行验证，避免过早验证
+        if(e.target.tagName.toLowerCase() != 'input' && e.target.tagName.toLowerCase() != 'textarea') {
+            return;
+        }
+
+        if(!apiName.value.trim()) {
+            //接口名称不能为空，提示用户并且不发送更新请求
+            apiName.style.borderColor = '#e53e3e';
+            apiName.focus(); // 聚焦到接口名称输入框
+            return;
+        }else{
+            apiName.style.borderColor = '';
+        }
+
+        const requestBodyData = {
+                "id": container.dataset.apiId,
+                "apiName": apiName.value.trim(),
+                "explanation": apiExplanation.value.trim(),
+                "status": statusTextSpan.dataset.status,
+                "inChargeUser": apiInChargeUser.value.trim(),
+            };
+
+        request.put('/api/updateInfo', requestBodyData)
+        .then(res => {
+            console.log('接口信息更新成功：', res);
+        });
+    });
+
     apiInChargeUserDiv.appendChild(apiInChargeUserLabel);
     apiInChargeUserDiv.appendChild(apiInChargeUser);
 
@@ -1243,7 +1273,7 @@ function renderBodyNodeForm(container){
 
         
         formDataLi.id=Data.id;
-        console.log('渲染节点项，Data:', Data);
+        //console.log('渲染节点项，Data:', Data);
         keyInput.placeholder="字段名";
         keyInput.className = 'param-name-input';
         if(is_root){

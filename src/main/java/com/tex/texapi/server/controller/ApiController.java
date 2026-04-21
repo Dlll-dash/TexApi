@@ -53,4 +53,11 @@ public class ApiController {
         String response=apiService.send(requestDTO);
         return Result.success(response);
      }
+
+     @PutMapping("/updateInfo")
+        public Result updateInfo(@RequestBody Api api){
+            log.info("更新接口信息：{}",api);
+            apiService.updateInfo(api);
+            return Result.success();
+        }
 }

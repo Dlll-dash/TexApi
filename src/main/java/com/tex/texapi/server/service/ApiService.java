@@ -26,4 +26,10 @@ public interface ApiService {
      * @return
      */
     String send(RequestDTO requestDTO);
+
+    /**
+     * 更新接口基本信息
+     * @param api
+     */
+    void updateInfo(Api api);
 }

@@ -33,4 +33,10 @@ public interface ApiMapper {
      */
     @Select("select * from api where id=#{id}")
     Api getById(Long id);
+
+    /**
+     * 更新接口信息
+     * @param api
+     */
+    void updateInfo(Api api);
 }

@@ -28,4 +28,16 @@
                 </if>
         where id = #{id}
     </update>
+    <update id="updateInfo">
+        update api set
+                <if test="apiName!=null and apiName!='' ">
+                    api_name = #{apiName},
+                </if>
+                <if test="status!=null">
+                    status=#{status},
+                </if>
+                explanation=#{explanation},
+                in_charge_user=#{inChargeUser}
+        where id = #{id}
+    </update>
 </mapper>

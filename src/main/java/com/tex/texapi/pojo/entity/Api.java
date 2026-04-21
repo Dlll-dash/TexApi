@@ -49,5 +49,5 @@ public class Api {
     String explanation;
 
     //责任人
-    Long inChargeUser;
+    String inChargeUser;
 }

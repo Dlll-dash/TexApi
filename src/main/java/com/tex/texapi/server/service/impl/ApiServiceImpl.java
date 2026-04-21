@@ -145,4 +145,9 @@ public class ApiServiceImpl implements ApiService {
         //返回结果
         return response.body().toString();
     }
+
+    @Override
+    public void updateInfo(Api api) {
+        apiMapper.updateInfo(api);
+    }
 }
