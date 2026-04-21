@@ -6,6 +6,7 @@ import { debugFormConfig,designFormConfig } from "../config/FormConfig.js";
 import { statusText,statusColors } from "../config/statusConfig.js";
 import { TreeNode } from "../module/BodyTree.js";
 import { NodeMapManager } from "../module/NodeMapManager.js";
+import { codeColorMap,getCodeColor } from "../config/ResponseConfig.js";
 
 const nodeMap=NodeMapManager.getInstance();
 
@@ -1003,6 +1004,10 @@ function renderDesign(apiData,config){
     apiInfoArea.appendChild(apiExplanationDiv);
     apiInfoArea.appendChild(apiInChargeUserDiv);
 
+    const submitButton = document.querySelectorAll('.submit-btn')[0];
+    // 设计窗口不需要发送请求按钮
+    submitButton.style.display = 'none'; 
+
     container.insertBefore(apiInfoArea, requestLine); // 将接口信息区域插入到请求行上方
 
    
@@ -1019,10 +1024,17 @@ function renderDesign(apiData,config){
     responseLabelContainer.className='response-label-container';
     const responseLabel=document.createElement('span');
     responseLabel.className='response-label';
+    const codeLabel=document.createElement('span');
+    const nameLabel=document.createElement('span');
+    codeLabel.className='code-label';
+    nameLabel.className='name-label';
+
+    responseLabel.appendChild(codeLabel);
+    responseLabel.appendChild(nameLabel);
+
     const responseFillLabel=document.createElement('span');
     responseFillLabel.className='response-fill-label';
-    //暂时先限定只有200状态码
-    responseLabel.textContent='200 成功';
+    
     
     responseLabelContainer.appendChild(responseLabel);
     responseLabelContainer.appendChild(responseFillLabel);
@@ -1094,9 +1106,14 @@ function renderDesign(apiData,config){
             return;
         }
 
+
+
         const responseCodeValue = responseCode.value.trim();
         if(responseCodeValue) {
             responseCode.style.borderColor = '';
+            //同步更新标签显示
+            codeLabel.textContent = responseCodeValue;
+            codeLabel.style.color = getCodeColor(responseCodeValue);
         }else{
             responseCode.style.borderColor = '#e53e3e';
         }
@@ -1104,6 +1121,7 @@ function renderDesign(apiData,config){
         const responseNameValue = responseName.value.trim();
         if(responseNameValue) {
             responseName.style.borderColor = '';
+            nameLabel.textContent = responseNameValue;
         }else{
             responseName.style.borderColor = '#e53e3e';
         }
@@ -1161,12 +1179,17 @@ function renderDesign(apiData,config){
                 responseBodyContainer.dataset.responseId = responseData.id;
                 // 同步存储在设计窗口容器dataset中，方便其他地方使用
                 container.dataset.responseId = responseData.id; 
-                //预填充响应信息
                 //console.log('预填充响应信息：', responseData);
+                //预填充响应信息
+                if(codeLabel){
+                    codeLabel.textContent = responseData.responseCode || '';
+                    codeLabel.style.color = getCodeColor(responseData.responseCode); // 根据状态码设置颜色，默认为黑色
+                } 
+                if(nameLabel) nameLabel.textContent = responseData.name || '';
                 if(responseCode) responseCode.value = responseData.responseCode || '';
                 if(responseName) responseName.value = responseData.name || '';
                 if(responseContentType) responseContentType.value = responseData.contentType || '';
-                
+
                 //在异步内执行，避免还没拿到数据就渲染表格
                 renderBodyNodeForm(responseBodyContainer);
             }
@@ -1183,13 +1206,9 @@ function renderDesign(apiData,config){
             //如果是根节点，初始化发送创建请求
             const url=`/response/add`;
             //获取表格转Json数据
-            const responseCodeInput = responseData.responseCode;
-            const responseNameInput = responseData.name;
-            const responseContentTypeInput = responseData.contentType;
-            
-            if(responseCode) responseCode.value = responseData.responseCode || '';
-            if(responseName) responseName.value = responseData.name || '';
-            if(responseContentType) responseContentType.value = responseData.contentType || '';
+            const responseCodeInput = responseCode;
+            const responseNameInput = responseName;
+            const responseContentTypeInput = responseContentType;
 
             const jsonStr=treeToJsonString(root);
             console.log('转换为JSON字符串：', jsonStr);
@@ -1215,6 +1234,9 @@ function renderDesign(apiData,config){
                 renderBodyNodeForm(responseBodyContainer);
             })
         }
+
+        
+                
     })
     //console.log('存储responseId到dataset:',responseBodyContainer.dataset.responseId);
     
