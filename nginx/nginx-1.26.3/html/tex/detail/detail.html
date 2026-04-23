@@ -439,7 +439,9 @@
         .preview-title {
             color: #2d3748;
             padding-bottom: 0.5rem;
-            border-bottom: 1px solid #e8e8e8;
+            text-align: left;
+            border-bottom: transparent; 
+            margin-top: 0.5rem;
         }
 
         .doc-content {
@@ -516,6 +518,11 @@
             border-radius: 6px;
             margin-bottom: 0.5rem;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            transition: all 0.2s ease;
+        }
+        
+        #paramsList li:hover, #headersList li:hover,#formDataList li:hover,#xwwwList li:hover{
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
         }
 
         #paramsList li:first-child, #headersList li:first-child,#formDataList li:first-child,#xwwwList li:first-child {
@@ -990,7 +997,36 @@
             border-color: #fee2e2;
         }
 
+        .url-span-display {
+            display: inline-block;
+            max-width: 100%;
+            padding: 0.3rem 0.45rem;
+            border-radius: 12px;
+            border: 1px solid transparent;
+            background-color: #f5f7fa !important;
+            width: fit-content;
+            overflow: hidden;
+            margin-top: -2rem;
+        }
         
+        .method-span-display {
+            display: inline-block;
+            padding: 0.3rem 0.45rem;
+            border-radius: 6px;
+            border: 1px solid transparent;
+            color: #ffffff;
+            font-weight: 600;
+        }
+
+        .url-text-display {
+            display: inline-block;
+            max-width: 100%;
+            padding: 0.3rem 0.45rem;
+            border-radius: 6px;
+            border: 1px solid transparent;
+            background-color: transparent;
+            color: #2d3748;
+        }
 
         @media (max-width: 768px) {
             body {

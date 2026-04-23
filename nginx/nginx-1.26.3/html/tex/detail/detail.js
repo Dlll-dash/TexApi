@@ -7,6 +7,8 @@ import { statusText,statusColors } from "../config/statusConfig.js";
 import { TreeNode } from "../module/BodyTree.js";
 import { NodeMapManager } from "../module/NodeMapManager.js";
 import { codeColorMap,getCodeColor } from "../config/ResponseConfig.js";
+import { urlDisplay } from "../components/urlSpan.js";
+
 
 const nodeMap=NodeMapManager.getInstance();
 
@@ -913,7 +915,6 @@ function renderDesign(apiData,config){
     // 复用调试窗口的接口基本信息展示部分（url，请求参数），保持设计窗口和调试窗口风格一致
     renderDebug(apiData,config); 
     const requestInfo = document.getElementById('requestInfo');
-    const requestLine = requestInfo;
 
     const apiInfoArea = document.createElement('div');
     apiInfoArea.className = "api-info-area";
@@ -1060,8 +1061,15 @@ function renderDesign(apiData,config){
     // 设计窗口不需要发送请求按钮
     submitButton.style.display = 'none'; 
 
-    container.insertBefore(apiInfoArea, requestLine); // 将接口信息区域插入到请求行上方
+    container.insertBefore(apiInfoArea, requestInfo); // 将接口信息区域插入到请求行上方
 
+    // 请求参数标签
+    const requestParamsTitle = document.createElement('span');
+    requestParamsTitle.textContent = "请求参数";
+    requestParamsTitle.className = 'params-title';
+    //手动拉回一点距离
+    requestParamsTitle.style.marginBottom = '-1.5rem';
+    container.insertBefore(requestParamsTitle, requestInfo);
    
 
     // 响应格式设计区域
@@ -1682,10 +1690,13 @@ function renderPreview(apiData){
     container.className = "preview-container"; // 新增容器类名
 
     // 文档预览标题
-    const previewTitle = document.createElement('h3');
-    previewTitle.textContent = `接口文档：${apiData.apiName || '未命名接口'}`;
+    const previewTitle = document.createElement('h2');
+    
+    previewTitle.textContent = `${apiData.apiName || '未命名接口'}`;
     previewTitle.className = "preview-title";
     container.appendChild(previewTitle);
+
+    container.appendChild(urlDisplay(apiData.requestMethod, apiData.requestUrl)); // 显示接口URL和请求方法
 
     // 文档主体容器
     const docContent = document.createElement('div');
@@ -1694,7 +1705,7 @@ function renderPreview(apiData){
     // 接口描述
     const descSection = document.createElement('section');
     descSection.className = "doc-section";
-    const descTitle = document.createElement('h4');
+    const descTitle = document.createElement('h3');
     descTitle.textContent = "接口描述";
     const descText = document.createElement('p');
     descText.textContent = apiData.apiDesc || "该接口暂无描述信息";
@@ -1710,6 +1721,8 @@ function renderPreview(apiData){
     const callList = document.createElement('ul');
     callList.className = "call-list";
     
+
+
     // 请求方法
     const methodLi = document.createElement('li');
     const methodLabelText = document.createTextNode('请求方法:');

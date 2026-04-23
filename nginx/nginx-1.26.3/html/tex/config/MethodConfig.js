@@ -16,5 +16,12 @@ const methodBackroundColors = {
     'DEFAULT': '#433e3e53'
 };
 
+const methodBackroundColorsDeep = {
+    'GET': '#31e72bb8',
+    'POST': '#e87d0ce4',
+    'PUT': '#1796c8cb',
+    'DELETE': '#db0a0add',
+    'DEFAULT': '#1a1818b9'
+};
 
-export {methodlist,methodColors,methodBackroundColors};
+export {methodlist,methodColors,methodBackroundColors,methodBackroundColorsDeep};
