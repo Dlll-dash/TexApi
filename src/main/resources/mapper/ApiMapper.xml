@@ -40,4 +40,20 @@
                 in_charge_user=#{inChargeUser}
         where id = #{id}
     </update>
+    <select id="list" resultType="com.tex.texapi.pojo.entity.Api">
+        select a.id,
+               project_id,
+               api_name,
+               request_url,
+               request_method,
+               response_example,
+               create_time,
+               status,
+               explanation,
+               in_charge_user,
+               u.name as create_user
+               from api a,user u
+               where project_id=#{id} and a.create_user = u.id
+        order by status desc
+    </select>
 </mapper>

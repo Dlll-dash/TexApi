@@ -1667,7 +1667,7 @@ function renderPreview(apiData){
 
     const statusUl = statusSpan.querySelector('.status-option-list');
 
-    //手动补充额外的下拉选项的点击事件逻辑，更新接口状态并发送更新请求
+    //手动补充status下拉框下拉选项的额外点击事件逻辑，更新接口状态并发送更新请求
     statusUl.querySelectorAll('.status-option-item').forEach(option => {
         option.addEventListener('click', function(e) {
             e.stopPropagation();
@@ -1686,79 +1686,87 @@ function renderPreview(apiData){
     url_statusDiv.appendChild(statusSpan);
     container.appendChild(url_statusDiv);
 
-    // 文档主体容器
-    const docContent = document.createElement('div');
-    docContent.className = "doc-content";
+    const apiInfoDiv=document.createElement('div');
+    apiInfoDiv.className = "api-info-div";
 
-    // 接口描述
-    const descSection = document.createElement('section');
-    descSection.className = "doc-section";
-    const descTitle = document.createElement('h3');
-    descTitle.textContent = "接口描述";
-    const descText = document.createElement('p');
-    descText.textContent = apiData.apiDesc || "该接口暂无描述信息";
-    descSection.appendChild(descTitle);
-    descSection.appendChild(descText);
-    docContent.appendChild(descSection);
+    //生成信息项
+    function createInfoItem(labelText, valueText) {
+        const item = document.createElement('span');
+        item.className = 'api-info-item';
 
-    // 调用说明
-    const callSection = document.createElement('section');
-    callSection.className = "doc-section";
-    const callTitle = document.createElement('h4');
-    callTitle.textContent = "调用说明";
-    const callList = document.createElement('ul');
-    callList.className = "call-list";
-    
+        const label = document.createElement('span');
+        label.className = 'api-info-label';
+        label.textContent = labelText;
 
+        const value = document.createElement('span');
+        value.className = 'api-info-value';
+        value.textContent = valueText || '未设置';
 
-    // 请求方法
-    const methodLi = document.createElement('li');
-    const methodLabelText = document.createTextNode('请求方法:');
-    const methodValueSpan = document.createElement('span');
-    methodValueSpan.style.marginLeft = '10px'; // 和标签留间距
+        item.appendChild(label);
+        item.appendChild(value);
+        return item;
+    }
 
-    methodValueSpan.textContent = apiData.requestMethod || '未知';
+    //格式化日期显示为中文格式，支持多种输入格式
+    function formatDateToChinese(value) {
+        if (!value) {
+            return '未设置';
+        }
+        if (Array.isArray(value)) {
+            const [year, month, day] = value;
+            if (year && month && day) {
+                return `${year}年${month}月${day}日`;
+            }
+        }
+        const text = String(value).trim();
+        const parts = text.split(',').map(part => part.trim()).filter(Boolean);
+        if (parts.length >= 3 && parts.every(part => /^\d+$/.test(part))) {
+            const [year, month, day] = parts;
+            return `${year}年${month}月${day}日`;
+        }
+        if (/\d+\s*天前$|\d+\s*小时前$|\d+\s*分钟前$|刚刚$/.test(text)) {
+            return text;
+        }
+        const date = new Date(text);
+        if (Number.isNaN(date.getTime())) {
+            return text;
+        }
+        return `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日`;
+    }
 
-    methodValueSpan.style.color = methodColors[apiData.requestMethod] || methodColors['DEFAULT'];
-    methodValueSpan.style.fontWeight = 'bold'; // 可选：加粗突出
-    
+    //格式化日期显示为相对时间，支持多种输入格式
+    function formatRelativeTime(value) {
+        if (!value) {
+            return '未设置';
+        }
+        const text = String(value).trim();
+        if (/\d+\s*天前$|\d+\s*小时前$|\d+\s*分钟前$|刚刚$/.test(text)) {
+            return text;
+        }
+        const date = new Date(text);
+        if (Number.isNaN(date.getTime())) {
+            return text;
+        }
+        const diff = Date.now() - date.getTime();
+        if (diff < 60000) {
+            return '刚刚';
+        }
+        if (diff < 3600000) {
+            return `${Math.floor(diff / 60000)} 分钟前`;
+        }
+        if (diff < 86400000) {
+            return `${Math.floor(diff / 3600000)} 小时前`;
+        }
+        return `${Math.floor(diff / 86400000)} 天前`;
+    }
 
-    methodLi.appendChild(methodLabelText);
-    methodLi.appendChild(methodValueSpan);
-    // 请求地址
-    const urlLi = document.createElement('li');
-    urlLi.textContent = `请求地址：${apiData.requestUrl || '未配置'}`;
-    // 权限说明（模拟字段）
-    const authLi = document.createElement('li');
-    authLi.textContent = `权限要求：${apiData.needAuth ? '需要登录' : '无需登录'}`;
+    apiInfoDiv.appendChild(createInfoItem('创建时间', formatDateToChinese(apiData.createTime)));
+    apiInfoDiv.appendChild(createInfoItem('修改时间', formatRelativeTime(apiData.updateTime)));
+    apiInfoDiv.appendChild(createInfoItem('修改者', apiData.updateUser || apiData.modifiedBy || '未设置'));
+    apiInfoDiv.appendChild(createInfoItem('创建者', apiData.createUser || apiData.createdBy || '未设置'));
+    apiInfoDiv.appendChild(createInfoItem('责任人', apiData.inChargeUser || '未设置'));
 
-    callList.appendChild(methodLi);
-
-
-    callList.appendChild(urlLi);
-    callList.appendChild(authLi);
-    callSection.appendChild(callTitle);
-    callSection.appendChild(callList);
-    docContent.appendChild(callSection);
-
-    // 响应示例
-    const responseSection = document.createElement('section');
-    responseSection.className = "doc-section";
-    const responseTitle = document.createElement('h4');
-    responseTitle.textContent = "响应示例";
-    const responsePre = document.createElement('pre');
-    responsePre.className = "doc-pre";
-    const exampleData = apiData.responseExample || {
-        code: 200,
-        msg: "操作成功",
-        data: null
-    };
-    responsePre.textContent = JSON.stringify(exampleData, null, 2);
-    responseSection.appendChild(responseTitle);
-    responseSection.appendChild(responsePre);
-    docContent.appendChild(responseSection);
-
-    container.appendChild(docContent);
+    container.appendChild(apiInfoDiv);
 }
 
 window.onload = async function () {

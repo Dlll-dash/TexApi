@@ -17,7 +17,7 @@ public interface ApiMapper {
      * @param id
      * @return
      */
-    @Select("select * from api where project_id=#{id} order by status desc")
+    //@Select("select * from api where project_id=#{id} order by status desc")
     List<Api> list(Long id);
 
     /**
