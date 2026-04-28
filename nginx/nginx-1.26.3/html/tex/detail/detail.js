@@ -8,7 +8,7 @@ import { TreeNode } from "../module/BodyTree.js";
 import { NodeMapManager } from "../module/NodeMapManager.js";
 import { codeColorMap,getCodeColor } from "../config/ResponseConfig.js";
 import { urlDisplay } from "../components/urlSpan.js";
-
+import { createApiStatusSpan } from "../components/apiStatusSpan.js";
 
 const nodeMap=NodeMapManager.getInstance();
 
@@ -897,6 +897,14 @@ function renderform(container,config){
 }
 
 
+function updateApiInfoArea(requestBodyData={id,apiName, explanation, status, inChargeUser}) {
+
+        request.put('/api/updateInfo', requestBodyData)
+        .then(res => {
+            console.log('接口信息更新成功：', res);
+        });
+    }
+
 /**
  * 渲染设计窗口（美化补全）
  * @param {传入单个api} apiData 
@@ -926,70 +934,27 @@ function renderDesign(apiData,config){
     apiName.value = apiData.apiName || '未命名接口';
     apiName.className = "api-name-input";
     
-    const statusSpan = document.createElement('span');
-    statusSpan.className = 'status-span';
-    const statusLight= document.createElement('span');
-    statusLight.innerHTML = '&#9679;  '; // 圆形符号
+    const statusSpan = createApiStatusSpan(apiData.status);
 
-    if(apiData.status=== null || apiData.status === undefined) {
-        throw new Error('接口状态未定义');
-    }
-    // 根据状态设置颜色
-    statusLight.style.color =statusColors[apiData.status]; 
+    const statusUl = statusSpan.querySelector('.status-option-list');
 
-    const statusTextSpan = document.createElement('span');
-    statusTextSpan.textContent = statusText[apiData.status];
-    statusSpan.dataset.status = apiData.status; // 存储状态值，方便后续点击切换状态时使用
-
-    //接口状态下拉框
-    const statusUl = document.createElement('ul');
-    statusUl.className = 'status-option-list';
-    Object.keys(statusText).forEach(statusKey => {
-        const optionLi = document.createElement('li');
-        optionLi.className = 'status-option-item';
-
-        const liStatusLight=document.createElement('span');
-        liStatusLight.innerHTML = '&#9679;  '; // 圆形符号
-        liStatusLight.style.color = statusColors[statusKey];
-
-        const liStatusText=document.createElement('span');
-        liStatusText.textContent = statusText[statusKey];
-
-        optionLi.appendChild(liStatusLight);
-        optionLi.appendChild(liStatusText);
-
-        optionLi.dataset.statusValue = statusKey; // 存储状态值，方便点击时使用
-        optionLi.addEventListener('click', function(e) {
+    //手动补充额外的下拉选项的点击事件逻辑，更新接口状态并发送更新请求
+    statusUl.querySelectorAll('.status-option-item').forEach(option => {
+        option.addEventListener('click', function(e) {
             e.stopPropagation();
-            const selectedStatus = this.dataset.statusValue;
-            statusTextSpan.textContent = statusText[selectedStatus];
-            statusSpan.dataset.status = selectedStatus;
-            statusLight.style.color = statusColors[selectedStatus];
-            statusUl.style.display = 'none';
-            // 更新接口数据中的状态字段，后续发送请求时可以用到
-            apiData.status = selectedStatus;
-            updateApiInfoArea(); //发送更新接口的请求，保持数据同步
+            apiData.status = this.dataset.statusValue; // 更新接口数据中的状态字段，后续发送请求时可以用到
+            const requestBodyData = {
+                "id": container.dataset.apiId,
+                "apiName": apiName.value.trim(),
+                "explanation": apiExplanation.value.trim(),
+                "status": statusSpan.dataset.status,
+                "inChargeUser": apiInChargeUser.value.trim(),
+            };
+            updateApiInfoArea(requestBodyData); //发送更新接口的请求，保持数据同步
         });
-
-        statusUl.appendChild(optionLi);
-    });
-    
-    
-    statusSpan.addEventListener('click', function(e) {
-        e.stopPropagation();
-        statusUl.style.display = statusUl.style.display === 'block' ? 'none' : 'block';
     });
 
-    // 点击页面其他地方关闭下拉框
-    document.addEventListener('click', () => {
-        statusUl.style.display = 'none';
-    });
-
-    statusSpan.appendChild(statusUl);
-    statusSpan.appendChild(statusLight);
-    statusSpan.appendChild(statusTextSpan);
     
-
     apiTitleDiv.appendChild(apiName);
     apiTitleDiv.appendChild(statusSpan);
     const apiExplanationDiv = document.createElement('div');
@@ -1018,12 +983,6 @@ function renderDesign(apiData,config){
         if(e.target.tagName.toLowerCase() != 'input' && e.target.tagName.toLowerCase() != 'textarea') {
             return;
         }
-
-        updateApiInfoArea();
-    });
-
-
-    function updateApiInfoArea(){
         if(!apiName.value.trim()) {
             //接口名称不能为空，提示用户并且不发送更新请求
             apiName.style.borderColor = '#e53e3e';
@@ -1041,11 +1000,12 @@ function renderDesign(apiData,config){
                 "inChargeUser": apiInChargeUser.value.trim(),
             };
 
-        request.put('/api/updateInfo', requestBodyData)
-        .then(res => {
-            console.log('接口信息更新成功：', res);
-        });
-    }
+        updateApiInfoArea(requestBodyData);
+    });
+
+    
+
+    
 
 
 
@@ -1696,7 +1656,35 @@ function renderPreview(apiData){
     previewTitle.className = "preview-title";
     container.appendChild(previewTitle);
 
-    container.appendChild(urlDisplay(apiData.requestMethod, apiData.requestUrl)); // 显示接口URL和请求方法
+    //url和api状态容器
+    const url_statusDiv=document.createElement('div');
+    url_statusDiv.className = "url-status-div";
+
+    // 显示接口URL和请求方法
+    url_statusDiv.appendChild(urlDisplay(apiData.requestMethod, apiData.requestUrl)); 
+
+    const statusSpan = createApiStatusSpan(apiData.status);
+
+    const statusUl = statusSpan.querySelector('.status-option-list');
+
+    //手动补充额外的下拉选项的点击事件逻辑，更新接口状态并发送更新请求
+    statusUl.querySelectorAll('.status-option-item').forEach(option => {
+        option.addEventListener('click', function(e) {
+            e.stopPropagation();
+            apiData.status = this.dataset.statusValue; // 更新接口数据中的状态字段，后续发送请求时可以用到
+            const requestBodyData = {
+                "id": container.dataset.apiId,
+                "apiName": apiData.apiName, 
+                "explanation": apiData.explanation || '',
+                "status": statusSpan.dataset.status,
+                "inChargeUser": apiData.inChargeUser || '',
+            };
+            updateApiInfoArea(requestBodyData); //发送更新接口的请求，保持数据同步
+        });
+    });
+
+    url_statusDiv.appendChild(statusSpan);
+    container.appendChild(url_statusDiv);
 
     // 文档主体容器
     const docContent = document.createElement('div');
