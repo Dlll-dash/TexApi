@@ -8,6 +8,13 @@ const requestDataType = {
     'Header': 'header'
 };
 
+const httpMimeTypes = {
+    'json': 'application/json',
+    'xml': 'application/xml',
+    'formData': 'multipart/form-data',
+    'urlencoded': 'application/x-www-form-urlencoded'
+};
+
 //参数值类型
 const typeList = {
     'object' :'Object',
@@ -29,4 +36,4 @@ const typeExampleValue = {
 
 
 
-export {typeList,typeExampleValue,requestDataType};
+export {typeList,typeExampleValue,requestDataType,httpMimeTypes};

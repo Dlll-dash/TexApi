@@ -1,4 +1,4 @@
- import { statusColors, statusText } from "../config/statusConfig.js"; 
+ import { statusColors, statusText } from "../config/StatusConfig.js"; 
   
 function createApiStatusSpan(status) {
     const statusSpan = document.createElement('span');

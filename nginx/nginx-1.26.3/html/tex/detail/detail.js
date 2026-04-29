@@ -1,14 +1,16 @@
 
 import { request,getUrlParams } from "../config/AxiosConfig/AxiosConfig.js";
 import { methodlist,methodColors,methodBackroundColors } from "../config/MethodConfig.js";
-import { requestDataType,typeList} from "../config/TypeConfig.js";
+import { requestDataType,typeList,httpMimeTypes} from "../config/TypeConfig.js";
 import { debugFormConfig,designFormConfig } from "../config/FormConfig.js";
-import { statusText,statusColors } from "../config/statusConfig.js";
+import { statusText,statusColors } from "../config/StatusConfig.js";
 import { TreeNode } from "../module/BodyTree.js";
 import { NodeMapManager } from "../module/NodeMapManager.js";
 import { codeColorMap,getCodeColor } from "../config/ResponseConfig.js";
 import { urlDisplay } from "../components/urlSpan.js";
 import { createApiStatusSpan } from "../components/apiStatusSpan.js";
+import { formatDateToChinese, formatRelativeTime } from "../utils/DateUtil.js";
+import { createParamList } from "../components/paramList.js";
 
 const nodeMap=NodeMapManager.getInstance();
 
@@ -1707,58 +1709,7 @@ function renderPreview(apiData){
         return item;
     }
 
-    //格式化日期显示为中文格式，支持多种输入格式
-    function formatDateToChinese(value) {
-        if (!value) {
-            return '未设置';
-        }
-        if (Array.isArray(value)) {
-            const [year, month, day] = value;
-            if (year && month && day) {
-                return `${year}年${month}月${day}日`;
-            }
-        }
-        const text = String(value).trim();
-        const parts = text.split(',').map(part => part.trim()).filter(Boolean);
-        if (parts.length >= 3 && parts.every(part => /^\d+$/.test(part))) {
-            const [year, month, day] = parts;
-            return `${year}年${month}月${day}日`;
-        }
-        if (/\d+\s*天前$|\d+\s*小时前$|\d+\s*分钟前$|刚刚$/.test(text)) {
-            return text;
-        }
-        const date = new Date(text);
-        if (Number.isNaN(date.getTime())) {
-            return text;
-        }
-        return `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日`;
-    }
-
-    //格式化日期显示为相对时间，支持多种输入格式
-    function formatRelativeTime(value) {
-        if (!value) {
-            return '未设置';
-        }
-        const text = String(value).trim();
-        if (/\d+\s*天前$|\d+\s*小时前$|\d+\s*分钟前$|刚刚$/.test(text)) {
-            return text;
-        }
-        const date = new Date(text);
-        if (Number.isNaN(date.getTime())) {
-            return text;
-        }
-        const diff = Date.now() - date.getTime();
-        if (diff < 60000) {
-            return '刚刚';
-        }
-        if (diff < 3600000) {
-            return `${Math.floor(diff / 60000)} 分钟前`;
-        }
-        if (diff < 86400000) {
-            return `${Math.floor(diff / 3600000)} 小时前`;
-        }
-        return `${Math.floor(diff / 86400000)} 天前`;
-    }
+    
 
     apiInfoDiv.appendChild(createInfoItem('创建时间', formatDateToChinese(apiData.createTime)));
     apiInfoDiv.appendChild(createInfoItem('修改时间', formatRelativeTime(apiData.updateTime)));
@@ -1767,6 +1718,56 @@ function renderPreview(apiData){
     apiInfoDiv.appendChild(createInfoItem('责任人', apiData.inChargeUser || '未设置'));
 
     container.appendChild(apiInfoDiv);
+
+    
+
+    const paramsTitle=document.createElement('h3');
+    paramsTitle.textContent = "请求参数";
+    paramsTitle.className = "params-title";
+    paramsTitle.style.marginTop = "1.5rem";
+    container.appendChild(paramsTitle);
+
+    const paramsDiv=document.createElement('div');
+    paramsDiv.className = "params-div";
+
+    const bodyInfoSpan=document.createElement('span');
+    bodyInfoSpan.className = 'preview-body-info';
+
+    const bodyTitle=document.createElement('span');
+    bodyTitle.textContent = "Body 参数";
+    bodyTitle.className = "body-title";
+
+    const bodyType=document.createElement('span');
+    bodyType.textContent = `${httpMimeTypes[localStorage.getItem('contentType')] || '未设置'}`;
+    bodyType.className = "preview-type-label";
+
+    bodyInfoSpan.appendChild(bodyTitle);
+    bodyInfoSpan.appendChild(bodyType);
+
+    paramsDiv.appendChild(bodyInfoSpan);
+    if(localStorage.getItem('contentType')!=typeList.None) {
+
+        request.get(`/request/param/list/${apiData.id}`,{
+            params: {
+                formatType:localStorage.getItem('contentType') || ''
+            }
+        }).then(res => {
+            const data = res.data.data || [];
+            if(data.length > 0) {
+                const paramsList = createParamList(data);
+                paramsDiv.appendChild(paramsList);
+                container.appendChild(paramsDiv);
+            }
+        })
+    }else{
+        const noParamsSpan=document.createElement('span');
+        noParamsSpan.textContent = "无";
+        noParamsSpan.className = "no-params-span";
+        paramsDiv.appendChild(noParamsSpan);
+        container.appendChild(paramsDiv);
+    }
+    
+    
 }
 
 window.onload = async function () {

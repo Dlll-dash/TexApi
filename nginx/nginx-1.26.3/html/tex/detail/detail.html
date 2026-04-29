@@ -1022,6 +1022,90 @@
             color: #2d3748;
         }
 
+        /* Preview request-params styles */
+        .params-div {
+            border: 1px solid #e8e8e8;
+            border-radius: 8px;
+            padding: 0.75rem;
+            margin-top: -1rem;
+            background-color: #ffffff;
+        }
+
+        
+
+        .preview-body-info {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+            border-bottom: 1px solid #e8e8e8;
+            padding-bottom: 0.5rem;
+        }
+
+        .body-title {
+            display: block;
+            font-weight: 600;
+            color: #2d3748;
+            /* padding-bottom: 0.5rem; */
+            
+            /* margin-bottom: 0.5rem; */
+        }
+
+        .preview-type-label {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.25rem 0.6rem;
+            border-radius: 999px;
+            background-color: #edf0f2;
+            color: #2d3748;
+            font-size: 0.7rem;
+            font-weight: 550;
+            white-space: nowrap;
+        }
+
+        .params-list-display {
+            list-style: none;
+            padding: 0.25rem 0;
+            margin: 0;
+        }
+
+        .params-list-display li {
+            display: flex;
+            gap: 0.75rem;
+            align-items: center;
+            padding: 0.35rem 0;
+            border: none; /* no inner borders between items */
+        }
+
+        .param-name-display {
+            color: #62a3e9; /* blue */
+            background-color: rgba(66,153,225,0.08); /* translucent blue */
+            padding: 0.25rem 0.5rem;
+            border-radius: 6px;
+            font-weight: 550;
+            font-size: 0.8rem;
+            width: fit-content;
+            min-width: unset;
+            white-space: nowrap;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+
+        .param-type-display,
+        .param-explanation {
+            color: #9aa3ad; /* light gray */
+            font-size: 0.9rem;
+        }
+
+        .no-params-span {
+            color: #718096;
+            padding: 0.25rem 0;
+            display: inline-block;
+        }
+
         @media (max-width: 768px) {
             body {
                 flex-direction: column; /* 小屏改为上下布局 */
