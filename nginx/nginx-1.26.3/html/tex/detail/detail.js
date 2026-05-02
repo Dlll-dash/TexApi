@@ -11,6 +11,7 @@ import { urlDisplay } from "../components/urlSpan.js";
 import { createApiStatusSpan } from "../components/apiStatusSpan.js";
 import { formatDateToChinese, formatRelativeTime } from "../utils/DateUtil.js";
 import { createParamList } from "../components/paramList.js";
+import { createResponseApi } from "../api/ResponseApi.js";
 
 const nodeMap=NodeMapManager.getInstance();
 
@@ -899,12 +900,10 @@ function renderform(container,config){
 }
 
 
+//更新接口信息的请求函数
 function updateApiInfoArea(requestBodyData={id,apiName, explanation, status, inChargeUser}) {
-
-        request.put('/api/updateInfo', requestBodyData)
-        .then(res => {
-            console.log('接口信息更新成功：', res);
-        });
+        const reponseApi = createResponseApi();
+        responseApi.updateInfo(requestBodyData);
     }
 
 /**
@@ -921,6 +920,9 @@ function renderDesign(apiData,config){
     container.innerHTML = "";
     container.className = "design-container";
     container.dataset.apiId=apiData.id;
+
+    //初始化响应区域的接口实例
+    const responseApi= createResponseApi(apiData.id);
 
     // 复用调试窗口的接口基本信息展示部分（url，请求参数），保持设计窗口和调试窗口风格一致
     renderDebug(apiData,config); 
@@ -1163,10 +1165,7 @@ function renderDesign(apiData,config){
                 "contentType": responseContentTypeValue,
             };
 
-        request.put('/response/updateInfo', requestBodyData)
-        .then(res => {
-            console.log('响应信息更新成功：', res);
-        });
+        updateApiInfoArea(requestBodyData);
     });
 
     //响应Body
@@ -1188,8 +1187,10 @@ function renderDesign(apiData,config){
     //console.log('Respons容器接口id：', responseBodyContainer.dataset.apiId);
     responseBodyContainer.className='response-body-container';
 
+    
+
      //发送GET请求，获取到响应数据
-    request.get(`/response/list/${apiData.id}`)
+    responseApi.list()
     .then(response => {
 
         if(response.data && response.data.data && response.data.data.length > 0) {
@@ -1226,7 +1227,7 @@ function renderDesign(apiData,config){
             console.log('初始化根节点：', root);
 
             //如果是根节点，初始化发送创建请求
-            const url=`/response/add`;
+            
             //获取表格转Json数据
             const responseCodeInput = responseCode;
             const responseNameInput = responseName;
@@ -1244,8 +1245,8 @@ function renderDesign(apiData,config){
                 body: JSON.stringify(jsonStr)
             };
 
-            //发送POST请求
-            request.post(url, requestBodyData)
+            //发送新建请求
+            responseApi.add(requestBodyData)
             .then(res => {
                 console.log('根节点创建成功：', res,'responseId:', res.data.data.id);
                 //将返回的responseId存储在容器dataset中，方便后续更新
@@ -1279,6 +1280,10 @@ function renderBodyNodeForm(container){
     const apiId=container.dataset.apiId;
     const responseId=container.dataset.responseId;
     const rootId=container.dataset.rootId;
+
+    const responseApi= createResponseApi(apiId);
+
+
     container.innerHTML = "";
 
     container.dataset.apiId=apiId; // 确保接口id在dataset中，后续发送请求时可以用到
@@ -1390,20 +1395,6 @@ function renderBodyNodeForm(container){
             keyInput.style.marginLeft=margin;
             formDataLi.dataset.parentId=Data.parentId;
 
-            // //在树结构中找到父节点，添加当前节点为父节点的子节点
-            // const parentNode=nodeMap.get(Data.parentId);
-            // if(parentNode) {
-            //     const newNode = new TreeNode({
-            //         key: Data.key,
-            //         type: Data.type,
-            //         value: Data.value,
-            //         explanation: Data.explanation,
-            //     });
-            //     parentNode.addChild(newNode);
-            //     formDataLi.id=newNode.id; // 将生成的节点id赋值给表单行的id，方便后续操作
-            // } else {
-            //     console.error('父节点未找到，无法添加子节点，父节点id：', Data.parentId);
-            // }
         }
 
         function updatateResponseBody(){
@@ -1414,9 +1405,8 @@ function renderBodyNodeForm(container){
                 "apiId": apiId,
                 "responseBody": data
             };
-            request.put(`/response/updateBody`, 
-                requestBodyData
-            ).then(res => {
+            responseApi.updateBody(requestBodyData)
+            .then(res => {
                 console.log('参数更新成功：', res);
             });
         }
@@ -1475,10 +1465,7 @@ function renderBodyNodeForm(container){
                     console.error('根节点未找到，无法发送请求');
                     return;
                 }
-                //发送请求（只修改body，在初始化根节点的时候发送创建请求）
-                //console.log('当前树结构：', nodeMap.get(container.dataset.rootId));
-                // console.log('转换为JSON字符串：', treeToJsonString(nodeMap.get(container.dataset.rootId)));
-                // console.log('1293 responseId:', container.dataset.responseId);
+
                 updatateResponseBody();
             }
         });
@@ -1583,7 +1570,7 @@ function renderBodyNodeForm(container){
         const apiId= document.getElementById('subWindow').dataset.apiId;// 获取当前接口id
         
         
-        request.get(`/response/getResponse/${container.dataset.responseId}`)
+        responseApi.getResponse(container.dataset.responseId)
         .then(res => {
             console.log('获取参数列表成功：', res);
             const data = res.data.data || {};
@@ -1650,7 +1637,7 @@ function renderPreview(apiData){
     }
     container.innerHTML="";//清空原有内容
     container.className = "preview-container"; // 新增容器类名
-
+    const responseApi = createResponseApi(apiData.id); // 初始化接口实例，后续获取响应数据时可以用到
     // 文档预览标题
     const previewTitle = document.createElement('h2');
     
@@ -1745,6 +1732,7 @@ function renderPreview(apiData){
     bodyInfoSpan.appendChild(bodyType);
 
     paramsDiv.appendChild(bodyInfoSpan);
+    container.appendChild(paramsDiv);
     if(localStorage.getItem('contentType')!=typeList.None) {
 
         request.get(`/request/param/list/${apiData.id}`,{
@@ -1756,7 +1744,7 @@ function renderPreview(apiData){
             if(data.length > 0) {
                 const paramsList = createParamList(data);
                 paramsDiv.appendChild(paramsList);
-                container.appendChild(paramsDiv);
+                
             }
         })
     }else{
@@ -1764,12 +1752,49 @@ function renderPreview(apiData){
         noParamsSpan.textContent = "无";
         noParamsSpan.className = "no-params-span";
         paramsDiv.appendChild(noParamsSpan);
-        container.appendChild(paramsDiv);
+
     }
     
-    
-}
+    //把响应信息也展示在预览窗口
+    const responseTitle=document.createElement('h3');
+    responseTitle.textContent = "返回响应";
+    responseTitle.className = "params-title";
+    responseTitle.style.marginTop = "1.5rem";
+    container.appendChild(responseTitle);
 
+    responseApi.list()
+    .then(response => {
+        if(response.data && response.data.data && response.data.data.length > 0) {
+            const responseData = response.data.data[0];
+            const responseInfoDiv = document.createElement('div');
+            responseInfoDiv.className = 'response-info-div';
+            const codeLabel = document.createElement('span');
+            codeLabel.textContent = `HTTP状态码: ${responseData.responseCode || '未设置'}`;
+            codeLabel.style.color = getCodeColor(responseData.responseCode);
+            codeLabel.className = 'response-code-label';
+            const nameLabel = document.createElement('span');
+            nameLabel.textContent = `名称: ${responseData.name || '未设置'}`;
+            nameLabel.className = 'response-name-label';
+            const contentTypeLabel = document.createElement('span');
+            contentTypeLabel.textContent = `内容格式: ${responseData.contentType || '未设置'}`;
+            contentTypeLabel.className = 'response-content-type-label';
+            responseInfoDiv.appendChild(codeLabel);
+            responseInfoDiv.appendChild(nameLabel);
+            responseInfoDiv.appendChild(contentTypeLabel);
+            container.appendChild(responseInfoDiv);
+            if(responseData.responseBody) {
+                const responseBodyTitle = document.createElement('span');
+                responseBodyTitle.textContent = "Body";
+                responseBodyTitle.className = "response-body-title";
+                container.appendChild(responseBodyTitle);
+                const responseBodyPre = document.createElement('pre');
+                responseBodyPre.className = 'response-body-pre';
+                responseBodyPre.textContent = responseData.responseBody;
+                container.appendChild(responseBodyPre);
+            }
+        }
+    });
+}
 window.onload = async function () {
     const params=getUrlParams();
     //console.log("创建标题：",params.name);
