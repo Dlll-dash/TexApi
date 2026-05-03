@@ -1775,14 +1775,14 @@ function renderPreview(apiData){
     container.appendChild(responsePreviewDiv);
     
     const responseInfoSpan= document.createElement('span');
-    responseInfoSpan.className = 'response-info-label';
+    responseInfoSpan.className = 'preview-response-info-label';
 
     const statusCodeSpan = document.createElement('span');
     statusCodeSpan.className = 'preview-type-label';
 
     const contentTypeSpan = document.createElement('span');
     contentTypeSpan.textContent = `${httpMimeTypes['json']}`;
-    contentTypeSpan.className = 'preview-type-label';
+    contentTypeSpan.className = 'preview-type-without-bg';
 
     responseInfoSpan.appendChild(statusCodeSpan);
     responseInfoSpan.appendChild(contentTypeSpan);

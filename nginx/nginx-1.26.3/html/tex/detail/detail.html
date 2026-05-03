@@ -1042,7 +1042,9 @@
             background-color: #ffffff;
         }
 
-        
+        .response-preview-div{
+            margin-top: 0.5rem;
+        }
 
         .preview-body-info {
             display: flex;
@@ -1055,11 +1057,16 @@
 
         .body-title {
             display: block;
+            font-size: 0.9rem;
             font-weight: 600;
             color: #2d3748;
             /* padding-bottom: 0.5rem; */
             
             /* margin-bottom: 0.5rem; */
+        }
+        
+        .preview-response-info-label{
+            margin-left: 0.5rem;
         }
 
         .preview-type-label {
@@ -1074,14 +1081,54 @@
             font-weight: 550;
             white-space: nowrap;
         }
+        .preview-type-without-bg{
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.25rem 0.6rem;
+            border-radius: 999px;
+            background-color: transparent;
+            color: #9aa3ad;
+            font-size: 0.7rem;
+            /* font-weight: 550; */
+            white-space: nowrap;
+        }
 
-        .params-list-display,.params-table-display {
+        .params-list-display {
             list-style: none;
             padding: 0.25rem 0;
             margin: 0;
         }
 
-        .params-list-display li, .params-table-display tr {
+        .params-list-display li {
+            display: flex;
+            gap: 0.75rem;
+            align-items: center;
+            padding: 0.35rem 0;
+            border: none; /* no inner borders between items */
+        }
+        .params-table-display {
+            width: 100%;
+            padding: 0.25rem 0;
+            border-collapse: collapse;
+            margin: 0;
+        }
+
+        /* .params-table-display td {
+            padding: 0.35rem 0.5rem;
+            vertical-align: middle;
+            border: none; 
+        } */
+
+        .connector-cell {
+            width: auto;
+            color: #cbd5e0;
+            white-space: pre;
+             /* 保持空格格式 */
+            /* text-align: center; */
+        }
+
+        .params-table-display tr {
             display: flex;
             gap: 0.75rem;
             align-items: center;
@@ -1121,7 +1168,7 @@
             border: 1px solid #e8e8e8;
             border-bottom-left-radius: 6px;
             border-top: transparent;
-            padding: 0.75rem;
+            padding: 0.75rem; 
             margin-top: -2rem;
             background-color: #ffffff;
         }

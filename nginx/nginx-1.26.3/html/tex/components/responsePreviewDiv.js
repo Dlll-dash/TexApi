@@ -25,23 +25,40 @@ export function createResponsePreviewDiv(response) {
 
             const tableBody = document.createElement('tbody');
 
-            function renderResponseBody(responseBody, depth = 0) {
+            function buildConnectorText(depth, ancestors, isLast) {
+                if (depth === 0) {
+                    return '';
+                }
+
+                // Add blank prefixes according to the number of ancestors
+                // Each ancestor contributes two spaces so the connector aligns by depth
+                const blanks = '       '.repeat(Math.max(0, ancestors.length-1));
+                return `${blanks}${isLast ? '└─' : '├─'}`;
+            }
+
+            function renderResponseBody(responseBody, depth = 0, ancestors = []) {
                 if (!responseBody || typeof responseBody !== 'object') {
                     return;
                 }
 
-                Object.entries(responseBody).forEach(([key, value]) => {
+                const entries = Object.entries(responseBody).filter(([, value]) => value && typeof value === 'object');
+
+                entries.forEach(([key, value], index) => {
                     if (!key ||!value || typeof value !== 'object') {
                         return;
                     }
                     console.log('正在渲染响应体字段：', key, value);
                     const li = document.createElement('tr');
+                    const isLast = index === entries.length - 1;
 
+                    const connectorCell = document.createElement('td');
+                    connectorCell.className = 'connector-cell';
+                    connectorCell.textContent = buildConnectorText(depth, ancestors, isLast);
+                    
 
                     const keyCell = document.createElement('td');
                     keyCell.className = 'param-name-display';
                     keyCell.textContent = key || '(空键)';
-                    keyCell.style.marginLeft = `${0.75 + depth * 1.25}rem`;
 
 
                     const typeCell = document.createElement('td');
@@ -51,14 +68,16 @@ export function createResponsePreviewDiv(response) {
                     const explanationCell = document.createElement('td');
                     explanationCell.textContent = value.explanation || '';
                     explanationCell.className = 'param-explanation';
-
+                    if(depth>0){
+                        li.appendChild(connectorCell);
+                    }
                     li.appendChild(keyCell);
                     li.appendChild(typeCell);
                     li.appendChild(explanationCell);
                     tableBody.appendChild(li);
 
                     if (value.type === typeList.object && value.value && typeof value.value === 'object') {
-                        renderResponseBody(value.value, depth + 1);
+                        renderResponseBody(value.value, depth + 1, [...ancestors, !isLast]);
                     }
                 });
             }
