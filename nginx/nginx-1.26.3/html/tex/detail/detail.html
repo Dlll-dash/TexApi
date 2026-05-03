@@ -394,7 +394,8 @@
             font-size: 1rem;
             font-weight: 600;
             color: #2d3748;
-            margin-bottom: 0.8rem;
+            margin-bottom: 0.5rem;
+            margin-top: 1.5rem;
         }
 
         .params-table {
@@ -802,7 +803,8 @@
             flex-direction: row;
             align-items: center;
             padding: 0.5rem 0.7rem;
-            border-radius: 4px;
+            border-top-left-radius: 6px;
+            border-top-right-radius: 6px;
             border: 1px solid #e8e8e8;
             border-bottom: transparent;
             color: #4a5568;
@@ -1024,11 +1026,19 @@
         }
 
         /* Preview request-params styles */
-        .params-div {
+        .preview-params-title{
+            font-size: 1rem;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: -0.5rem; 
+            margin-top: 1.5rem;
+        }
+
+        .preview-params-div {
             border: 1px solid #e8e8e8;
             border-radius: 8px;
             padding: 0.75rem;
-            margin-top: -1rem;
+            /* margin-top: -1rem; */
             background-color: #ffffff;
         }
 
@@ -1065,13 +1075,13 @@
             white-space: nowrap;
         }
 
-        .params-list-display {
+        .params-list-display,.params-table-display {
             list-style: none;
             padding: 0.25rem 0;
             margin: 0;
         }
 
-        .params-list-display li {
+        .params-list-display li, .params-table-display tr {
             display: flex;
             gap: 0.75rem;
             align-items: center;
@@ -1107,6 +1117,15 @@
             display: inline-block;
         }
 
+        .preview-response-container {
+            border: 1px solid #e8e8e8;
+            border-bottom-left-radius: 6px;
+            border-top: transparent;
+            padding: 0.75rem;
+            margin-top: -2rem;
+            background-color: #ffffff;
+        }
+        
         @media (max-width: 768px) {
             body {
                 flex-direction: column; /* 小屏改为上下布局 */

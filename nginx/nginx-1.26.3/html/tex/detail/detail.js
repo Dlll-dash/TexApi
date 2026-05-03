@@ -12,6 +12,7 @@ import { createApiStatusSpan } from "../components/apiStatusSpan.js";
 import { formatDateToChinese, formatRelativeTime } from "../utils/DateUtil.js";
 import { createParamList } from "../components/paramList.js";
 import { createResponseApi } from "../api/ResponseApi.js";
+import { createResponsePreviewDiv } from "../components/responsePreviewDiv.js";
 
 const nodeMap=NodeMapManager.getInstance();
 
@@ -1710,12 +1711,12 @@ function renderPreview(apiData){
 
     const paramsTitle=document.createElement('h3');
     paramsTitle.textContent = "请求参数";
-    paramsTitle.className = "params-title";
-    paramsTitle.style.marginTop = "1.5rem";
+    paramsTitle.className = "preview-params-title";
+    // paramsTitle.style.marginTop = "1.5rem";
     container.appendChild(paramsTitle);
 
     const paramsDiv=document.createElement('div');
-    paramsDiv.className = "params-div";
+    paramsDiv.className = "preview-params-div";
 
     const bodyInfoSpan=document.createElement('span');
     bodyInfoSpan.className = 'preview-body-info';
@@ -1758,42 +1759,77 @@ function renderPreview(apiData){
     //把响应信息也展示在预览窗口
     const responseTitle=document.createElement('h3');
     responseTitle.textContent = "返回响应";
-    responseTitle.className = "params-title";
-    responseTitle.style.marginTop = "1.5rem";
+    responseTitle.className = "preview-params-title";
     container.appendChild(responseTitle);
 
+    const responseLabelContainer=document.createElement('div');
+    responseLabelContainer.className='response-label-container';
+    container.appendChild(responseLabelContainer);
+
+    const responseContainer=document.createElement('div');
+    responseContainer.className='preview-response-container';
+
+    let responsePreviewDiv=document.createElement('div');
+    responsePreviewDiv.className='response-preview-div';
+
+    container.appendChild(responsePreviewDiv);
+    
+    const responseInfoSpan= document.createElement('span');
+    responseInfoSpan.className = 'response-info-label';
+
+    const statusCodeSpan = document.createElement('span');
+    statusCodeSpan.className = 'preview-type-label';
+
+    const contentTypeSpan = document.createElement('span');
+    contentTypeSpan.textContent = `${httpMimeTypes['json']}`;
+    contentTypeSpan.className = 'preview-type-label';
+
+    responseInfoSpan.appendChild(statusCodeSpan);
+    responseInfoSpan.appendChild(contentTypeSpan);
+    responseContainer.appendChild(responseInfoSpan);
+    responseContainer.appendChild(responsePreviewDiv);
+    container.appendChild(responseContainer);
+
+
+    //获取响应信息数据，展示在预览窗口
     responseApi.list()
     .then(response => {
         if(response.data && response.data.data && response.data.data.length > 0) {
+            //默认第一个响应数据作为预览展示
             const responseData = response.data.data[0];
-            const responseInfoDiv = document.createElement('div');
-            responseInfoDiv.className = 'response-info-div';
-            const codeLabel = document.createElement('span');
-            codeLabel.textContent = `HTTP状态码: ${responseData.responseCode || '未设置'}`;
+            
+            const responseLabel=document.createElement('span');
+            responseLabel.className='response-label';
+            const codeLabel=document.createElement('span');
+            const nameLabel=document.createElement('span');
+            codeLabel.className='code-label';
+            nameLabel.className='name-label';
+
+            statusCodeSpan.textContent = `HTTP 状态码: ${responseData.responseCode}` || "未知状态码";
+            codeLabel.textContent = responseData.responseCode || '';
             codeLabel.style.color = getCodeColor(responseData.responseCode);
-            codeLabel.className = 'response-code-label';
-            const nameLabel = document.createElement('span');
-            nameLabel.textContent = `名称: ${responseData.name || '未设置'}`;
-            nameLabel.className = 'response-name-label';
-            const contentTypeLabel = document.createElement('span');
-            contentTypeLabel.textContent = `内容格式: ${responseData.contentType || '未设置'}`;
-            contentTypeLabel.className = 'response-content-type-label';
-            responseInfoDiv.appendChild(codeLabel);
-            responseInfoDiv.appendChild(nameLabel);
-            responseInfoDiv.appendChild(contentTypeLabel);
-            container.appendChild(responseInfoDiv);
-            if(responseData.responseBody) {
-                const responseBodyTitle = document.createElement('span');
-                responseBodyTitle.textContent = "Body";
-                responseBodyTitle.className = "response-body-title";
-                container.appendChild(responseBodyTitle);
-                const responseBodyPre = document.createElement('pre');
-                responseBodyPre.className = 'response-body-pre';
-                responseBodyPre.textContent = responseData.responseBody;
-                container.appendChild(responseBodyPre);
-            }
+            nameLabel.textContent = responseData.name || '';
+
+            responseLabel.appendChild(codeLabel);
+            responseLabel.appendChild(nameLabel);
+
+            const responseFillLabel=document.createElement('span');
+            responseFillLabel.className='response-fill-label';
+            
+            
+            responseLabelContainer.appendChild(responseLabel);
+            responseLabelContainer.appendChild(responseFillLabel);
+            
+            responseApi.getResponse(responseData.id)
+            .then(res => {
+                const data = res.data.data || {};
+                //异步返回替换原节点
+                responsePreviewDiv.replaceWith(createResponsePreviewDiv(data.responseBody));
+            })
         }
     });
+
+    
 }
 window.onload = async function () {
     const params=getUrlParams();
