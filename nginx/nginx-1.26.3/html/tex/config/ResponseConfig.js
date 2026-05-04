@@ -1,5 +1,5 @@
 const codeColorMap = {
-    '2xx': '#4acf88', // 绿色
+    '2xx': '#71eaaa', // 绿色
     '3xx': '#3182ce', // 蓝色
     '4xx': '#dd6b20', // 橙色
     '5xx': '#e53e3e'  // 红色
