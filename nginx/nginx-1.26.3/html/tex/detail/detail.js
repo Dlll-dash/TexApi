@@ -13,6 +13,7 @@ import { formatDateToChinese, formatRelativeTime } from "../utils/DateUtil.js";
 import { createParamList } from "../components/paramList.js";
 import { createResponseApi } from "../api/ResponseApi.js";
 import { createResponsePreviewDiv } from "../components/responsePreviewDiv.js";
+import { createResponseJsonExampleDiv } from "../components/responseJsonExampleDiv.js";
 
 const nodeMap=NodeMapManager.getInstance();
 
@@ -1471,7 +1472,19 @@ function renderBodyNodeForm(container){
             }
         });
         
-        ul.appendChild(formDataLi);
+        //在父项下面添加新列表项，形成树结构
+        if(Data.neigborId){
+            //如果有邻居节点id，说明新节点添加为兄弟节点，插入到邻居节点后面
+            const neighbor=document.getElementById(Data.neigborId);
+            if(neighbor && neighbor.parentNode === ul) {
+                ul.insertBefore(formDataLi, neighbor.nextSibling);
+            }else{
+                ul.appendChild(formDataLi);
+            }
+        }else{
+            //如果没有邻居节点id，说明新节点添加为子节点，直接添加到父节点下面
+            ul.appendChild(formDataLi);
+        }
 
         //updateRemoveButtons(); // 添加新项后更新删除按钮显示
         
@@ -1530,6 +1543,7 @@ function renderBodyNodeForm(container){
 
             const data={
                 parentId: formDataLi.id,
+                neigborId: formDataLi.id, //暂时不需要邻居节点id，因为新节点默认添加为最后一个子节点
             }
             //检查类型
             if(typeInput.value==typeList.object){
@@ -1769,10 +1783,9 @@ function renderPreview(apiData){
     const responseContainer=document.createElement('div');
     responseContainer.className='preview-response-container';
 
+    //响应信息表格预览区域（左）
     let responsePreviewDiv=document.createElement('div');
     responsePreviewDiv.className='response-preview-div';
-
-    container.appendChild(responsePreviewDiv);
     
     const responseInfoSpan= document.createElement('span');
     responseInfoSpan.className = 'preview-response-info-label';
@@ -1786,10 +1799,20 @@ function renderPreview(apiData){
 
     responseInfoSpan.appendChild(statusCodeSpan);
     responseInfoSpan.appendChild(contentTypeSpan);
-    responseContainer.appendChild(responseInfoSpan);
+    responsePreviewDiv.appendChild(responseInfoSpan);
     responseContainer.appendChild(responsePreviewDiv);
     container.appendChild(responseContainer);
 
+    //响应信息JSON示例区域（右）
+    let responseJsonExampleDiv=document.createElement('div');
+    responseJsonExampleDiv.className='response-json-example-div';
+
+    responseContainer.appendChild(responseJsonExampleDiv);
+    
+    const responseJsonExampleTitle=document.createElement('span');
+    responseJsonExampleTitle.textContent = "示例";
+    responseJsonExampleTitle.className = "body-title";
+    responseJsonExampleDiv.appendChild(responseJsonExampleTitle);
 
     //获取响应信息数据，展示在预览窗口
     responseApi.list()
@@ -1824,7 +1847,9 @@ function renderPreview(apiData){
             .then(res => {
                 const data = res.data.data || {};
                 //异步返回替换原节点
-                responsePreviewDiv.replaceWith(createResponsePreviewDiv(data.responseBody));
+                createResponsePreviewDiv(data.responseBody, responsePreviewDiv);
+                createResponseJsonExampleDiv(data.responseBody, responseJsonExampleDiv);
+                
             })
         }
     });

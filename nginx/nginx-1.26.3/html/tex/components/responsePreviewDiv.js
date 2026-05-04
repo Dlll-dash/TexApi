@@ -1,10 +1,7 @@
 import { httpMimeTypes,typeList } from "../config/TypeConfig.js";
 
-export function createResponsePreviewDiv(response) {
-    console.log('创建响应预览组件，响应数据：', response);
-    const responsePreviewDiv = document.createElement('div');
-    responsePreviewDiv.className = 'response-preview-div';
-
+export function createResponsePreviewDiv(response,responsePreviewDiv) {
+    //console.log('创建响应预览组件，响应数据：', response);
     
     const responseUl= document.createElement('ul');
     responseUl.className = 'params-list-display';
@@ -47,7 +44,7 @@ export function createResponsePreviewDiv(response) {
                     if (!key ||!value || typeof value !== 'object') {
                         return;
                     }
-                    console.log('正在渲染响应体字段：', key, value);
+                    //console.log('正在渲染响应体字段：', key, value);
                     const li = document.createElement('tr');
                     const isLast = index === entries.length - 1;
 
@@ -83,10 +80,12 @@ export function createResponsePreviewDiv(response) {
             }
             
             renderResponseBody(responseBody);
-            console.log('完成响应体渲染，表格内容：', tableBody.innerHTML);
+            //console.log('完成响应体渲染，表格内容：', tableBody.innerHTML);
             responseTable.appendChild(tableBody);
             responsePreviewDiv.appendChild(responseTable);
             renderedAsTable = true;
+
+            
         } catch (e) {
             const errorLi = document.createElement('li');
             errorLi.textContent = "响应体非JSON格式，无法解析展示";
@@ -98,6 +97,5 @@ export function createResponsePreviewDiv(response) {
         responsePreviewDiv.appendChild(responseUl);
     }
 
-    return responsePreviewDiv;
 }
 

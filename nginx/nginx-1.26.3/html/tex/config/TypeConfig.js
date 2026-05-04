@@ -27,11 +27,11 @@ const typeList = {
 
 //类型示例值
 const typeExampleValue = {
-    'string':'string',
-    'integer':1,
-    'boolean':false,
-    'array':[],
-    'null':null
+    'String':'string',
+    'Integer':1,
+    'Boolean':false,
+    'Array':[],
+    'Null':null
 }
 
 
