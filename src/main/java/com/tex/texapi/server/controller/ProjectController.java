@@ -5,10 +5,7 @@ import com.tex.texapi.pojo.entity.Project;
 import com.tex.texapi.server.service.ProjectService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -31,5 +28,26 @@ public class ProjectController {
         log.info("获取项目列表,{}",id);
         List<Project> projectList = projectService.getProjectList(id);
         return Result.success(projectList);
+    }
+
+    @PostMapping("/create")
+    public Result createProject(@RequestBody Project project) {
+        log.info("创建项目：{}", project);
+        projectService.createProject(project);
+        return Result.success();
+    }
+
+    @PutMapping("/update")
+    public Result updateProject(@RequestBody Project project) {
+        log.info("更新项目：{}", project);
+        projectService.updateProject(project);
+        return Result.success();
+    }
+
+    @DeleteMapping("/delete/{id}")
+    public Result deleteProject(@PathVariable Long id) {
+        log.info("删除项目：{}", id);
+        projectService.deleteProject(id);
+        return Result.success();
     }
 }

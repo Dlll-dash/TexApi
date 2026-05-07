@@ -31,12 +31,24 @@
             padding: 2rem;
         }
 
+        .page-head {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .toolbar-row {
+            display: flex;
+            justify-content: flex-end;
+        }
+
         /* 标题样式 */
         h2 {
             color: #2d3748;
             font-size: 1.8rem;
             font-weight: 600;
-            margin-bottom: 1.5rem;
+            margin-bottom: 0;
             padding-bottom: 0.8rem;
             border-bottom: 1px solid #e8e8e8;
             text-align: center;
@@ -70,6 +82,7 @@
             /* 强制正方形：宽高相等 */
             width: 200px;
             height: 200px;
+            position: relative;
             /* 卡片样式 */
             padding: 1.5rem;
             border-radius: 8px;
@@ -86,6 +99,80 @@
             justify-content: center;
             align-items: center;
             text-align: center;
+        }
+
+        .item-actions {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 2;
+        }
+
+        .more-btn {
+            width: 28px;
+            height: 28px;
+            border: none;
+            border-radius: 999px;
+            background: rgba(66, 153, 225, 0.1);
+            color: #2d3748;
+            font-size: 18px;
+            line-height: 1;
+            cursor: pointer;
+            opacity: 0;
+            transform: scale(0.92);
+            transition: opacity 0.18s ease, transform 0.18s ease, background 0.18s ease;
+        }
+
+        li:hover .more-btn,
+        li:focus-within .more-btn,
+        .more-btn.is-open {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        .more-btn:hover {
+            background: rgba(66, 153, 225, 0.18);
+        }
+
+        .item-menu {
+            position: absolute;
+            top: 38px;
+            right: 0;
+            min-width: 128px;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            box-shadow: 0 12px 28px rgba(15, 23, 42, 0.12);
+            padding: 0.35rem 0;
+            display: none;
+            z-index: 3;
+        }
+
+        .item-menu.is-open {
+            display: block;
+        }
+
+        .item-menu button {
+            width: 100%;
+            border: none;
+            background: transparent;
+            padding: 0.65rem 0.9rem;
+            text-align: left;
+            font-size: 0.95rem;
+            cursor: pointer;
+            color: #2d3748;
+        }
+
+        .item-menu button:hover {
+            background: #f8fafc;
+        }
+
+        .item-menu .danger {
+            color: #e53e3e;
+        }
+
+        .item-menu .danger:hover {
+            background: #fff5f5;
         }
         
         /* 列表项hover效果（阴影加深 + 轻微上浮） */
@@ -107,6 +194,120 @@
             color: #718096;
             font-size: 0.9rem;
             line-height: 1.5;
+        }
+
+        /* 添加按钮样式 */
+        .add-btn {
+            background: #4299e1;
+            color: #fff;
+            border: none;
+            padding: 0.8rem 1.1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(72,187,120,0.2);
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+            font-weight: 600;
+        }
+        .add-btn:hover { transform: translateY(-2px); }
+
+        /* 自定义右键菜单 */
+        .rename-modal-backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.45);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            padding: 1rem;
+        }
+
+        .rename-modal-backdrop.is-open {
+            display: flex;
+        }
+
+        .rename-modal {
+            width: min(92vw, 440px);
+            background: #ffffff;
+            border-radius: 16px;
+            box-shadow: 0 24px 60px rgba(15, 23, 42, 0.2);
+            padding: 1.25rem;
+        }
+
+        .rename-modal h3 {
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .rename-modal label {
+            display: block;
+            font-size: 0.92rem;
+            color: #4b5563;
+            margin-bottom: 0.45rem;
+        }
+
+        .rename-modal input {
+            width: 100%;
+            border: 1px solid #d1d5db;
+            border-radius: 10px;
+            padding: 0.8rem 0.9rem;
+            font-size: 1rem;
+            outline: none;
+        }
+
+        .rename-modal input:focus {
+            border-color: #4299e1;
+            box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.15);
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.75rem;
+            margin-top: 1rem;
+        }
+
+        .btn-secondary,
+        .btn-primary {
+            border: none;
+            border-radius: 10px;
+            padding: 0.7rem 1rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .btn-secondary {
+            background: #e5e7eb;
+            color: #374151;
+        }
+
+        .btn-primary {
+            background: #4299e1;
+            color: #ffffff;
+        }
+
+        .btn-danger {
+            border: none;
+            border-radius: 10px;
+            padding: 0.7rem 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            background: #e53e3e;
+            color: #ffffff;
+        }
+
+        .delete-modal-desc {
+            color: #4b5563;
+            line-height: 1.6;
+            font-size: 0.95rem;
+        }
+
+        @media (hover: none) {
+            .more-btn {
+                opacity: 1;
+                transform: scale(1);
+            }
         }
 
         /* 错误提示样式 */
@@ -149,6 +350,41 @@
 </head>
 <body>
     <div id="container"></div>
+
+    <div id="rename-backdrop" class="rename-modal-backdrop" aria-hidden="true">
+        <div class="rename-modal" role="dialog" aria-modal="true" aria-labelledby="rename-title">
+            <h3 id="rename-title">修改项目名称</h3>
+            <label for="rename-input">新名称</label>
+            <input id="rename-input" type="text" maxlength="60" autocomplete="off" />
+            <div class="modal-actions">
+                <button id="rename-cancel" class="btn-secondary" type="button">取消</button>
+                <button id="rename-confirm" class="btn-primary" type="button">确定</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="add-backdrop" class="rename-modal-backdrop" aria-hidden="true">
+        <div class="rename-modal" role="dialog" aria-modal="true" aria-labelledby="add-title">
+            <h3 id="add-title">新建项目</h3>
+            <label for="add-input">项目名称</label>
+            <input id="add-input" type="text" maxlength="60" autocomplete="off" />
+            <div class="modal-actions">
+                <button id="add-cancel" class="btn-secondary" type="button">取消</button>
+                <button id="add-confirm" class="btn-primary" type="button">创建</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="delete-backdrop" class="rename-modal-backdrop" aria-hidden="true">
+        <div class="rename-modal" role="dialog" aria-modal="true" aria-labelledby="delete-title">
+            <h3 id="delete-title">删除项目</h3>
+            <p id="delete-desc" class="delete-modal-desc">确认删除该项目吗？</p>
+            <div class="modal-actions">
+                <button id="delete-cancel" class="btn-secondary" type="button">取消</button>
+                <button id="delete-confirm" class="btn-danger" type="button">确认删除</button>
+            </div>
+        </div>
+    </div>
 
     <script src="home.js"></script>
 </body>

@@ -6,7 +6,7 @@ public class BaseContext {
 
     public static void setCurrentId(Long id){threadLocal.set(id);}
 
-    public static Long getCurrentId(Long id){return threadLocal.get();}
+    public static Long getCurrentId(){return threadLocal.get();}
 
     public static void removeCurrentId(){threadLocal.remove();}
 
