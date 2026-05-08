@@ -1,6 +1,7 @@
 package com.tex.texapi.server.service.impl;
 
 import com.tex.texapi.common.constant.MessageConstant;
+import com.tex.texapi.common.exception.InputException;
 import com.tex.texapi.pojo.dto.ParamDTO;
 import com.tex.texapi.pojo.entity.Params;
 import com.tex.texapi.server.mapper.RequestParamsMapper;
@@ -26,7 +27,7 @@ public class RequestParamsServiceImpl implements RequestParamsService {
         Params param=new Params();
         BeanUtils.copyProperties(paramDTO,param);
         if(param.getName()==null||param.getName().isEmpty()){
-            throw new IllegalArgumentException(MessageConstant.PARAM_NAME_EMPTY);
+            throw new InputException(MessageConstant.PARAM_NAME_EMPTY);
         }
         requestParamsMapper.addParam(param);
         return param;

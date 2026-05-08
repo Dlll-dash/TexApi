@@ -1,6 +1,6 @@
 package com.tex.texapi.common.exception;
 
-public class RequestException extends RuntimeException {
+public class RequestException extends BaseException {
     public RequestException(String message) {
         super(message);
     }
