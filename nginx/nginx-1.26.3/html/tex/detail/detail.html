@@ -509,48 +509,102 @@
             margin: 0.5rem 0;
         }
 
-        #paramsList li, #headersList li, #formDataList li,#xwwwList li {
+        /* 参数表单：尽量贴近 BodyNodeForm 的轻量行式风格 */
+        #formDataList {
             display: flex;
-            gap: 0.5rem;
-            align-items: center;
-            padding: 0.5rem;
-            background-color: #ffffff;
-            border-radius: 6px;
-            margin-bottom: 0.5rem;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-            transition: all 0.2s ease;
-        }
-        
-        #paramsList li:hover, #headersList li:hover,#formDataList li:hover,#xwwwList li:hover{
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            flex-direction: column;
+            gap: 0.2rem;
         }
 
-        #paramsList li:first-child, #headersList li:first-child,#formDataList li:first-child,#xwwwList li:first-child {
+        #formDataList li {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.45rem 0.4rem;
+            background-color: transparent;
+            border-top: 1px solid transparent;
+            border-bottom: 1px solid #edf0f2;
+            border-left: 1px solid transparent;
+            border-right: 1px solid transparent;
+            border-radius: 6px;
+            border-bottom-left-radius: 0;
+            border-bottom-right-radius: 0;
+            transition: border-color 0.2s ease, background-color 0.2s ease, transform 0.2s ease;
+        }
+
+        #formDataList li:hover {
+            background-color: #edf0f2;
+            border-bottom-left-radius: 6px;
+            border-bottom-right-radius: 6px;
+            transform: translateY(-1px);
+        }
+
+        #formDataList li:first-child {
             background-color: #f8f9fa;
             font-weight: 600;
             color: #2d3748;
+            border-bottom: 1px solid #e8e8e8;
+            border-radius: 6px;
             box-shadow: none;
+            transform: none;
         }
 
-        #paramsList input, #headersList input, #formDataList input,#xwwwList input {
-            padding: 0.5rem;
-            border-radius: 4px;
-            font-size: 0.9rem;
+        #formDataList li:first-child:hover {
+            background-color: #f8f9fa;
+            border-bottom-left-radius: 6px;
+            border-bottom-right-radius: 6px;
+            transform: none;
+        }
+
+        #formDataList input {
             border: 1px solid transparent;
-            transition: border-color 0.3s ease;
+            border-radius: 6px;
+            background-color: transparent;
+            padding: 0.45rem 0.5rem;
+            color: #2d3748;
+            transition: border-color 0.2s ease, background-color 0.2s ease;
         }
 
-        #paramsList input:hover, #headersList input:hover,#formDataList input:hover,#xwwwList input:hover {
-            border-color: #e8e8e8;
+        #formDataList input:hover,
+        #formDataList input:focus {
+            border-color: #d7dce2;
+            background-color: #ffffff;
+            outline: none;
         }
 
-        #paramsList input:focus, #headersList input:focus,#formDataList input:focus,#xwwwList input:focus {
-           outline:#718096 solid 1px;
-        }
-
-        .param-label, .header-label, .type-label, .explain-label {
-            color: #718096;
+        #formDataList .param-label {
+            color: #9aa3ad;
             text-align: left;
+            font-size: 0.9rem;
+            font-weight: 550;
+        }
+
+        #formDataList .param-data-row .remove-btn {
+            border: 1px solid transparent;
+            background-color: transparent;
+            border-radius: 6px;
+            padding: 0.3rem 0.5rem;
+            color: #718096;
+            transition: border-color 0.2s ease, background-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
+        }
+
+        #formDataList .param-data-row .remove-btn:hover {
+            border-color: #edf0f2;
+            background-color: #ffffff;
+            color: #4a5568;
+            transform: translateY(-1px);
+        }
+
+        #formDataList .param-data-row .remove-btn.active {
+            color: #e53e3e;
+            background-color: #fef2f2;
+            border-color: #fee2e2;
+        }
+
+        #formDataList .param-data-row .remove-btn.active:hover {
+            color: #e53e3e;
+            background-color: #fef2f2;
+            border-color: #fee2e2;
         }
 
         .param-name-input {
@@ -583,6 +637,11 @@
             min-width: 192px;
         }
 
+        .param-label, .header-label, .type-label, .explain-label {
+            color: #718096;
+            text-align: left;
+        }
+
         #paramsList button, #headersList button,#formDataList button,#xwwwList button {
             padding: 0.5rem 0.8rem;
             border: none;
@@ -591,32 +650,17 @@
             font-size: 0.9rem;
             transition: background-color 0.2s;
         }
-        
-
-        .remove-btn {
-            background-color: #f5f7fa;
-            color: #718096;
-        }
-
-        .remove-btn:hover {
-            background-color: #e0e1e1;
-        }
-
-        .remove-btn.active{
-            color:#e53e3e;
-            background-color: #fef2f2;
-        }
 
         /* 里面的图标 —— 只有它旋转！ */
         .remove-btn i {
-        display: inline-block; 
-        transform: rotate(0deg);
-        transition: transform 0.2s ease; 
+            display: inline-block; 
+            transform: rotate(0deg);
+            transition: transform 0.2s ease; 
         }
 
         /* 激活时图标旋转 */
         .remove-btn.active i {
-        transform: rotate(90deg);
+            transform: rotate(90deg);
         }
         
 

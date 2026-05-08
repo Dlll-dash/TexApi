@@ -634,272 +634,171 @@ function renderform(container,config){
     container.style.opacity = '0';
     container.style.transition = 'opacity 0.2s ease';
 
-    //创建formData列表
-    const ul=document.createElement('ul');
-    ul.id='formDataList';
+    // 创建formData列表（保留原id以兼容现有CSS）
+    const ul = document.createElement('ul');
+    ul.id = 'formDataList';
 
-    const textli=document.createElement('li');
-    const keySpan=document.createElement('span');
-    // keySpan.textContent='参数名';
-    keySpan.className = 'param-label';
-    const valueSpan=document.createElement('span');
-    // valueSpan.textContent='参数值';
-    valueSpan.className = 'param-label';
-    
-    //调整与输入框左对齐
-    const typeSpan=document.createElement('span');
-    // typeSpan.textContent='类型';
-    typeSpan.className = 'param-label';
+    // header 行（第一行为表头）
+    const headerLi = document.createElement('li');
+    headerLi.className = 'param-header-row';
 
-    const explainSpan=document.createElement('span');
-    // explainSpan.textContent='说明';
-    explainSpan.className = 'param-label';
-
+    // 使用 config 来生成表头列，保持顺序一致
     config.forEach(item => {
-        if(item.key === 'name') {
-            keySpan.textContent = item.label;
-            textli.appendChild(keySpan);
-        }else if(item.key === 'value') {
-            valueSpan.textContent = item.label;
-            valueSpan.style.marginLeft=item.marginLeft;
-            textli.appendChild(valueSpan);
-        }else if(item.key === 'type') {
-            typeSpan.textContent = item.label;
-            typeSpan.style.marginLeft=item.marginLeft;
-            textli.appendChild(typeSpan);
-        }else if(item.key === 'explanation') {
-            explainSpan.textContent = item.label;
-            explainSpan.style.marginLeft=item.marginLeft;
-            textli.appendChild(explainSpan);
-        }
+        const span = document.createElement('span');
+        span.className = 'param-label';
+        span.textContent = item.label || '';
+        if(item.marginLeft) span.style.marginLeft = item.marginLeft;
+        headerLi.appendChild(span);
     });
 
-    ul.appendChild(textli);
+    ul.appendChild(headerLi);
 
-    //更新删除按钮状态函数(可选)
+    // 更新删除按钮状态（仅显示有值行的删除按钮）
     function updateRemoveButtons() {
-        const formDataItems = ul.querySelectorAll('li:not(:first-child)');
-
-        //有值的参数项才显示删除按钮
-        formDataItems.forEach((item) => {
-            const removeBtn = item.querySelector('.remove-btn');
-            item.querySelectorAll('input').forEach(input =>{
-                if(input.value.trim()!='') {
-                    removeBtn.style.visibility = 'visible';
-                }
+        const rows = ul.querySelectorAll('li:not(:first-child)');
+        rows.forEach(row => {
+            const removeBtn = row.querySelector('.remove-btn');
+            if(!removeBtn) return;
+            let visible = false;
+            row.querySelectorAll('input').forEach(input => {
+                if(input.value && input.value.trim() !== '') visible = true;
             });
-        })
+            removeBtn.style.visibility = visible ? 'visible' : 'hidden';
+        });
     }
 
-    //添加formData项
+    // 添加数据行（保持原有输入类名，方便样式复用）
     function addFormDataItem(Data){
-        const formDataLi=document.createElement('li');
-        const keyInput=document.createElement('input');
-        const valueInput=document.createElement('input');
-        const typeInput=document.createElement('input');
-        const explainInput=document.createElement('input');
-        const removeButton=document.createElement('button');
+        const row = document.createElement('li');
+        row.className = 'param-data-row';
 
-        keyInput.placeholder="添加参数";
+        const keyInput = document.createElement('input');
+        const valueInput = document.createElement('input');
+        const typeInput = document.createElement('input');
+        const explainInput = document.createElement('input');
+        const removeButton = document.createElement('button');
+
+        keyInput.placeholder = '添加参数';
         keyInput.className = 'param-name-input';
         valueInput.className = 'param-value-input';
         typeInput.className = 'type-input';
         explainInput.className = 'explain-input';
         removeButton.innerHTML = '<i class="bi bi-dash-lg"></i>';
         removeButton.className = 'remove-btn';
-        removeButton.style.visibility = 'hidden'; // 默认隐藏，只有输入内容后才显示
+        removeButton.style.visibility = 'hidden';
 
         if(Data){
-            // 如果传入了Data参数，说明是编辑已有参数，需要预填充输入框
-            keyInput.value=Data.name || '';
-            if(!keyInput.value.trim()) {
-                keyInput.placeholder= "参数名";
-                keyInput.style.outline = '1px solid #e53e3e';
-            }
-            valueInput.value=Data.value || '';
-            typeInput.value=Data.type || '';
-            explainInput.value=Data.explanation || '';
-            formDataLi.dataset.id = Data.id;  //设置行dataset为id(返回的参数id)，方便后续修改
+            keyInput.value = Data.name || '';
+            if(!keyInput.value.trim()) keyInput.placeholder = '参数名';
+            valueInput.value = Data.value || '';
+            typeInput.value = Data.type || '';
+            explainInput.value = Data.explanation || '';
+            row.dataset.id = Data.id;
         }
 
+        // 插入输入项，按照 config 的字段顺序
         config.forEach(item => {
-            if(item.key === 'name') {
-
-                formDataLi.appendChild(keyInput);
-
-            }else if(item.key === 'value') {
-
-                formDataLi.appendChild(valueInput);
-
-            }else if(item.key === 'type') {
-
-                formDataLi.appendChild(typeInput);
-
-            }else if(item.key === 'explanation') {
-
-                formDataLi.appendChild(explainInput);
-
-            }
+            if(item.key === 'name') row.appendChild(keyInput);
+            else if(item.key === 'value') row.appendChild(valueInput);
+            else if(item.key === 'type') row.appendChild(typeInput);
+            else if(item.key === 'explanation') row.appendChild(explainInput);
         });
-        formDataLi.appendChild(removeButton);
+        row.appendChild(removeButton);
 
-        //监听鼠标离开事件
-        formDataLi.addEventListener('focusout', function(e) {
-            // 只有当离开的元素是输入框时才进行验证，避免过早验证
-            if(e.target.tagName.toLowerCase() != 'input') {
-                return;
-            }
-        
+        // 失焦处理：和原逻辑保持一致（新增/更新）
+        row.addEventListener('focusout', function(e){
+            if(e.target.tagName.toLowerCase() !== 'input') return;
 
-            if(keyInput.value.trim()||valueInput.value.trim()||typeInput.value.trim()||explainInput.value.trim()) {
-                //存在输入框不为空
-                if (!keyInput.value.trim()&&(valueInput.value.trim()||typeInput.value.trim()||explainInput.value.trim())) {
-                    //参数名输入框为空
-
-                    //console.log('参数名不能为空');
-                    keyInput.style.outline = "1px solid #e53e3e";
-                    keyInput.style.outlineOffset = "0";
-                    keyInput.placeholder= "参数名";
-                }else{
-                    //参数名不为空
-
-                    //恢复默认
+            if(keyInput.value.trim() || valueInput.value.trim() || typeInput.value.trim() || explainInput.value.trim()){
+                if(!keyInput.value.trim() && (valueInput.value.trim() || typeInput.value.trim() || explainInput.value.trim())){
+                    keyInput.style.outline = '1px solid #e53e3e';
+                    keyInput.style.outlineOffset = '0';
+                    keyInput.placeholder = '参数名';
+                } else {
                     keyInput.style.outline = '';
-                    keyInput.placeholder= "添加参数";
+                    keyInput.placeholder = '添加参数';
                 }
 
-                //新增一个参数项
-                if(!formDataLi.dataset.id){
-                    // 只有当前行没有id，说明是新输入的行，才添加新的空行。有id则不反复添加空行，保证始终只有一个空行
-                    addFormDataItem(null); 
+                if(!row.dataset.id){
+                    // 新条目：先保持本地添加一空行
+                    addFormDataItem(null);
                 }
-                
 
-                keyInput.style.borderColor = '';
-                const paramName = keyInput.value.trim();
-                const paramValue = valueInput.value.trim();
-                const paramType = typeInput.value.trim();
-                const paramExplain = explainInput.value.trim();
+                const apiId = document.getElementById('requestArea').dataset.apiId;
+                const param = [keyInput.value.trim(), valueInput.value.trim(), typeInput.value.trim(), explainInput.value.trim(), apiId];
+                const dataType = container.dataset.type;
+                const method = row.dataset.id ? 'PUT' : 'POST';
 
-                // 获取当前接口id
-                const apiId= document.getElementById('requestArea').dataset.apiId; 
-
-                //console.log(`参数名：${paramName}，参数值：${paramValue}，类型：${paramType}，说明：${paramExplain}, 接口id：${apiId}`);
-                const param=[paramName, paramValue, paramType, paramExplain, apiId];
-
-                //发送请求函数：dataType = requestDataType.Query , ... 作为url的参数
-                const dataType=container.dataset.type;
-
-                // 有id是修改，无id是添加
-                const method = formDataLi.dataset.id ? 'PUT' : 'POST'; 
-                
-                //如果id为空则代表是添加，如果不为空则代表是修改
-                sendRequest(param,formDataLi.dataset.id,dataType,method) 
+                sendRequest(param, row.dataset.id, dataType, method)
                 .then(res => {
-                    console.log('请求成功：', res);
-                    // 设置行dataset为id(返回的参数id)，方便后续修改
-                    if(res.data && res.data.data && res.data.data.id) {
-                        // 根据后端返回结构调整
-                        formDataLi.dataset.id = res.data.data.id; 
+                    if(res.data && res.data.data && res.data.data.id){
+                        row.dataset.id = res.data.data.id;
                     }
-                    // 可以根据需要更新界面，比如显示一个成功提示
-                    //alert('参数保存成功');
-                })
-                
+                }).catch(err => {
+                    console.error('保存参数失败：', err);
+                });
             }
+            updateRemoveButtons();
         });
-        
-        ul.appendChild(formDataLi);
 
-        updateRemoveButtons(); // 添加新项后更新删除按钮显示
-        
-        removeButton.dataset.confirmed = 'false'; // 初始化删除确认状态
-        // 删除按钮点击事件
+        // 删除按钮行为：两步确认
+        removeButton.dataset.confirmed = 'false';
         removeButton.onclick = function(e){
-            e.stopPropagation(); // 阻止事件冒泡，避免触发li的点击事件
-            console.log('点击删除按钮，当前确认状态：', removeButton.dataset.confirmed);
-            if(removeButton.dataset.confirmed === 'true') {
-                console.log('删除参数项，id：', formDataLi.dataset.id);
-                // 如果该项有id，说明已经保存过，需要发送删除请求
-                if(formDataLi.dataset.id) {
-                    const dataType=container.dataset.type;
-                    sendRequest(null, formDataLi.dataset.id, dataType, 'DELETE')
+            e.stopPropagation();
+            if(removeButton.dataset.confirmed === 'true'){
+                if(row.dataset.id){
+                    const dataType = container.dataset.type;
+                    sendRequest(null, row.dataset.id, dataType, 'DELETE');
                 }
-                const formatList=ul.querySelectorAll('li:not(:first-child)');
-                if(formatList.length > 1) {
-                    ul.removeChild(formDataLi);
-                }else{
-
-                    // 只有一个参数项时，清空输入框内容但不删除
-                    formDataLi.querySelectorAll('input').forEach(input => input.value = '');
-                    removeButton.dataset.confirmed = 'false'; // 重置删除确认状态
+                const others = ul.querySelectorAll('li:not(:first-child)');
+                if(others.length > 1){
+                    ul.removeChild(row);
+                } else {
+                    row.querySelectorAll('input').forEach(i => i.value = '');
+                    removeButton.dataset.confirmed = 'false';
                 }
-                // 删除后重新更新删除按钮显示
                 updateRemoveButtons();
-            }else{
-                //第一次点击，进入确认状态
+            } else {
                 removeButton.classList.add('active');
-                setTimeout(() => {
-                removeButton.innerHTML = '<i class="bi bi-x-lg"></i>';
-                }, 200);
+                setTimeout(()=>{ removeButton.innerHTML = '<i class="bi bi-x-lg"></i>'; }, 200);
                 removeButton.dataset.confirmed = 'true';
-
             }
         };
-        removeButton.addEventListener('mouseout', function() {
-            //如果点击一次后移开鼠标，则取消删除确认状态，避免误操作
+        removeButton.addEventListener('mouseout', function(){
             this.classList.remove('active');
             this.dataset.confirmed = false;
-            setTimeout(() => {
-            this.innerHTML = '<i class="bi bi-dash-lg"></i>';
-            }, 200);
+            setTimeout(()=>{ this.innerHTML = '<i class="bi bi-dash-lg"></i>'; }, 200);
         });
+
+        ul.appendChild(row);
+        updateRemoveButtons();
     }
 
-    
     try{
-
-        const requestDataType = container.dataset.type; // 从容器dataset获取数据类型，之前点击不同参数类型时已经设置好了
-        const apiId= document.getElementById('requestArea').dataset.apiId;// 获取当前接口id
-
-        sendRequest(null, apiId, requestDataType, 'GET') // 获取已有参数列表，传入null让函数构造一个空请求体
+        const requestDataType = container.dataset.type;
+        const apiId = document.getElementById('requestArea').dataset.apiId;
+        sendRequest(null, apiId, requestDataType, 'GET')
         .then(res => {
-        
-            console.log('获取参数列表成功：', res);
-            const paramsList = res.data.data || {};
-
-            if(paramsList.length > 0) {
+            const paramsList = res.data.data || [];
+            if(paramsList.length > 0){
                 paramsList.forEach(param => {
-                    //遍历每个参数项，渲染输入框，预填充数据
-                    const paramData = {
-                        name: param.name, 
-                        value: param.value, 
-                        type: param.type, 
-                        explanation: param.explanation, 
-                        id: param.id
-                    }; //后端返回每个param参数的id，用来初始化
-
-                    addFormDataItem(paramData); // 传入参数数据，预填充输入框
-                    
+                    const paramData = { name: param.name, value: param.value, type: param.type, explanation: param.explanation, id: param.id };
+                    addFormDataItem(paramData);
                 });
-
-        }
-        addFormDataItem(null); // 初始化一个参数项
-        
-        
-    })
+            }
+            addFormDataItem(null); // 保持至少一个空行
+            container.appendChild(ul);
+            setTimeout(() => { container.style.opacity = 1; }, 0);
+        }).catch(err => {
+            console.error('获取参数列表失败：', err);
+            container.appendChild(ul);
+            setTimeout(() => { container.style.opacity = 1; }, 0);
+        });
     }catch(err){
-
         console.error('获取参数列表失败详情：', err);
-        const errMsg = err.response?.data?.msg || err.message || '网络错误/后端接口未响应';
-
-        alert('获取参数列表失败：' + errMsg);
-    };
-
-    container.appendChild(ul);
-    setTimeout(() => {
-        container.style.opacity=1;
-    },0); // 先隐藏容器，等内容渲染完成后再显示，避免闪烁
+        container.appendChild(ul);
+        setTimeout(() => { container.style.opacity = 1; }, 0);
+    }
 }
 
 
