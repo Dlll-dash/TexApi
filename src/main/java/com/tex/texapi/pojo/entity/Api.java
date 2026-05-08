@@ -42,7 +42,7 @@ public class Api {
     //创建者
     String createUser;
 
-    //状态 0禁用 1启用
+    //状态 0 开发中 1 维护中 2 已发行
     Integer status;
 
     //接口说明
@@ -50,4 +50,9 @@ public class Api {
 
     //责任人
     String inChargeUser;
+
+    //接口状态
+    public static final int DEVELOPING = 0;
+    public static final int MAINTAINING = 1;
+    public static final int RELEASED = 2;
 }

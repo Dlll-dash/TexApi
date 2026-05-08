@@ -56,8 +56,7 @@ public class ApiServiceImpl implements ApiService {
         String baseUrl=api.getRequestUrl();
 
         //判断状态是否为启用
-        if(api.getStatus()!= StatusConstant.ENABLE){
-
+        if(api.getStatus()==Api.MAINTAINING){
             //禁用则抛出异常
             throw new RequestException(MessageConstant.API_FORBIDDEN);
         }
