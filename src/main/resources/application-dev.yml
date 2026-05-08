@@ -1,8 +1,0 @@
-tex:
-  driver-class-name: com.mysql.cj.jdbc.Driver
-  username: root
-  password: zxc051107
-  datasource:
-    host: localhost
-    port: 3306
-    database: tex_api
