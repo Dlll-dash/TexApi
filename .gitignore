@@ -37,3 +37,5 @@ nginx/nginx-1.26.3/docs
 nginx/nginx-1.26.3/logs
 nginx/nginx-1.26.3/temp
 nginx/nginx-1.26.3/conf
+
+src/main/resources/application-dev.yml
