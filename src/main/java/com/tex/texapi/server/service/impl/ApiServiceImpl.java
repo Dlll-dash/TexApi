@@ -1,22 +1,25 @@
 package com.tex.texapi.server.service.impl;
 
 import com.tex.texapi.common.constant.MessageConstant;
-import com.tex.texapi.common.constant.StatusConstant;
+import com.tex.texapi.common.context.BaseContext;
 import com.tex.texapi.common.exception.RequestException;
 import com.tex.texapi.common.utils.HttpClientUtil;
+import com.tex.texapi.pojo.dto.AddApiDTO;
 import com.tex.texapi.pojo.dto.RequestDTO;
+import com.tex.texapi.pojo.dto.UpdateApiInfoDTO;
 import com.tex.texapi.pojo.entity.Api;
 import com.tex.texapi.pojo.entity.Params;
 import com.tex.texapi.pojo.entity.Request;
+import com.tex.texapi.pojo.vo.AddApiVO;
 import com.tex.texapi.server.mapper.ApiMapper;
 import com.tex.texapi.server.mapper.RequestParamsMapper;
+import com.tex.texapi.server.mapper.ResponseMapper;
 import com.tex.texapi.server.service.ApiService;
 import okhttp3.*;
-import okio.BufferedSink;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 import java.util.List;
@@ -29,7 +32,8 @@ public class ApiServiceImpl implements ApiService {
     private ApiMapper apiMapper;
     @Autowired
     private RequestParamsMapper requestParamsMapper;
-
+    @Autowired
+    private ResponseMapper responseMapper;
 
     /**
      * 根据项目id获取接口列表
@@ -40,6 +44,21 @@ public class ApiServiceImpl implements ApiService {
     public List<Api> list(Long id) {
         List<Api> list=apiMapper.list(id);
         return list;
+    }
+
+    /**
+     * 添加接口
+     *
+     * @param addApiDTO
+     * @return
+     */
+    @Override
+    public AddApiVO addApi(AddApiDTO addApiDTO) {
+        addApiDTO.setCreateUser(BaseContext.getCurrentId());
+        apiMapper.addApi(addApiDTO);
+        AddApiVO addApiVO=new AddApiVO();
+        BeanUtils.copyProperties(addApiDTO,addApiVO);
+        return addApiVO;
     }
 
     @Override
@@ -54,6 +73,11 @@ public class ApiServiceImpl implements ApiService {
 
         //获取url
         String baseUrl=api.getRequestUrl();
+
+        if(baseUrl==null||baseUrl.isEmpty()){
+            //url为空则抛出异常
+            throw new RequestException(MessageConstant.URL_EMPTY);
+        }
 
         //判断状态是否为启用
         if(api.getStatus()==Api.MAINTAINING){
@@ -151,8 +175,20 @@ public class ApiServiceImpl implements ApiService {
         return response.body().toString();
     }
 
+    //更新接口信息
     @Override
-    public void updateInfo(Api api) {
-        apiMapper.updateInfo(api);
+    public void updateInfo(UpdateApiInfoDTO updateApiInfoDTO) {
+        apiMapper.updateInfo(updateApiInfoDTO);
+    }
+
+    @Override
+    @Transactional
+    public void delete(Long id) {
+        //删除接口
+        apiMapper.deleteById(id);
+        //删除接口相关的参数
+        requestParamsMapper.deleteByApiId(id);
+        //删除接口相关的响应参数
+        responseMapper.deleteByApiId(id);
     }
 }

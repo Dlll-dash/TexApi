@@ -1,10 +1,11 @@
 package com.tex.texapi.server.controller;
 
 import com.tex.texapi.common.result.Result;
-import com.tex.texapi.pojo.dto.ParamDTO;
+import com.tex.texapi.pojo.dto.AddApiDTO;
 import com.tex.texapi.pojo.dto.RequestDTO;
+import com.tex.texapi.pojo.dto.UpdateApiInfoDTO;
 import com.tex.texapi.pojo.entity.Api;
-import com.tex.texapi.pojo.entity.Params;
+import com.tex.texapi.pojo.vo.AddApiVO;
 import com.tex.texapi.server.service.ApiService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,9 +42,9 @@ public class ApiController {
     }
 
      @PostMapping("/add")
-    public Result addApi(@RequestBody Api api) {
-         log.info("添加接口：{}", api);
-         //apiService.addApi(api);
+    public Result<AddApiVO> addApi(@RequestBody AddApiDTO apiDTO) {
+         log.info("添加接口：{}", apiDTO);
+         AddApiVO addApiVO=apiService.addApi(apiDTO);
          return Result.success();
      }
 
@@ -55,9 +56,18 @@ public class ApiController {
      }
 
      @PutMapping("/updateInfo")
-        public Result updateInfo(@RequestBody Api api){
-            log.info("更新接口信息：{}",api);
-            apiService.updateInfo(api);
-            return Result.success();
-        }
+    public Result updateInfo(@RequestBody UpdateApiInfoDTO updateApiInfoDTO){
+        log.info("更新接口信息：{}",updateApiInfoDTO);
+        apiService.updateInfo(updateApiInfoDTO);
+        return Result.success();
+    }
+
+    @DeleteMapping("/delete/{id}")
+    public Result delete(@PathVariable Long id) {
+        log.info("删除接口：{}", id);
+        apiService.delete(id);
+        return Result.success();
+    }
+
+
 }

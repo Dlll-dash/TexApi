@@ -1,7 +1,10 @@
 package com.tex.texapi.server.service;
 
+import com.tex.texapi.pojo.dto.AddApiDTO;
 import com.tex.texapi.pojo.dto.RequestDTO;
+import com.tex.texapi.pojo.dto.UpdateApiInfoDTO;
 import com.tex.texapi.pojo.entity.Api;
+import com.tex.texapi.pojo.vo.AddApiVO;
 
 import java.util.List;
 
@@ -29,7 +32,23 @@ public interface ApiService {
 
     /**
      * 更新接口基本信息
-     * @param api
+     * @param updateApiInfoDTO
      */
-    void updateInfo(Api api);
+    void updateInfo(UpdateApiInfoDTO updateApiInfoDTO);
+
+    /**
+     * 添加接口
+     *
+     * @param apiDTO
+     * @return
+     */
+    AddApiVO addApi(AddApiDTO apiDTO);
+
+    /**
+     * 删除接口
+     * @param id
+     */
+    void delete(Long id);
+
+
 }

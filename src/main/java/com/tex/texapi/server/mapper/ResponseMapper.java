@@ -3,6 +3,7 @@ package com.tex.texapi.server.mapper;
 import com.tex.texapi.pojo.entity.Response;
 import com.tex.texapi.pojo.vo.ResponseListVO;
 import com.tex.texapi.pojo.vo.ResponseVO;
+import org.apache.ibatis.annotations.Delete;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Select;
 
@@ -41,4 +42,7 @@ public interface ResponseMapper {
      * @param response
      */
     void updateInfo(Response response);
+
+    @Delete("delete from response where api_id=#{apiId}")
+    void deleteByApiId(Long apiId);
 }

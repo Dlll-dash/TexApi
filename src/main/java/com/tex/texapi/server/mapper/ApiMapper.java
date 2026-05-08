@@ -1,16 +1,23 @@
 package com.tex.texapi.server.mapper;
 
+import com.tex.texapi.pojo.dto.AddApiDTO;
+import com.tex.texapi.pojo.dto.UpdateApiInfoDTO;
 import com.tex.texapi.pojo.entity.Api;
-import com.tex.texapi.pojo.entity.Params;
 import org.apache.ibatis.annotations.Delete;
 import org.apache.ibatis.annotations.Mapper;
-import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 
 import java.util.List;
 
 @Mapper
 public interface ApiMapper {
+
+    /**
+     * 添加接口
+     *
+     * @param apiDTO
+     */
+    void addApi(AddApiDTO apiDTO);
 
     /**
      * 根据项目id获取接口列表
@@ -36,7 +43,14 @@ public interface ApiMapper {
 
     /**
      * 更新接口信息
-     * @param api
+     * @param updateApiInfoDTO
      */
-    void updateInfo(Api api);
+    void updateInfo(UpdateApiInfoDTO updateApiInfoDTO);
+
+    /**
+     * 删除接口
+     * @param id
+     */
+    @Delete("delete from api where id=#{id}")
+    void deleteById(Long id);
 }

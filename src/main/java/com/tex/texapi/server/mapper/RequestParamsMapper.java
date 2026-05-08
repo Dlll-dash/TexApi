@@ -40,4 +40,10 @@ public interface RequestParamsMapper {
     @Delete("delete from request_params where id = #{id}")
     void deleteParamById(Long id);
 
+    /**
+     * 根据接口id删除请求参数
+     * @param apiId
+     */
+    @Delete("delete from request_params where api_id = #{apiId}")
+    void deleteByApiId(Long apiId);
 }

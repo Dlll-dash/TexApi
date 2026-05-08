@@ -27,15 +27,6 @@ public class Api {
     //接口调用方法
     String requestMethod;
 
-    //请求头
-    String requestHeader;
-
-    //请求参数
-    String requestParam;
-
-    //请求示例
-    String responseExample;
-
     //创建时间
     LocalDateTime createTime;
 

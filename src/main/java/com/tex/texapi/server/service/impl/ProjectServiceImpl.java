@@ -7,6 +7,7 @@ import com.tex.texapi.server.mapper.ProjectUserMapper;
 import com.tex.texapi.server.service.ProjectService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -34,6 +35,7 @@ public class ProjectServiceImpl implements ProjectService {
      * @param project
      */
     @Override
+    @Transactional
     public void createProject(Project project) {
         projectMapper.createProject(project);
         //创建项目后，自动添加项目成员关系，暂定项目创建者为管理员
@@ -53,14 +55,15 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
+    @Transactional
     public void deleteProject(Long id) {
         //如果是项目管理员，删除项目（暂定项目创建者为管理员）
         Long userId = BaseContext.getCurrentId();
+        //删除项目成员关系
+        projectUserMapper.deleteProjectUser(id,userId);
         if(projectMapper.isProjectAdmin(userId,id)) {
+            //如果是管理员，删除项目
             projectMapper.deleteProject(id);
-        }else{
-            //如果不是管理员，删除项目成员关系
-            projectUserMapper.deleteProjectUser(id,userId);
         }
     }
 
