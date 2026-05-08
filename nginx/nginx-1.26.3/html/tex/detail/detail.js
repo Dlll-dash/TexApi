@@ -290,6 +290,16 @@ function renderDebug(apiData,config){
     submitButton.addEventListener('click', function() {
         
         console.log(`接口${apiData.id}发送${apiData.requestMethod}请求到：${urlInput.value}`);
+        
+        const responseContent = document.querySelector('.response-content');
+        if (responseContent) {
+            responseContent.innerHTML = `<div class="loading-container"><div class="loading-spinner"></div><span>加载中...</span></div>`;
+            responseContent.style.color = "";
+        }
+
+        const startTime = Date.now();
+        const minLoadingTime = 300;
+
         //发送请求，告诉后端apiId为xxx的接口要发送请求了，在后端向指定接口发送请求
         request.post(`http://localhost/tex/api/send`,{
             
@@ -297,19 +307,30 @@ function renderDebug(apiData,config){
             contentType: localStorage.getItem('contentType') || requestDataType.None // 发送当前选择的请求体格式，后端根据这个参数来区分请求体数据结构
         
         }).then(res => {
-            // 更新响应区域
-            const responseContent = document.querySelector('.response-content');
-            if (responseContent) {
-                responseContent.textContent = JSON.stringify(res, null, 2);
-                responseContent.style.color = "#000"; // 正常颜色
-            }
+            const elapsed = Date.now() - startTime;
+            const remaining = Math.max(0, minLoadingTime - elapsed);
+            
+            setTimeout(() => {
+                // 更新响应区域
+                const responseContent = document.querySelector('.response-content');
+                if (responseContent) {
+                    responseContent.textContent = JSON.stringify(res.data, null, 2);
+                    responseContent.style.color = "#000"; // 正常颜色
+                    responseContent.style.fontFamily = "Consolas, monospace"; // 等宽字体
+                }
+            }, remaining);
         }).catch(err => {
-            // 更新响应区域显示错误
-            const responseContent = document.querySelector('.response-content');
-            if (responseContent) {
-                responseContent.textContent = `错误: ${err.response?.data?.message || err.message || '未知错误'}`;
-                responseContent.style.color = "#ff0000"; // 错误颜色
-            }
+            const elapsed = Date.now() - startTime;
+            const remaining = Math.max(0, minLoadingTime - elapsed);
+            
+            setTimeout(() => {
+                // 更新响应区域显示错误
+                const responseContent = document.querySelector('.response-content');
+                if (responseContent) {
+                    responseContent.textContent = `错误: ${err.response?.data?.message || err.message || '未知错误'}`;
+                    responseContent.style.color = "#e53e3e"; // 错误颜色
+                }
+            }, remaining);
         });
 
     })

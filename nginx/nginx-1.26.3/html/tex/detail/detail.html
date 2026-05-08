@@ -1294,6 +1294,27 @@
             border-radius:6px; 
             font-family:monospace;
         }
+        .loading-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            color: #1890ff;
+            font-size: 14px;
+            padding: 20px 0;
+        }
+        .loading-spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #1890ff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body>

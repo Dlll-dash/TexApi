@@ -1,6 +1,25 @@
 
 // 替换为更稳定的DOMContentLoaded事件
 document.addEventListener('DOMContentLoaded', async function () {
+    function createMenuButton(label, svgPath, className = '') {
+        const button = document.createElement('button');
+        button.type = 'button';
+        if (className) {
+            button.className = className;
+        }
+
+        const icon = document.createElement('span');
+        icon.className = 'menu-icon';
+        icon.innerHTML = svgPath;
+
+        const text = document.createElement('span');
+        text.textContent = label;
+
+        button.appendChild(icon);
+        button.appendChild(text);
+        return button;
+    }
+
     // 获取并校验ID
     const id = localStorage.getItem('id');
     if (!id) {
@@ -195,14 +214,18 @@ document.addEventListener('DOMContentLoaded', async function () {
             const itemMenu = document.createElement('div');
             itemMenu.className = 'item-menu';
 
-            const renameBtn = document.createElement('button');
-            renameBtn.type = 'button';
-            renameBtn.textContent = '修改名称';
+            const renameBtn = createMenuButton('修改名称', `
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path>
+                </svg>
+            `);
 
-            const deleteBtn = document.createElement('button');
-            deleteBtn.type = 'button';
-            deleteBtn.className = 'danger';
-            deleteBtn.textContent = '删除项目';
+            const deleteBtn = createMenuButton('删除项目', `
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <polyline points="3 6 5 6 21 6"></polyline>
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                </svg>
+            `, 'danger');
 
             renameBtn.addEventListener('click', (event) => {
                 event.stopPropagation();

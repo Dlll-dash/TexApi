@@ -154,6 +154,9 @@
 
         .item-menu button {
             width: 100%;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
             border: none;
             background: transparent;
             padding: 0.65rem 0.9rem;
@@ -165,6 +168,22 @@
 
         .item-menu button:hover {
             background: #f8fafc;
+        }
+
+        .menu-icon {
+            width: 16px;
+            height: 16px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex: 0 0 16px;
+            color: currentColor;
+        }
+
+        .menu-icon svg {
+            width: 16px;
+            height: 16px;
+            display: block;
         }
 
         .item-menu .danger {

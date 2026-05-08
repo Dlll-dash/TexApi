@@ -14,4 +14,5 @@ public class MessageConstant {
     public static final String REQUEST_FAILED="请求失败";
     public static final String API_FORBIDDEN="接口维护中";
     public static final String PARAM_NAME_EMPTY="参数名称不能为空";
+
 }

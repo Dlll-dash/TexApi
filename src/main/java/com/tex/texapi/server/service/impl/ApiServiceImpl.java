@@ -81,14 +81,20 @@ public class ApiServiceImpl implements ApiService {
 
         //构建RequestBody
         if(contentType.equals(Request.FormData)){
+            try {
+                //form-data构建（不含文件上传）
+                MultipartBody.Builder builder = new MultipartBody.Builder();
 
-            //form-data构建（不含文件上传）
-            MultipartBody.Builder builder=new MultipartBody.Builder();
-            bodyParams.forEach(p->{
-                builder.addFormDataPart(p.getName(),p.getValue());
-            });
-            requestBody=builder.build();
 
+                if(bodyParams!=null&&!bodyParams.isEmpty()) {
+                    bodyParams.forEach(p -> {
+                        builder.addFormDataPart(p.getName(), p.getValue());
+                    });
+                }
+                requestBody = builder.build();
+            }catch (Exception e){
+                throw new RequestException(MessageConstant.REQUEST_FAILED);
+            }
         }else if(contentType.equals(Request.Json)){
 
             //json构建
