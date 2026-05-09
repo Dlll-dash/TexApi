@@ -43,7 +43,7 @@ public class Api {
     String inChargeUser;
 
     //接口状态
-    public static final int DEVELOPING = 0;
-    public static final int MAINTAINING = 1;
+    public static final int DEVELOPING = 1;
+    public static final int MAINTAINING = 0;
     public static final int RELEASED = 2;
 }
