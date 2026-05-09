@@ -368,7 +368,7 @@ function isSameApi(item, selectApi) {
                 apiName: '未命名接口',
                 requestMethod: 'GET',// 默认GET
                 projectId: getUrlParams().id, 
-                status: 0 // 默认待开发状态
+                status: 1 // 默认待开发状态
 
             });
 
@@ -1120,6 +1120,7 @@ function renderform(container,config){
 //更新接口信息的请求函数
 function updateApiInfoArea(requestBodyData={id,apiName, explanation, status, inChargeUser}) {
         request.put(`http://localhost/tex/api/updateInfo`, requestBodyData)
+        // fetchApiListAndRender();
     }
 
 /**
@@ -1136,7 +1137,7 @@ function renderDesign(apiData,config){
     container.innerHTML = "";
     container.className = "design-container";
     container.dataset.apiId=apiData.id;
-
+    console.log("设计窗口接口数据：", apiData);
     //初始化响应区域的接口实例
     const responseApi= createResponseApi(apiData.id);
 
@@ -1164,7 +1165,7 @@ function renderDesign(apiData,config){
             e.stopPropagation();
             apiData.status = this.dataset.statusValue; // 更新接口数据中的状态字段，后续发送请求时可以用到
             const requestBodyData = {
-                "id": container.dataset.apiId,
+                "id": apiData.id,
                 "apiName": apiName.value.trim(),
                 "explanation": apiExplanation.value.trim(),
                 "status": statusSpan.dataset.status,
@@ -1212,6 +1213,10 @@ function renderDesign(apiData,config){
             apiName.style.borderColor = '';
         }
         
+        apiData.apiName = apiName.value.trim();
+        apiData.explanation = apiExplanation.value.trim();
+        apiData.inChargeUser = apiInChargeUser.value.trim();
+
         const requestBodyData = {
                 "id": container.dataset.apiId,
                 "apiName": apiName.value.trim(),
