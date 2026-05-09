@@ -45,7 +45,7 @@ public class ApiController {
     public Result<AddApiVO> addApi(@RequestBody AddApiDTO apiDTO) {
          log.info("添加接口：{}", apiDTO);
          AddApiVO addApiVO=apiService.addApi(apiDTO);
-         return Result.success();
+         return Result.success(addApiVO);
      }
 
      @PostMapping("/send")

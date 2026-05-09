@@ -33,7 +33,7 @@
                     status=#{status},
                 </if>
                 <if test="explanation!=null">
-                explanation=#{explanation},
+                    explanation=#{explanation},
                 </if>
                 <if test="inChargeUser!=null">
                 in_charge_user=#{inChargeUser},
