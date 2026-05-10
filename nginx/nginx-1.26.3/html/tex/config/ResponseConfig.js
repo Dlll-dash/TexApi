@@ -10,4 +10,20 @@ function getCodeColor(statusCode) {
     return codeColorMap[codeCategory] || '#000'; // 默认黑色
 }
 
-export { codeColorMap, getCodeColor };
+const codeMessageMap = {
+    200: '请求成功',
+    201: '资源创建成功',
+    204: '无内容',
+    301: '永久重定向',
+    302: '临时重定向',
+    304: '未修改',
+    400: '错误请求',
+    401: '未授权',
+    403: '禁止访问',
+    404: '未找到',
+    500: '服务器错误',
+    502: '错误网关',
+    503: '服务不可用'
+};
+
+export { codeColorMap, getCodeColor, codeMessageMap };

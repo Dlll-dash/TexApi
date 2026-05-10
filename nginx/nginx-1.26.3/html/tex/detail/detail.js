@@ -6,7 +6,7 @@ import { debugFormConfig,designFormConfig } from "../config/FormConfig.js";
 import { statusText,statusColors } from "../config/StatusConfig.js";
 import { TreeNode } from "../module/BodyTree.js";
 import { NodeMapManager } from "../module/NodeMapManager.js";
-import { codeColorMap,getCodeColor } from "../config/ResponseConfig.js";
+import { codeColorMap,codeMessageMap,getCodeColor } from "../config/ResponseConfig.js";
 import { urlDisplay } from "../components/urlSpan.js";
 import { createApiStatusSpan } from "../components/apiStatusSpan.js";
 import { formatDateToChinese, formatRelativeTime } from "../utils/DateUtil.js";
@@ -329,6 +329,9 @@ function isSameApi(item, selectApi) {
             ul.querySelectorAll('li').forEach(sibling => sibling.classList.remove('active'));
             li.classList.add('active'); // 添加点击效果
             renderTestWindow(item);
+            //移除响应区域
+            document.getElementById('responseArea')?.remove();
+            renderResponse(document.getElementById('testWindow'));
         };
         ul.appendChild(li);
 
@@ -582,17 +585,61 @@ function renderDebug(apiData,config){
     submitButton.textContent='发送'; 
     submitButton.className = "submit-btn";
     submitButton.addEventListener('click', function() {
-        
-        console.log(`接口${apiData.id}发送${apiData.requestMethod}请求到：${urlInput.value}`);
-        
         const responseContent = document.querySelector('.response-content');
+        const responseCode = document.querySelector('.response-area-code');
+        const minLoadingTime = 300;
+        const maxLoadingTime = 10000;
+        const startTime = Date.now();
+        let settled = false;
+        let maxLoadingTimer = null;
+
+        function clearMaxLoadingTimer() {
+            if (maxLoadingTimer) {
+                clearTimeout(maxLoadingTimer);
+                maxLoadingTimer = null;
+            }
+        }
+
+        function finishWithDelay(renderFn) {
+            if (settled) {
+                return;
+            }
+            settled = true;
+            clearMaxLoadingTimer();
+
+            const elapsed = Date.now() - startTime;
+            const remaining = Math.max(0, minLoadingTime - elapsed);
+            setTimeout(renderFn, remaining);
+        }
+
         if (responseContent) {
             responseContent.innerHTML = `<div class="loading-container"><div class="loading-spinner"></div><span>加载中...</span></div>`;
             responseContent.style.color = "";
+            responseContent.style.fontFamily = "inherit";
         }
 
-        const startTime = Date.now();
-        const minLoadingTime = 300;
+        if (responseCode) {
+            responseCode.textContent = '';
+            responseCode.style.color = '';
+        }
+
+        maxLoadingTimer = setTimeout(() => {
+            if (settled) {
+                return;
+            }
+            settled = true;
+            if (responseContent) {
+                responseContent.textContent = '请求超时，已停止等待响应';
+                responseContent.style.color = '#e53e3e';
+                responseContent.style.fontFamily = 'inherit';
+            }
+            if (responseCode) {
+                responseCode.textContent = '';
+                responseCode.style.color = '';
+            }
+        }, maxLoadingTime);
+
+        console.log(`接口${apiData.id}发送${apiData.requestMethod}请求到：${urlInput.value}`);
 
         //发送请求，告诉后端apiId为xxx的接口要发送请求了，在后端向指定接口发送请求
         request.post(`http://localhost/tex/api/send`,{
@@ -601,44 +648,56 @@ function renderDebug(apiData,config){
             contentType: localStorage.getItem('contentType') || requestDataType.None // 发送当前选择的请求体格式，后端根据这个参数来区分请求体数据结构
         
         }).then(res => {
-            const elapsed = Date.now() - startTime;
-            const remaining = Math.max(0, minLoadingTime - elapsed);
-            
-            setTimeout(() => {
-                // 更新响应区域
-                const responseContent = document.querySelector('.response-content');
-                if (responseContent) {
-                    const rawData = res?.data?.data;
-                    res.data.data=JSON.parse(rawData);
-                    let formattedData = res.data;
+            finishWithDelay(() => {
+                if (!responseContent) {
+                    return;
+                }
 
-                    if (typeof formattedData === 'string') {
+                const responseData = res?.data?.data;
+                const rawBody = responseData?.body;
+
+                if (rawBody !== undefined && rawBody !== null) {
+                    let formattedData = rawBody;
+                    if (typeof rawBody === 'string') {
                         try {
-                            formattedData = JSON.parse(formattedData);
+                            formattedData = JSON.parse(rawBody);
                         } catch (parseErr) {
-                            // 保持原字符串，避免非 JSON 文本时报错
+                            formattedData = rawBody;
                         }
                     }
 
                     responseContent.textContent = typeof formattedData === 'string'
                         ? formattedData
                         : JSON.stringify(formattedData, null, 2);
-                    responseContent.style.color = "#000"; // 正常颜色
-                    responseContent.style.fontFamily = "Consolas, monospace"; // 等宽字体
+                    responseContent.style.color = '#000';
+                    responseContent.style.fontFamily = 'Consolas, monospace';
+                } else {
+                    responseContent.textContent = codeMessageMap[responseData?.code] || '请求成功但无响应体';
+                    responseContent.style.color = '#e53e3e';
+                    responseContent.style.fontFamily = 'inherit';
                 }
-            }, remaining);
+
+                if (responseCode) {
+                    const statusCode = responseData?.code || 0;
+                    responseCode.textContent = statusCode;
+                    responseCode.style.color = getCodeColor(statusCode);
+                }
+            });
         }).catch(err => {
-            const elapsed = Date.now() - startTime;
-            const remaining = Math.max(0, minLoadingTime - elapsed);
-            
-            setTimeout(() => {
-                // 更新响应区域显示错误
-                const responseContent = document.querySelector('.response-content');
-                if (responseContent) {
-                    responseContent.textContent = `错误: ${err.response?.data?.message || err.message || '未知错误'}`;
-                    responseContent.style.color = "#e53e3e"; // 错误颜色
+            finishWithDelay(() => {
+                if (!responseContent) {
+                    return;
                 }
-            }, remaining);
+
+                responseContent.textContent = `错误: ${err.response?.data?.message || err.message || '未知错误'}`;
+                responseContent.style.color = '#e53e3e';
+                responseContent.style.fontFamily = 'inherit';
+
+                if (responseCode) {
+                    responseCode.textContent = '';
+                    responseCode.style.color = '';
+                }
+            });
         });
 
     })
@@ -714,11 +773,18 @@ function renderResponse(container){
     const responseDiv=document.createElement('div');
     responseDiv.className = "response-container";
     responseDiv.id="responseArea";
+    const responseTitleSpan = document.createElement('span');
     // 响应结果标题
     const responseTitle = document.createElement('span');
     responseTitle.className = "response-title";
     responseTitle.textContent = "响应结果：";
-    responseDiv.appendChild(responseTitle);
+    responseTitleSpan.appendChild(responseTitle);
+
+    const statusSpan = document.createElement('span');
+    statusSpan.className = "response-area-code";
+    responseTitleSpan.appendChild(statusSpan);
+
+    responseDiv.appendChild(responseTitleSpan);
     
     // 新增响应结果区域，美化调试窗口
     const responseArea = document.createElement('div');
