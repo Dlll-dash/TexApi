@@ -172,7 +172,15 @@ public class ApiServiceImpl implements ApiService {
         }
 
         //返回结果
-        return response.body().toString();
+        String body = null;
+        if (response != null && response.body() != null) {
+            try (ResponseBody responseBody = response.body()) {
+                body = responseBody.string();
+            } catch (IOException e) {
+                throw new RequestException(MessageConstant.REQUEST_FAILED);
+            }
+        }
+        return body;
     }
 
     //更新接口信息

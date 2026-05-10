@@ -608,7 +608,21 @@ function renderDebug(apiData,config){
                 // 更新响应区域
                 const responseContent = document.querySelector('.response-content');
                 if (responseContent) {
-                    responseContent.textContent = JSON.stringify(res.data, null, 2);
+                    const rawData = res?.data?.data;
+                    res.data.data=JSON.parse(rawData);
+                    let formattedData = res.data;
+
+                    if (typeof formattedData === 'string') {
+                        try {
+                            formattedData = JSON.parse(formattedData);
+                        } catch (parseErr) {
+                            // 保持原字符串，避免非 JSON 文本时报错
+                        }
+                    }
+
+                    responseContent.textContent = typeof formattedData === 'string'
+                        ? formattedData
+                        : JSON.stringify(formattedData, null, 2);
                     responseContent.style.color = "#000"; // 正常颜色
                     responseContent.style.fontFamily = "Consolas, monospace"; // 等宽字体
                 }
@@ -824,13 +838,13 @@ function renderBody(container,config){
                 if(!contentDiv.dataset.id) {
                     sendRequest(param,null,requestDataType.Json, 'POST')
                     .then(res => {
-                        alert('Json保存成功');
+                        //alert('Json保存成功');
                         if(res.data && res.data.data && res.data.data.id) {
                             contentDiv.dataset.id = res.data.data.id;
                         }
                     })
                 }else{
-                    alert('Json更新成功');
+                    //alert('Json更新成功');
                     sendRequest(param, contentDiv.dataset.id, requestDataType.Json, 'PUT');
                 }
             }
