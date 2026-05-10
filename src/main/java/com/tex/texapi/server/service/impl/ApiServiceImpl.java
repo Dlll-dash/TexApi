@@ -11,6 +11,7 @@ import com.tex.texapi.pojo.entity.Api;
 import com.tex.texapi.pojo.entity.Params;
 import com.tex.texapi.pojo.entity.Request;
 import com.tex.texapi.pojo.vo.AddApiVO;
+import com.tex.texapi.pojo.vo.RequestVO;
 import com.tex.texapi.server.mapper.ApiMapper;
 import com.tex.texapi.server.mapper.RequestParamsMapper;
 import com.tex.texapi.server.mapper.ResponseMapper;
@@ -67,7 +68,7 @@ public class ApiServiceImpl implements ApiService {
     }
 
     @Override
-    public String send(RequestDTO requestDTO) {
+    public RequestVO send(RequestDTO requestDTO) {
         //获取api实体
         Api api=apiMapper.getById(requestDTO.getApiId());
 
@@ -172,6 +173,16 @@ public class ApiServiceImpl implements ApiService {
         }
 
         //返回结果
+        if(response==null){
+            throw new RequestException(MessageConstant.REQUEST_FAILED);
+        }
+        if(!response.isSuccessful()){
+            return RequestVO.builder()
+                    .body(null)
+                    .code(String.valueOf(response.code()))
+                    .build();
+        }
+
         String body = null;
         if (response != null && response.body() != null) {
             try (ResponseBody responseBody = response.body()) {
@@ -180,7 +191,10 @@ public class ApiServiceImpl implements ApiService {
                 throw new RequestException(MessageConstant.REQUEST_FAILED);
             }
         }
-        return body;
+        return  RequestVO.builder()
+                .body(body)
+                .code(String.valueOf(response.code()))
+                .build();
     }
 
     //更新接口信息

@@ -5,6 +5,7 @@ import com.tex.texapi.pojo.dto.RequestDTO;
 import com.tex.texapi.pojo.dto.UpdateApiInfoDTO;
 import com.tex.texapi.pojo.entity.Api;
 import com.tex.texapi.pojo.vo.AddApiVO;
+import com.tex.texapi.pojo.vo.RequestVO;
 
 import java.util.List;
 
@@ -28,7 +29,7 @@ public interface ApiService {
      * @param requestDTO
      * @return
      */
-    String send(RequestDTO requestDTO);
+    RequestVO send(RequestDTO requestDTO);
 
     /**
      * 更新接口基本信息

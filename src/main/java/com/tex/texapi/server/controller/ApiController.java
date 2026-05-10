@@ -6,6 +6,7 @@ import com.tex.texapi.pojo.dto.RequestDTO;
 import com.tex.texapi.pojo.dto.UpdateApiInfoDTO;
 import com.tex.texapi.pojo.entity.Api;
 import com.tex.texapi.pojo.vo.AddApiVO;
+import com.tex.texapi.pojo.vo.RequestVO;
 import com.tex.texapi.server.service.ApiService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -49,10 +50,10 @@ public class ApiController {
      }
 
      @PostMapping("/send")
-     public Result<String> send(@RequestBody RequestDTO requestDTO){
+     public Result<RequestVO> send(@RequestBody RequestDTO requestDTO){
         log.info("发送请求：{}",requestDTO);
-        String response=apiService.send(requestDTO);
-        return Result.success(response);
+        RequestVO requestVO =apiService.send(requestDTO);
+        return Result.success(requestVO);
      }
 
      @PutMapping("/updateInfo")
