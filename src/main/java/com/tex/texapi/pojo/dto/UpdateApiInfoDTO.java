@@ -2,6 +2,8 @@ package com.tex.texapi.pojo.dto;
 
 import lombok.Data;
 
+import java.time.LocalDateTime;
+
 @Data
 public class UpdateApiInfoDTO {
     //api的id
@@ -14,4 +16,8 @@ public class UpdateApiInfoDTO {
     String explanation;
     //责任人
     String inChargeUser;
+    //更新时间
+    LocalDateTime updateTime;
+    //更新者id
+    Long updateUser;
 }

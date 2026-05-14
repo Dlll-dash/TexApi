@@ -1,8 +1,12 @@
 package com.tex.texapi.server.mapper;
 
+import com.tex.texapi.common.constant.AutoFillConstant;
+import com.tex.texapi.common.enumeration.OperationType;
 import com.tex.texapi.pojo.dto.AddApiDTO;
+import com.tex.texapi.pojo.dto.UpdateApiDTO;
 import com.tex.texapi.pojo.dto.UpdateApiInfoDTO;
 import com.tex.texapi.pojo.entity.Api;
+import com.tex.texapi.server.annotation.AutoFill;
 import org.apache.ibatis.annotations.Delete;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Select;
@@ -17,6 +21,7 @@ public interface ApiMapper {
      *
      * @param apiDTO
      */
+    @AutoFill(OperationType.INSERT)
     void addApi(AddApiDTO apiDTO);
 
     /**
@@ -29,9 +34,10 @@ public interface ApiMapper {
 
     /**
      * 更新api信息
-     * @param api
+     * @param updateApiDTO
      */
-    void updateApi(Api api);
+    @AutoFill(OperationType.UPDATE)
+    void updateApi(UpdateApiDTO updateApiDTO);
 
     /**
      * 根据id获取api
@@ -45,6 +51,7 @@ public interface ApiMapper {
      * 更新接口信息
      * @param updateApiInfoDTO
      */
+    @AutoFill(OperationType.UPDATE)
     void updateInfo(UpdateApiInfoDTO updateApiInfoDTO);
 
     /**

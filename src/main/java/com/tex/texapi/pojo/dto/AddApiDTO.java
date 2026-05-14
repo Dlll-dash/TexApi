@@ -27,6 +27,12 @@ public class AddApiDTO {
     //创建者id
     Long createUser;
 
+    //更新时间
+    LocalDateTime updateTime;
+
+    //更新者id
+    Long updateUser;
+
     //状态 0 开发中 1 维护中 2 已发行
     Integer status;
 

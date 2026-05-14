@@ -3,8 +3,8 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="com.tex.texapi.server.mapper.ApiMapper">
     <insert id="addApi" keyProperty="id" useGeneratedKeys="true">
-        insert into api (project_id, api_name, request_url, request_method, create_time, create_user, status, explanation, in_charge_user)
-        VALUES (#{projectId}, #{apiName}, #{requestUrl}, #{requestMethod}, now(), #{createUser}, #{status}, #{explanation}, #{inChargeUser})
+        insert into api (project_id, api_name, request_url, request_method, status, explanation, in_charge_user, create_time,create_user,update_time,update_user)
+        VALUES (#{projectId}, #{apiName}, #{requestUrl}, #{requestMethod}, #{status}, #{explanation}, #{inChargeUser},#{createTime},#{createUser},#{updateTime},#{updateUser})
     </insert>
 
     <update id="updateApi">
@@ -19,8 +19,15 @@
                     request_url = #{requestUrl},
                 </if>
                 <if test="status!=null">
-                    status = #{status}
+                    status = #{status},
                 </if>
+                <if test="updateTime!=null">
+                    update_time = #{updateTime},
+                </if>
+                <if test="updateUser!=null">
+                    update_user = #{updateUser}
+                </if>
+
         where id = #{id}
     </update>
     <update id="updateInfo">
@@ -36,7 +43,13 @@
                     explanation=#{explanation},
                 </if>
                 <if test="inChargeUser!=null">
-                in_charge_user=#{inChargeUser},
+                    in_charge_user=#{inChargeUser},
+                </if>
+                <if test="updateTime!=null">
+                    update_time=#{updateTime},
+                </if>
+                <if test="updateUser!=null">
+                    update_user=#{updateUser}
                 </if>
             </set>
         where id = #{id}
@@ -48,11 +61,13 @@
                request_url,
                request_method,
                create_time,
+               update_time,
                status,
                explanation,
                in_charge_user,
-               u.name as create_user
-               from api a left join user u on a.create_user = u.id
+               u1.name as create_user,
+               u2.name as update_user
+               from api a left join user u1 on a.create_user = u1.id left join user u2 on a.update_user=u2.id
                where project_id=#{id}
         order by status desc
     </select>

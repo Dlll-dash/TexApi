@@ -30,7 +30,18 @@
         if (!value) {
             return '未设置';
         }
+        if (Array.isArray(value)) {
+            const [year, month, day] = value;
+            if (year && month && day) {
+                return `${year}年${month}月${day}日`;
+            }
+        }
         const text = String(value).trim();
+        const parts = text.split(',').map(part => part.trim()).filter(Boolean);
+        if (parts.length >= 3 && parts.every(part => /^\d+$/.test(part))) {
+            const [year, month, day] = parts;
+            return `${year}年${month}月${day}日`;
+        }
         if (/\d+\s*天前$|\d+\s*小时前$|\d+\s*分钟前$|刚刚$/.test(text)) {
             return text;
         }
@@ -38,17 +49,7 @@
         if (Number.isNaN(date.getTime())) {
             return text;
         }
-        const diff = Date.now() - date.getTime();
-        if (diff < 60000) {
-            return '刚刚';
-        }
-        if (diff < 3600000) {
-            return `${Math.floor(diff / 60000)} 分钟前`;
-        }
-        if (diff < 86400000) {
-            return `${Math.floor(diff / 3600000)} 小时前`;
-        }
-        return `${Math.floor(diff / 86400000)} 天前`;
+        return `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日`;
     }
 
     export { formatDateToChinese, formatRelativeTime };

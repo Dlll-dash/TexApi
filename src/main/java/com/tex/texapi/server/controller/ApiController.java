@@ -3,6 +3,7 @@ package com.tex.texapi.server.controller;
 import com.tex.texapi.common.result.Result;
 import com.tex.texapi.pojo.dto.AddApiDTO;
 import com.tex.texapi.pojo.dto.RequestDTO;
+import com.tex.texapi.pojo.dto.UpdateApiDTO;
 import com.tex.texapi.pojo.dto.UpdateApiInfoDTO;
 import com.tex.texapi.pojo.entity.Api;
 import com.tex.texapi.pojo.vo.AddApiVO;
@@ -36,9 +37,9 @@ public class ApiController {
     }
 
     @PutMapping("/update")
-    public Result updateApi(@RequestBody Api api){
-        log.info("更新接口：{}",api);
-        apiService.updateApi(api);
+    public Result updateApi(@RequestBody UpdateApiDTO updateApiDTO){
+        log.info("更新接口：{}",updateApiDTO);
+        apiService.updateApi(updateApiDTO);
         return Result.success();
     }
 

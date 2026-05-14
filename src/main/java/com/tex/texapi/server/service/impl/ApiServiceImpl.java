@@ -6,6 +6,7 @@ import com.tex.texapi.common.exception.RequestException;
 import com.tex.texapi.common.utils.HttpClientUtil;
 import com.tex.texapi.pojo.dto.AddApiDTO;
 import com.tex.texapi.pojo.dto.RequestDTO;
+import com.tex.texapi.pojo.dto.UpdateApiDTO;
 import com.tex.texapi.pojo.dto.UpdateApiInfoDTO;
 import com.tex.texapi.pojo.entity.Api;
 import com.tex.texapi.pojo.entity.Params;
@@ -55,7 +56,6 @@ public class ApiServiceImpl implements ApiService {
      */
     @Override
     public AddApiVO addApi(AddApiDTO addApiDTO) {
-        addApiDTO.setCreateUser(BaseContext.getCurrentId());
         apiMapper.addApi(addApiDTO);
         AddApiVO addApiVO=new AddApiVO();
         BeanUtils.copyProperties(addApiDTO,addApiVO);
@@ -63,8 +63,8 @@ public class ApiServiceImpl implements ApiService {
     }
 
     @Override
-    public void updateApi(Api api) {
-        apiMapper.updateApi(api);
+    public void updateApi(UpdateApiDTO updateApiDTO) {
+        apiMapper.updateApi(updateApiDTO);
     }
 
     @Override

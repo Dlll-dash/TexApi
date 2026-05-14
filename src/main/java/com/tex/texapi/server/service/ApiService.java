@@ -2,6 +2,7 @@ package com.tex.texapi.server.service;
 
 import com.tex.texapi.pojo.dto.AddApiDTO;
 import com.tex.texapi.pojo.dto.RequestDTO;
+import com.tex.texapi.pojo.dto.UpdateApiDTO;
 import com.tex.texapi.pojo.dto.UpdateApiInfoDTO;
 import com.tex.texapi.pojo.entity.Api;
 import com.tex.texapi.pojo.vo.AddApiVO;
@@ -19,9 +20,9 @@ public interface ApiService {
 
     /**
      * 更新接口信息
-     * @param api
+     * @param updateApiDTO
      */
-    void updateApi(Api api);
+    void updateApi(UpdateApiDTO updateApiDTO);
 
     /**
      * 向指定接口发送请求

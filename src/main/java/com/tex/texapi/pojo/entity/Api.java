@@ -33,6 +33,12 @@ public class Api {
     //创建者
     String createUser;
 
+    //接口更新时间
+    LocalDateTime updateTime;
+
+    //更新者
+    String updateUser;
+
     //状态 0 开发中 1 维护中 2 已发行
     Integer status;
 
