@@ -13,19 +13,25 @@ spring:
     url: jdbc:mysql://${tex.datasource.host}:${tex.datasource.port}/${tex.datasource.database}?serverTimezone=Asia/Shanghai&useUnicode=true&characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull&useSSL=false&allowPublicKeyRetrieval=true
     username: ${tex.username}
     password: ${tex.password}
+  data:
+    redis:
+      host: ${tex.redis.host}
+      port: ${tex.redis.port}
+      password: ${tex.redis.password}
+      database: ${tex.redis.database}
 mybatis:
   mapper-locations: classpath*:mapper/**/*.xml    # mapper 映射文件路径
   type-aliases-package: com.tex.texapi.pojo.entity  # 实体类别名包
-  configuration:  # mybatis 内置配置（缩进 2 个空格，隶属于 mybatis）
-    map-underscore-to-camel-case: true  # 下划线转驼峰（缩进 4 个空格）
+  configuration:  # mybatis 内置配置
+    map-underscore-to-camel-case: true  # 下划线转驼峰
 
-# 日志配置（和 mybatis 同级，不能嵌套在 mybatis 里）
+
 logging:
-  level:  # 日志级别配置（缩进 2 个空格）
-    com.tex.texapi:  # 你的项目包名（缩进 4 个空格）
-      mapper: debug   # mapper 层打印 debug 日志（缩进 6 个空格）
-      service: info   # service 层打印 info 日志
-      controller: info  # controller 层打印 info 日志
+  level:
+    com.tex.texapi:
+      mapper: debug
+      service: info
+      controller: info
 
 
 

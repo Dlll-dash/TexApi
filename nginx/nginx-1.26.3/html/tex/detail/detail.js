@@ -1466,7 +1466,7 @@ function renderDesign(apiData,config){
                 "contentType": responseContentTypeValue,
             };
 
-        updateApiInfoArea(requestBodyData);
+        responseApi.updateInfo(requestBodyData);
     });
 
     //响应Body
