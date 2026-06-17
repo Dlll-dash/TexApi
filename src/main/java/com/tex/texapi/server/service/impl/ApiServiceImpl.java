@@ -20,6 +20,7 @@ import com.tex.texapi.server.service.ApiService;
 import okhttp3.*;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -36,6 +37,8 @@ public class ApiServiceImpl implements ApiService {
     private RequestParamsMapper requestParamsMapper;
     @Autowired
     private ResponseMapper responseMapper;
+
+
 
     /**
      * 根据项目id获取接口列表
@@ -69,6 +72,8 @@ public class ApiServiceImpl implements ApiService {
 
     @Override
     public RequestVO send(RequestDTO requestDTO) {
+
+
         //获取api实体
         Api api=apiMapper.getById(requestDTO.getApiId());
 

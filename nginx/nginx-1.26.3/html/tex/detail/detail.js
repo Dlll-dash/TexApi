@@ -679,6 +679,9 @@ function renderDebug(apiData,config){
                     responseContent.style.fontFamily = 'Consolas, monospace';
                 } else {
                     responseContent.textContent = codeMessageMap[responseData?.code] || '请求成功但无响应体';
+                    if(res.data.code === 0) {
+                        responseContent.textContent = codeMessageMap[0]+"（"+(res.data.msg || '未知错误')+"）";
+                    }
                     responseContent.style.color = '#e53e3e';
                     responseContent.style.fontFamily = 'inherit';
                 }

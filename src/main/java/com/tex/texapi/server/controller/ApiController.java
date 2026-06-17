@@ -1,5 +1,6 @@
 package com.tex.texapi.server.controller;
 
+import com.tex.texapi.common.context.BaseContext;
 import com.tex.texapi.common.result.Result;
 import com.tex.texapi.pojo.dto.AddApiDTO;
 import com.tex.texapi.pojo.dto.RequestDTO;
@@ -11,9 +12,12 @@ import com.tex.texapi.pojo.vo.RequestVO;
 import com.tex.texapi.server.service.ApiService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Random;
+import java.util.concurrent.TimeUnit;
 
 @RestController
 @RequestMapping("/tex/api")
@@ -23,7 +27,8 @@ public class ApiController {
 
     @Autowired
     private ApiService apiService;
-
+    @Autowired
+    private RedisTemplate redisTemplate;
     /**
      * 根据项目id获取接口列表
      * @param id
@@ -52,7 +57,16 @@ public class ApiController {
 
      @PostMapping("/send")
      public Result<RequestVO> send(@RequestBody RequestDTO requestDTO){
-        log.info("发送请求：{}",requestDTO);
+         String key= BaseContext.getCurrentId()+"_"+requestDTO.getApiId();
+         //设置随机过期时间，防止缓存雪崩
+         long timeout=500+ new Random(System.currentTimeMillis()).nextInt(500);
+         if(redisTemplate.opsForValue().setIfAbsent(key,"1")){
+             redisTemplate.expire(key,timeout, TimeUnit.MILLISECONDS);
+         }else {
+             return Result.error("请勿频繁发送请求");
+         }
+
+         log.info("发送请求：{}",requestDTO);
         RequestVO requestVO =apiService.send(requestDTO);
         return Result.success(requestVO);
      }

@@ -11,6 +11,7 @@ function getCodeColor(statusCode) {
 }
 
 const codeMessageMap = {
+    0:'请求失败',
     200: '请求成功',
     201: '资源创建成功',
     204: '无内容',
