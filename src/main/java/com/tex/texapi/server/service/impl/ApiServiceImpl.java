@@ -168,33 +168,38 @@ public class ApiServiceImpl implements ApiService {
                 response = HttpClientUtil.doDELETE(url,headers);
 
             }
+            //返回结果
+            if(response==null){
+                throw new RequestException(MessageConstant.REQUEST_FAILED);
+            }
+            if(!response.isSuccessful()){
+                return RequestVO.builder()
+                        .body(null)
+                        .code(String.valueOf(response.code()))
+                        .build();
+            }
+
+            String body = null;
+            if (response != null && response.body() != null) {
+                try (ResponseBody responseBody = response.body()) {
+                    body = responseBody.string();
+                } catch (IOException e) {
+                    throw new RequestException(MessageConstant.REQUEST_FAILED);
+                }
+            }
+            return  RequestVO.builder()
+                    .body(body)
+                    .code(String.valueOf(response.code()))
+                    .build();
         }catch (IOException e){
             throw new RequestException(MessageConstant.REQUEST_FAILED);
         }
-
-        //返回结果
-        if(response==null){
-            throw new RequestException(MessageConstant.REQUEST_FAILED);
-        }
-        if(!response.isSuccessful()){
-            return RequestVO.builder()
-                    .body(null)
-                    .code(String.valueOf(response.code()))
-                    .build();
-        }
-
-        String body = null;
-        if (response != null && response.body() != null) {
-            try (ResponseBody responseBody = response.body()) {
-                body = responseBody.string();
-            } catch (IOException e) {
-                throw new RequestException(MessageConstant.REQUEST_FAILED);
+        finally {
+            if (response != null) {
+                response.close();
             }
         }
-        return  RequestVO.builder()
-                .body(body)
-                .code(String.valueOf(response.code()))
-                .build();
+
     }
 
     //更新接口信息
