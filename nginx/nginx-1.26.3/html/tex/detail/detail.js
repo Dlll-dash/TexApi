@@ -585,13 +585,19 @@ function renderDebug(apiData,config){
     submitButton.textContent='发送'; 
     submitButton.className = "submit-btn";
     submitButton.addEventListener('click', function() {
+        const btn=this;
+        btn.disabled = true; // 发送请求后禁用按钮，避免重复点击
+
         const responseContent = document.querySelector('.response-content');
         const responseCode = document.querySelector('.response-area-code');
-        const minLoadingTime = 300;
+        const minLoadingTime = 30;
         const maxLoadingTime = 10000;
+        const loadingHtml = `<div class="loading-container"><div class="loading-spinner"></div><span>加载中...</span></div>`;
         const startTime = Date.now();
         let settled = false;
         let maxLoadingTimer = null;
+
+        
 
         function clearMaxLoadingTimer() {
             if (maxLoadingTimer) {
@@ -613,7 +619,7 @@ function renderDebug(apiData,config){
         }
 
         if (responseContent) {
-            responseContent.innerHTML = `<div class="loading-container"><div class="loading-spinner"></div><span>加载中...</span></div>`;
+            responseContent.innerHTML = loadingHtml;
             responseContent.style.color = "";
             responseContent.style.fontFamily = "inherit";
         }
@@ -698,8 +704,10 @@ function renderDebug(apiData,config){
                     responseCode.style.color = '';
                 }
             });
-        });
-
+        })
+         .finally(() => {
+            btn.disabled = false; // 请求完成后重新启用按钮
+         });
     })
 
     requestLine.appendChild(methodSpan);
