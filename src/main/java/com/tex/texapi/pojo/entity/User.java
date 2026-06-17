@@ -23,7 +23,7 @@ public class User {
     String password;
 
     //性别
-    String sex;
+    String gender;
 
     //手机号码
     String phone;
