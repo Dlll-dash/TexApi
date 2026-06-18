@@ -6,6 +6,7 @@ import com.tex.texapi.common.exception.LoginException;
 import com.tex.texapi.common.properties.JwtProperties;
 import com.tex.texapi.common.utils.JwtUtil;
 import com.tex.texapi.pojo.dto.UserLoginDTO;
+import com.tex.texapi.pojo.dto.UserRegistryDTO;
 import com.tex.texapi.pojo.entity.User;
 import com.tex.texapi.pojo.vo.UserLoginVO;
 import com.tex.texapi.server.mapper.UserMapper;
@@ -50,5 +51,29 @@ public class UserServiceImpl implements UserService {
                 .userName(username)
                 .token(token)
                 .build();
+    }
+
+    @Override
+    public void register(UserRegistryDTO userRegistryDTO) {
+        userRegistryDTO.setPassword(DigestUtils.md5DigestAsHex(userRegistryDTO.getPassword().getBytes()));
+        User user=userMapper.gerByUserName(userRegistryDTO.getUserName());
+        if(user!=null){
+            //用户名已存在
+            throw new LoginException(MessageConstant.ACCOUNT_EXIST);
+        }
+        if(userRegistryDTO.getName()==null||userRegistryDTO.getName().isEmpty()){
+            //姓名不能为空
+            throw new LoginException(MessageConstant.NAME_EMPTY);
+        }else if(userRegistryDTO.getPassword()==null||userRegistryDTO.getPassword().isEmpty()){
+            //密码不能为空
+            throw new LoginException(MessageConstant.PASSWORD_EMPTY);
+        }else if(userRegistryDTO.getUserName()==null||userRegistryDTO.getUserName().isEmpty()){
+            //用户名不能为空
+            throw new LoginException(MessageConstant.USERNAME_EMPTY);
+        }else if(userRegistryDTO.getEmail()==null||userRegistryDTO.getEmail().isEmpty()){
+            //邮箱不能为空
+            throw new LoginException(MessageConstant.EMAIL_EMPTY);
+        }
+        userMapper.register(userRegistryDTO);
     }
 }

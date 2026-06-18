@@ -27,4 +27,7 @@ public class User {
 
     //手机号码
     String phone;
+
+    //邮箱
+    String email;
 }

@@ -1,6 +1,7 @@
 package com.tex.texapi.server.service;
 
 import com.tex.texapi.pojo.dto.UserLoginDTO;
+import com.tex.texapi.pojo.dto.UserRegistryDTO;
 import com.tex.texapi.pojo.vo.UserLoginVO;
 
 public interface UserService {
@@ -9,4 +10,10 @@ public interface UserService {
      * @param userLoginDTO
      */
     UserLoginVO login(UserLoginDTO userLoginDTO);
+
+    /**
+     * 用户注册
+     * @param userRegistryDTO
+     */
+    void register(UserRegistryDTO userRegistryDTO);
 }

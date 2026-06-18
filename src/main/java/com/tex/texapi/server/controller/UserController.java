@@ -2,6 +2,7 @@ package com.tex.texapi.server.controller;
 
 import com.tex.texapi.common.result.Result;
 import com.tex.texapi.pojo.dto.UserLoginDTO;
+import com.tex.texapi.pojo.dto.UserRegistryDTO;
 import com.tex.texapi.pojo.vo.UserLoginVO;
 import com.tex.texapi.server.service.UserService;
 import lombok.extern.slf4j.Slf4j;
@@ -29,5 +30,17 @@ public class UserController {
         log.info("用户登录：{}",userLoginDTO);
         UserLoginVO userLoginVO = userService.login(userLoginDTO);
         return Result.success(userLoginVO);
+    }
+
+    /**
+     * 用户注册
+     * @param userRegistryDTO
+     * @return
+     */
+    @PostMapping("/register")
+    public Result register(@RequestBody UserRegistryDTO userRegistryDTO){
+        log.info("用户注册：{}",userRegistryDTO);
+        userService.register(userRegistryDTO);
+        return Result.success();
     }
 }

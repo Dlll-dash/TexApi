@@ -96,6 +96,19 @@
             cursor: not-allowed;
         }
 
+        .register-link {
+            display: inline-block;
+            margin-top: 1rem;
+            color: #4299e1;
+            text-decoration: none;
+            font-size: 0.95rem;
+            font-weight: 500;
+        }
+
+        .register-link:hover {
+            text-decoration: underline;
+        }
+
         /* 响应式适配小屏幕 */
         @media (max-width: 480px) {
             #loginForm {
@@ -119,6 +132,8 @@
         <input type="password" id="password" placeholder="password"><br><br>
 
         <button type="button" id="loginBtn">登录</button>
+        <br>
+        <a class="register-link" href="pages/registry/registry.html">没有账号？去注册</a>
     </form>
     <script src="index.js"></script>
 </body>
