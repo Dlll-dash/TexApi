@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="../../favicon .ico" type="image/x-icon">
+    <title>TexApi-注册</title>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #f5f7fa;
+            padding: 1rem;
+        }
+
+        .register-card {
+            width: 100%;
+            max-width: 460px;
+            padding: 2.2rem;
+            background: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        }
+
+        .register-card h1 {
+            color: #2d3748;
+            font-size: 2rem;
+            text-align: center;
+            margin-bottom: 0.6rem;
+        }
+
+        .register-card p {
+            text-align: center;
+            color: #718096;
+            margin-bottom: 1.6rem;
+        }
+
+        .field {
+            margin-bottom: 1rem;
+        }
+
+        .field label {
+            display: block;
+            margin-bottom: 0.4rem;
+            color: #4a5568;
+            font-size: 0.95rem;
+        }
+
+        .field input {
+            width: 100%;
+            padding: 0.9rem 1rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .field input:focus {
+            border-color: #4299e1;
+            box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.12);
+        }
+
+        .actions {
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+            margin-top: 1.25rem;
+        }
+
+        .primary-btn,
+        .secondary-link {
+            width: 100%;
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            border: none;
+            border-radius: 8px;
+            padding: 0.9rem 1rem;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            transition: background-color 0.2s ease, transform 0.15s ease;
+        }
+
+        .primary-btn {
+            background: #4299e1;
+            color: #ffffff;
+        }
+
+        .primary-btn:hover {
+            background: #3182ce;
+            transform: translateY(-1px);
+        }
+
+        .secondary-link {
+            background: #e2e8f0;
+            color: #4a5568;
+        }
+
+        .secondary-link:hover {
+            background: #cbd5e1;
+        }
+
+        .helper {
+            margin-top: 1rem;
+            text-align: center;
+            font-size: 0.95rem;
+            color: #718096;
+        }
+
+        .helper a {
+            color: #4299e1;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .helper a:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 480px) {
+            .register-card {
+                padding: 1.6rem;
+            }
+
+            .register-card h1 {
+                font-size: 1.7rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <form id="registerForm" class="register-card" action="">
+        <h1>TexApi</h1>
+        <p>创建你的账号</p>
+
+        <div class="field">
+            <label for="name">用户姓名</label>
+            <input id="name" type="text" placeholder="请输入用户姓名" maxlength="50" autocomplete="name" />
+        </div>
+
+        <div class="field">
+            <label for="userName">用户名</label>
+            <input id="userName" type="text" placeholder="请输入用户名" maxlength="50" autocomplete="username" />
+        </div>
+
+        <div class="field">
+            <label for="password">密码</label>
+            <input id="password" type="password" placeholder="请输入密码" maxlength="60" autocomplete="new-password" />
+        </div>
+
+        <div class="field">
+            <label for="phone">手机号</label>
+            <input id="phone" type="tel" placeholder="请输入手机号" maxlength="20" autocomplete="tel" />
+        </div>
+
+        <div class="field">
+            <label for="email">邮箱</label>
+            <input id="email" type="email" placeholder="请输入邮箱" maxlength="80" autocomplete="email" />
+        </div>
+
+        <div class="actions">
+            <button type="button" id="registerBtn" class="primary-btn">注册</button>
+            <a class="secondary-link" href="../../index.html">返回登录</a>
+        </div>
+
+        <div class="helper">
+            已有账号？<a href="../../index.html">去登录</a>
+        </div>
+    </form>
+    <script type="module" src="registry.js"></script>
+</body>
+</html>
