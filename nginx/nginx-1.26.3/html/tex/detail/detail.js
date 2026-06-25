@@ -1,7 +1,6 @@
-
 import { request,getUrlParams } from "../config/AxiosConfig/AxiosConfig.js";
 import { methodlist,methodColors,methodBackroundColors } from "../config/MethodConfig.js";
-import { requestDataType,typeList,httpMimeTypes} from "../config/TypeConfig.js";
+import { requestDataType,typeList,httpMimeTypes,queryTypeList} from "../config/TypeConfig.js";
 import { debugFormConfig,designFormConfig } from "../config/FormConfig.js";
 import { statusText,statusColors } from "../config/StatusConfig.js";
 import { TreeNode } from "../module/BodyTree.js";
@@ -14,10 +13,12 @@ import { createParamList } from "../components/paramList.js";
 import { createResponseApi } from "../api/ResponseApi.js";
 import { createResponsePreviewDiv } from "../components/responsePreviewDiv.js";
 import { createResponseJsonExampleDiv } from "../components/responseJsonExampleDiv.js";
+import {createTypeDropdown,closeActiveTypeDropdown,setupTypeDropdownClose} from "../components/typeDropdown.js";
 
 const nodeMap=NodeMapManager.getInstance();
 let detailMenuOutsideCloseBound = false;
 let detailRenameModalBound = false;
+
 const detailRenameState = {
     apiId: null,
     apiName: ''
@@ -47,6 +48,14 @@ function closeAllDetailMenus() {
         menu.classList.remove('is-open');
     });
 }
+
+// function closeActiveTypeDropdown() {
+//     if (!activeTypeListDiv) {
+//         return;
+//     }
+//     activeTypeListDiv.style.display = 'none';
+//     activeTypeListDiv = null;
+// }
 
 function getDetailRenameModalElements() {
     return {
@@ -485,7 +494,7 @@ async function sendApiRequest(apiData,method){
         const res= await request(requestConfig);
         return res; // 根据后端返回结构调整
     }catch(err){
-        throw new Error(`请求失败：${err.response?.data?.message || err.message}`);
+        throw new Error(`请求失败：${err.response?.data?.message || err.message || '未知错误'}`);
     }
 }
 
@@ -1040,6 +1049,8 @@ function renderform(container,config){
     container.style.opacity = '0';
     container.style.transition = 'opacity 0.2s ease';
 
+    setupTypeDropdownClose();
+
     // 创建formData列表（保留原id以兼容现有CSS）
     const ul = document.createElement('ul');
     ul.id = 'formDataList';
@@ -1077,6 +1088,7 @@ function renderform(container,config){
     function addFormDataItem(Data){
         const row = document.createElement('li');
         row.className = 'param-data-row';
+        row.style.position = 'relative';
 
         const keyInput = document.createElement('input');
         const valueInput = document.createElement('input');
@@ -1088,6 +1100,7 @@ function renderform(container,config){
         keyInput.className = 'param-name-input';
         valueInput.className = 'param-value-input';
         typeInput.className = 'type-input';
+        typeInput.readOnly = true; // 类型输入框只读，点击时显示下拉列表
         explainInput.className = 'explain-input';
         removeButton.innerHTML = '<i class="bi bi-dash-lg"></i>';
         removeButton.className = 'remove-btn';
@@ -1101,6 +1114,10 @@ function renderform(container,config){
             explainInput.value = Data.explanation || '';
             row.dataset.id = Data.id;
         }
+        
+        // 创建类型下拉列表容器
+        const typeDropdownDiv = createTypeDropdown(queryTypeList, typeInput, row);
+
 
         // 插入输入项，按照 config 的字段顺序
         config.forEach(item => {
@@ -1110,9 +1127,14 @@ function renderform(container,config){
             else if(item.key === 'explanation') row.appendChild(explainInput);
         });
         row.appendChild(removeButton);
-
+        
         // 失焦处理：和原逻辑保持一致（新增/更新）
-        row.addEventListener('focusout', function(e){
+        row.addEventListener('focusout',updateLi); 
+        for(const option of typeDropdownDiv.children){
+            option.addEventListener('click',updateLi);
+        }
+        function updateLi(e){
+            setTimeout(() => {
             if(e.target.tagName.toLowerCase() !== 'input') return;
 
             if(keyInput.value.trim() || valueInput.value.trim() || typeInput.value.trim() || explainInput.value.trim()){
@@ -1145,7 +1167,8 @@ function renderform(container,config){
                 });
             }
             updateRemoveButtons();
-        });
+            },300);
+        };
 
         // 删除按钮行为：两步确认
         removeButton.dataset.confirmed = 'false';
@@ -1603,6 +1626,8 @@ function renderBodyNodeForm(container){
     container.dataset.rootId=rootId; // 确保根节点id在dataset中，后续发送请求时可以用到
     console.log('apiId:', container.dataset.apiId, 'responseId:', container.dataset.responseId,'rootId:', container.dataset.rootId);
 
+    document.addEventListener('click', closeActiveTypeDropdown); // 点击表格时关闭其他下拉列表
+
     container.style.opacity = '0';
     container.style.transition = 'opacity 0.2s ease';
 
@@ -1653,6 +1678,9 @@ function renderBodyNodeForm(container){
 
         typeInput.placeholder='类型';
         typeInput.className = 'type-input';
+        typeInput.readOnly = true; // 类型输入框只读，点击时显示下拉列表
+        
+        
 
         if(is_root){
             //根节点类型默认Object
@@ -1680,7 +1708,14 @@ function renderBodyNodeForm(container){
         formDataLi.appendChild(explainInput);
         formDataLi.appendChild(addButton);
         formDataLi.appendChild(removeButton);
-        
+        if(!is_root){
+            //下拉列表的类型选项
+            const typeArray=Object.values(typeList);
+            const typeDropdownDiv = createTypeDropdown(typeArray, typeInput, formDataLi);
+            for(const option of typeDropdownDiv.children){
+                option.addEventListener('click',updateLi);
+            }   
+        }
         //Data除了包含输入框的内容，还要有父节点的id
         if(!is_root){
             //非根节点
@@ -1699,9 +1734,8 @@ function renderBodyNodeForm(container){
             
             //console.log("父节点,id,is_root",parent,Data.parentId);
             
-            
             let margin=input?.style.marginLeft || 0;
-            //添加左内边距同时，拉回，保证整体排版不变
+            //添加左内边距
             margin=`${parseFloat(margin)+2}rem`;
 
             keyInput.style.marginLeft=margin;
@@ -1709,7 +1743,7 @@ function renderBodyNodeForm(container){
 
         }
 
-        function updatateResponseBody(){
+        function updateResponseBody(){
             const data= treeToJsonString(nodeMap.get(container.dataset.rootId));
 
             const requestBodyData = {
@@ -1724,14 +1758,17 @@ function renderBodyNodeForm(container){
         }
 
         //监听鼠标离开事件
-        formDataLi.addEventListener('focusout', function(e) {
+        formDataLi.addEventListener('focusout', updateLi);
+        
+        function updateLi(e) {
+            setTimeout(() => {
             // 只有当离开的元素是输入框时才进行验证，避免过早验证
             if(e.target.tagName.toLowerCase() != 'input') {
                 return;
             }
         
             if(typeInput.value.trim()===typeList.object){
-                //如果类型是Object,并且禁用value输入框，因为Object类型不需要value值
+                //如果类型是Object,禁用value输入框，因为Object类型不需要value值
                 valueInput.readOnly=true;
             }else{
                 valueInput.readOnly=false;
@@ -1778,9 +1815,10 @@ function renderBodyNodeForm(container){
                     return;
                 }
 
-                updatateResponseBody();
+                updateResponseBody();
             }
-        });
+            },300); // 延迟300毫秒执行，避免频繁触发
+        };
         
         //在父项下面添加新列表项，形成树结构
         if(Data.neigborId){
@@ -1824,7 +1862,7 @@ function renderBodyNodeForm(container){
 
                 console.log('删除节点后树结构：', nodeMap.get(container.dataset.rootId));
                 //发送修改请求，修改树结构为删除当前节点后的结构
-                updatateResponseBody();
+                updateResponseBody();
                  
 
                  ul.removeChild(formDataLi);
@@ -1880,7 +1918,7 @@ function renderBodyNodeForm(container){
             }
 
             addFormDataItem(data); // 添加新节点表单项
-            updatateResponseBody(); // 添加节点后更新树结构到后端
+            updateResponseBody(); // 添加节点后更新树结构到后端
 
         }
 
@@ -2187,5 +2225,5 @@ window.onload = async function () {
                 <div class="error-tip">项目获取失败：${errMsg}</div>
             `;
         }
+    }
 }
-};

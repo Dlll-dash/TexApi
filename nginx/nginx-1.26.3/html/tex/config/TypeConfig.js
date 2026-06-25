@@ -34,6 +34,7 @@ const typeExampleValue = {
     'Null':null
 }
 
+const queryTypeList = ['string','integer','boolean','array'];
 
 
-export {typeList,typeExampleValue,requestDataType,httpMimeTypes};
+export {typeList,typeExampleValue,requestDataType,httpMimeTypes,queryTypeList};

@@ -765,6 +765,7 @@
             padding: 1rem;
             background-color: #f8f9fa;
             border-radius: 8px;
+            overflow: visible;
         }
 
         /* 参数/头列表样式 */
@@ -779,6 +780,7 @@
             display: flex;
             flex-direction: column;
             gap: 0.2rem;
+            overflow: visible;
         }
 
         #formDataList li {
@@ -795,6 +797,16 @@
             border-bottom-left-radius: 0;
             border-bottom-right-radius: 0;
             transition: border-color 0.2s ease, background-color 0.2s ease, transform 0.2s ease;
+        }
+
+        #formDataList li.param-data-row {
+            position: relative;
+            overflow: visible;
+        }
+
+        #formDataList li.param-data-row:hover,
+        #formDataList li.param-data-row:focus-within {
+            z-index: 50;
         }
 
         #formDataList li:hover {
@@ -883,10 +895,40 @@
         }
 
         .type-input {
+            cursor: pointer;
+            position: relative;
             flex: 48 1 0;
             min-width: 48px;
         }
 
+        .type-list-div{
+            position: absolute;
+            background-color: #ffffff;
+            border: 1px solid #e8e8e8;
+            border-radius: 6px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            z-index: 100000;
+            min-width: 7.5rem;
+            overflow: hidden;
+            max-height: none;
+            overflow-y: visible;
+        }
+        .type-option{
+            display: block;
+            width: 100%;
+            text-align: left;
+            border: none;
+            background-color: #ffffff;
+            padding: 0.4rem 0.8rem;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+        .type-option + .type-option {
+            border-top: 1px solid #edf0f2;
+        }
+        .type-option:hover {
+            background-color: #f5f7fa;
+        }
         .explain-input {
             flex: 240 1 0;
             min-width: 240px;
@@ -1212,6 +1254,7 @@
             border: 1px solid #edf0f2;
             border-radius: 6px;
             padding: 0.5rem;
+            overflow: visible;
         }
 
         .response-body-title {
@@ -1225,6 +1268,7 @@
         .response-body-container {
             background-color: transparent;
             border: none;
+            overflow: visible;
             padding: 0;
         }
 
@@ -1234,7 +1278,7 @@
             padding: 0;
             display: flex;
             flex-direction: column;
-            
+            overflow: visible;
             gap: 0.2rem;
         }
 
@@ -1251,7 +1295,9 @@
             border-radius: 6px;
             border-bottom-left-radius:0 ;
             border-bottom-right-radius:0 ;
+            position: relative;
             transition: border-color 0.2s ease, background-color 0.2s ease, transform 0.2s ease;
+            overflow: visible;
         }
 
         #BodyNodeForm li:hover {
@@ -1261,6 +1307,9 @@
             border-bottom-right-radius:6px ;
             transform: translateY(-1px);
         }
+        #BodyNodeForm li:focus-within{
+            z-index: 50;
+        }
 
         #BodyNodeForm input {
             border: 1px solid transparent;
@@ -1269,6 +1318,7 @@
             padding: 0.45rem 0.5rem;
             color: #2d3748;
             transition: border-color 0.2s ease, background-color 0.2s ease;
+            overflow: visible;
         }
 
         #BodyNodeForm input:hover,
@@ -1592,6 +1642,7 @@
         </div>
         <div id="subWindow"></div>
     </div>
+
 
     <div id="rename-backdrop" class="rename-modal-backdrop" aria-hidden="true">
         <div class="rename-modal" role="dialog" aria-modal="true" aria-labelledby="rename-title">
