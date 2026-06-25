@@ -5,9 +5,9 @@ import com.tex.texapi.pojo.dto.AddResponseDTO;
 import com.tex.texapi.pojo.entity.Response;
 import com.tex.texapi.pojo.vo.AddResponseVO;
 import com.tex.texapi.pojo.vo.ResponseListVO;
-import com.tex.texapi.pojo.vo.ResponseVO;
 import com.tex.texapi.server.service.ResponseService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.web.bind.annotation.*;
@@ -32,16 +32,16 @@ public class ResponseController {
      * @return
      */
     @GetMapping("/getResponse/{id}")
-    public Result<ResponseVO> getResponse(@PathVariable Long id){
+    public Result<Response> getResponse(@PathVariable Long id){
         log.info("获取响应参数：{}",id);
         String key="response_"+id;
-        ResponseVO responseVO = (ResponseVO) redisTemplate.opsForValue().get(key);
-        if(responseVO==null){
-            responseVO = responseService.getResponse(id);
-            redisTemplate.opsForValue().set(key,responseVO);
+        Response response = (Response)redisTemplate.opsForValue().get(key);
+        if(response==null){
+            response = responseService.getResponse(id);
+            redisTemplate.opsForValue().set(key,response);
         }
 
-        return Result.success(responseVO);
+        return Result.success(response);
     }
 
     @PostMapping("/add")

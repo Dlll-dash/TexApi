@@ -2,7 +2,6 @@ package com.tex.texapi.server.mapper;
 
 import com.tex.texapi.pojo.entity.Response;
 import com.tex.texapi.pojo.vo.ResponseListVO;
-import com.tex.texapi.pojo.vo.ResponseVO;
 import org.apache.ibatis.annotations.Delete;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Select;
@@ -18,7 +17,7 @@ public interface ResponseMapper {
      * @return
      */
     @Select("select * from response where id=#{id}")
-    ResponseVO getResponseById(Long id);
+    Response getResponseById(Long id);
 
     void add(Response response);
 

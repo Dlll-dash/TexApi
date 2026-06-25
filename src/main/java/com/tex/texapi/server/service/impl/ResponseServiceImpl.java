@@ -7,7 +7,6 @@ import com.tex.texapi.pojo.dto.AddResponseDTO;
 import com.tex.texapi.pojo.entity.Response;
 import com.tex.texapi.pojo.vo.AddResponseVO;
 import com.tex.texapi.pojo.vo.ResponseListVO;
-import com.tex.texapi.pojo.vo.ResponseVO;
 import com.tex.texapi.server.mapper.ResponseMapper;
 import com.tex.texapi.server.service.ResponseService;
 import org.springframework.beans.BeanUtils;
@@ -26,9 +25,9 @@ public class ResponseServiceImpl implements ResponseService {
         * @param id
         */
     @Override
-    public ResponseVO getResponse(Long id) {
-        ResponseVO responseVO = responseMapper.getResponseById(id);
-        return responseVO;
+    public Response getResponse(Long id) {
+        Response response = responseMapper.getResponseById(id);
+        return response;
     }
 
     /**

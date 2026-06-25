@@ -3,7 +3,7 @@ package com.tex.texapi.server.service;
 import com.tex.texapi.pojo.dto.AddResponseDTO;
 import com.tex.texapi.pojo.entity.Response;
 import com.tex.texapi.pojo.vo.AddResponseVO;
-import com.tex.texapi.pojo.vo.ResponseVO;
+
 
 import java.util.List;
 
@@ -14,7 +14,7 @@ public interface ResponseService {
      * @param id
      * @return
      */
-    ResponseVO getResponse(Long id);
+    Response getResponse(Long id);
 
     /**
      * 新增响应参数
