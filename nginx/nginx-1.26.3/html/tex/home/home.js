@@ -20,6 +20,27 @@ document.addEventListener('DOMContentLoaded', async function () {
         return button;
     }
 
+    // ========== 项目图标配置 ==========
+    // 在 assets/svg/project/ 下新增 SVG 后，只需在此数组中追加文件名（不含扩展名）
+    const PROJECT_ICONS = [
+        '打印机',
+        '电脑办公'
+    ];
+
+    /** 基于项目 ID 哈希选择一个固定图标，保证同一项目总是显示相同图标 */
+    function getIconForProject(projectId) {
+        if (!PROJECT_ICONS.length) return '';
+        let hash = 0;
+        const idStr = String(projectId || '');
+        for (let i = 0; i < idStr.length; i++) {
+            hash = ((hash << 5) - hash) + idStr.charCodeAt(i);
+            hash |= 0; // 转为32位整数
+        }
+        const idx = Math.abs(hash) % PROJECT_ICONS.length;
+        return `../assets/svg/project/${PROJECT_ICONS[idx]}.svg`;
+    }
+    // ========== 图标配置结束 ==========
+
     // 获取并校验ID
     const id = localStorage.getItem('id');
     if (!id) {
@@ -250,6 +271,17 @@ document.addEventListener('DOMContentLoaded', async function () {
             actionWrap.appendChild(moreBtn);
             actionWrap.appendChild(itemMenu);
             li.appendChild(actionWrap);
+
+            // 创建图标（基于项目ID固定随机）
+            const iconUrl = getIconForProject(item.id);
+            const iconWrap = document.createElement('div');
+            iconWrap.className = 'project-icon';
+            const iconImg = document.createElement('img');
+            iconImg.src = iconUrl;
+            iconImg.alt = '';
+            iconImg.setAttribute('aria-hidden', 'true');
+            iconWrap.appendChild(iconImg);
+            li.appendChild(iconWrap);
 
             // 创建名称span（关联CSS类）
             const nameSpan = document.createElement('span');
