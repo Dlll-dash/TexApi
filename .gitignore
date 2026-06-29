@@ -39,3 +39,4 @@ nginx/nginx-1.26.3/temp
 nginx/nginx-1.26.3/conf
 
 src/main/resources/application-dev.yml
+/nginx/nginx-1.26.3/conf/
