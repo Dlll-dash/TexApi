@@ -466,9 +466,17 @@ function renderTestWindow(apiData){
 async function sendApiRequest(apiData,method){
     
     let requestData = {};
-    if(method === 'POST' || method === 'PUT') {
+    if(method === 'POST' ) {
         // 构造请求体数据，具体结构根据后端接口要求调整
         requestData = apiData; // 这里直接使用apiData作为请求体，后面也可以根据需要构造更具体的数据结构
+    }else if(method === 'PUT'){
+        requestData={
+            id: apiData.id,
+            apiName: apiData.apiName,
+            requestMethod: apiData.requestMethod,
+            requestUrl: apiData.requestUrl,
+            status: apiData.status
+        }
     }
     let url = `http://localhost/tex/api`;
     if(method ==='POST'){
