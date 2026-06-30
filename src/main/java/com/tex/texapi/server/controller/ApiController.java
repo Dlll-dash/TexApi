@@ -60,6 +60,7 @@ public class ApiController {
          String key= BaseContext.getCurrentId()+"_"+requestDTO.getApiId();
          //设置随机过期时间，防止缓存雪崩
          long timeout=500+ new Random(System.currentTimeMillis()).nextInt(500);
+         //防止短时间重复发
          if(redisTemplate.opsForValue().setIfAbsent(key,"1")){
              redisTemplate.expire(key,timeout, TimeUnit.MILLISECONDS);
          }else {

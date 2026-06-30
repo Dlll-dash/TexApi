@@ -37,7 +37,8 @@ public class ApiServiceImpl implements ApiService {
     private RequestParamsMapper requestParamsMapper;
     @Autowired
     private ResponseMapper responseMapper;
-
+    @Autowired
+    private RedisTemplate  redisTemplate;
 
 
     /**
@@ -92,7 +93,15 @@ public class ApiServiceImpl implements ApiService {
         }
 
         //获取Query参数
-        List<Params> params=requestParamsMapper.getParams(requestDTO.getApiId(), Request.Query);
+        String queryKey="params_"+requestDTO.getApiId()+"_"+Request.Query;
+        List<Params>params=(List<Params>) redisTemplate.opsForValue().get(queryKey);
+        if(params==null||params.isEmpty()){
+            //缓存中没有则从数据库中获取
+            params=requestParamsMapper.getParams(requestDTO.getApiId(), Request.Query);
+            //将结果存入缓存
+            redisTemplate.opsForValue().set(queryKey,params);
+        }
+
 
         //拼接Query参数到url上
         HttpUrl.Builder urlBuilder=HttpUrl.parse(baseUrl).newBuilder();
@@ -106,7 +115,14 @@ public class ApiServiceImpl implements ApiService {
 
         //获取Body参数
         String contentType=requestDTO.getContentType();
-        List<Params> bodyParams=requestParamsMapper.getParams(requestDTO.getApiId(), contentType);
+        String bodyKey="params_"+requestDTO.getApiId()+"_"+contentType;
+        List<Params>bodyParams=(List<Params>) redisTemplate.opsForValue().get(bodyKey);
+        if(bodyParams==null||bodyParams.isEmpty()){
+            //缓存中没有则从数据库中获取
+            bodyParams=requestParamsMapper.getParams(requestDTO.getApiId(), contentType);
+            //将结果存入缓存
+            redisTemplate.opsForValue().set(bodyKey,bodyParams);
+        }
         RequestBody requestBody=null;
 
         //构建RequestBody
@@ -142,8 +158,15 @@ public class ApiServiceImpl implements ApiService {
         }
 
         //获取Headers参数
-        List<Params> headerParams=requestParamsMapper.getParams(requestDTO.getApiId(),Request.Header);
 
+        String headerKey="params_"+requestDTO.getApiId()+"_"+Request.Header;
+        List<Params> headerParams=(List<Params>) redisTemplate.opsForValue().get(headerKey);
+        if(headerParams==null||headerParams.isEmpty()){
+            //缓存中没有则从数据库中获取
+            headerParams=requestParamsMapper.getParams(requestDTO.getApiId(), Request.Header);
+            //将结果存入缓存
+            redisTemplate.opsForValue().set(headerKey,headerParams);
+        }
         //构建Headers
         Map<String,String>mp=headerParams.stream()
                 .collect(Collectors.toMap(
