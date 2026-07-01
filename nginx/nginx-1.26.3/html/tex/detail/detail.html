@@ -1450,11 +1450,12 @@
             padding: 0.75rem;
             /* margin-top: -1rem; */
             background-color: #ffffff;
+            display: none; /* 默认隐藏，只有在有参数时才显示 */
         }
 
         
 
-        .preview-body-info {
+        .preview-body-info,.preview-query-info {
             display: flex;
             align-items: center;
             gap: 0.5rem;
@@ -1463,7 +1464,7 @@
             padding-bottom: 0.5rem;
         }
 
-        .body-title {
+        .body-title,.query-title {
             display: block;
             font-size: 0.9rem;
             font-weight: 600;
@@ -1507,6 +1508,7 @@
         }
 
         .params-list-display li {
+            position: relative;
             display: flex;
             gap: 0.75rem;
             align-items: center;
@@ -1563,7 +1565,18 @@
             color: #9aa3ad; /* light gray */
             font-size: 0.9rem;
         }
-
+        .param-is-necessary-display{
+            position: absolute;
+            color: #e57b3e; /* red */
+            font-size: 0.9rem;
+            right: 16rem;
+        }
+        .param-is-not-necessary-display{
+            position: absolute;
+            color: #9aa3ad; /* light gray */
+            font-size: 0.9rem;
+            right: 16rem;
+        }
         .no-params-span {
             color: #718096;
             padding: 0.25rem 0;

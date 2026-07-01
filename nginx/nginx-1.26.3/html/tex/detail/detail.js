@@ -2121,8 +2121,37 @@ function renderPreview(apiData){
     // paramsTitle.style.marginTop = "1.5rem";
     container.appendChild(paramsTitle);
 
-    const paramsDiv=document.createElement('div');
-    paramsDiv.className = "preview-params-div";
+    const queryParamsDiv=document.createElement('div');
+    queryParamsDiv.className = "preview-params-div";
+
+    const queryInfoSpan=document.createElement('span');
+    queryInfoSpan.className = 'preview-query-info';
+
+    const queryTitle=document.createElement('span');
+    queryTitle.textContent = "Query 参数";
+    queryTitle.className = "query-title";
+
+    queryInfoSpan.appendChild(queryTitle);
+    queryParamsDiv.appendChild(queryInfoSpan);
+
+    request.get(`/request/param/list/${apiData.id}`,{
+            params: {
+                formatType: requestDataType.Query
+            }
+        }).then(res => {
+            const data = res.data.data || [];
+            if(data.length > 0) {
+                const paramsList = createParamList(data);
+                queryParamsDiv.appendChild(paramsList);
+                queryParamsDiv.style.display = 'block'; // 显示Query参数区域
+            }
+        })
+    container.appendChild(queryParamsDiv);
+    
+
+    const bodyParamsDiv=document.createElement('div');
+    bodyParamsDiv.className = "preview-params-div";
+
 
     const bodyInfoSpan=document.createElement('span');
     bodyInfoSpan.className = 'preview-body-info';
@@ -2138,10 +2167,10 @@ function renderPreview(apiData){
     bodyInfoSpan.appendChild(bodyTitle);
     bodyInfoSpan.appendChild(bodyType);
 
-    paramsDiv.appendChild(bodyInfoSpan);
-    container.appendChild(paramsDiv);
-    if(localStorage.getItem('contentType')!=typeList.None) {
-
+    bodyParamsDiv.appendChild(bodyInfoSpan);
+    container.appendChild(bodyParamsDiv);
+    //console.log('当前请求参数类型：', localStorage.getItem('contentType'),typeof localStorage.getItem('contentType'));
+    if(localStorage.getItem('contentType')!=requestDataType.None) {
         request.get(`/request/param/list/${apiData.id}`,{
             params: {
                 formatType:localStorage.getItem('contentType') || ''
@@ -2150,16 +2179,11 @@ function renderPreview(apiData){
             const data = res.data.data || [];
             if(data.length > 0) {
                 const paramsList = createParamList(data);
-                paramsDiv.appendChild(paramsList);
-                
+                bodyParamsDiv.appendChild(paramsList);
+                bodyParamsDiv.style.display = 'block'; // 显示Body参数区域
             }
         })
-    }else{
-        const noParamsSpan=document.createElement('span');
-        noParamsSpan.textContent = "无";
-        noParamsSpan.className = "no-params-span";
-        paramsDiv.appendChild(noParamsSpan);
-
+        
     }
     
     //把响应信息也展示在预览窗口

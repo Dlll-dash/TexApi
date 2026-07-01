@@ -1,4 +1,4 @@
-
+//preview中展示参数列表
 function createParamList(params){
     const paramsList=document.createElement('ul');
     paramsList.className = "params-list-display";
@@ -16,9 +16,14 @@ function createParamList(params){
         explanationSpan.textContent = ` ${param.explanation||''}`;
         explanationSpan.className = "param-explanation";
 
+        const isNecessarySpan=document.createElement('span');
+        isNecessarySpan.textContent = param.isNecessary ? '必填' : '可选';
+        isNecessarySpan.className = param.isNecessary ? "param-is-necessary-display" : "param-is-not-necessary-display";
+
         paramItem.appendChild(nameSpan);
         paramItem.appendChild(typeSpan);
         paramItem.appendChild(explanationSpan);
+        paramItem.appendChild(isNecessarySpan);
         paramsList.appendChild(paramItem);
     });
     

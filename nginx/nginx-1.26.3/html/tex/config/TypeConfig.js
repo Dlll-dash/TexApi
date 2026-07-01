@@ -1,7 +1,7 @@
 //请求参数类型
 const requestDataType = {
     'Query': 'query',
-    'None': null,
+    'None': 'null',
     'FormData': 'formData',
     'Json': 'json',
     'Urlencoded': 'urlencoded',
