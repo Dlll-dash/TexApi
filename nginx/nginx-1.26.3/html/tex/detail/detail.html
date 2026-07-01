@@ -1537,6 +1537,7 @@
         }
 
         .params-table-display tr {
+            position: relative;
             display: flex;
             gap: 0.75rem;
             align-items: center;
@@ -1602,6 +1603,20 @@
             margin-bottom: 0.5rem;
         }
         
+        .response-is-necessary-display{
+            position: absolute;
+            color: #e57b3e; /* red */
+            font-size: 0.9rem;
+            right: 1rem;
+        }
+
+        .response-is-not-necessary-display{
+            position: absolute;
+            color: #9aa3ad; /* light gray */
+            font-size: 0.9rem;
+            right: 1rem;
+        }
+
         .preview-response-info-label{
             margin-bottom: 1rem;
         }

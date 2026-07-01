@@ -14,6 +14,7 @@ import { createResponseApi } from "../api/ResponseApi.js";
 import { createResponsePreviewDiv } from "../components/responsePreviewDiv.js";
 import { createResponseJsonExampleDiv } from "../components/responseJsonExampleDiv.js";
 import {createTypeDropdown,closeActiveTypeDropdown,setupTypeDropdownClose} from "../components/typeDropdown.js";
+import {getIsNecessaryButton} from "../components/isNecessaryButton.js";
 
 const nodeMap=NodeMapManager.getInstance();
 let detailMenuOutsideCloseBound = false;
@@ -1099,8 +1100,7 @@ function renderform(container,config){
         const keyInput = document.createElement('input');
         const valueInput = document.createElement('input');
         const typeInput = document.createElement('input');
-        const isNecessaryButton = document.createElement('button');
-        const isNecessaryTip = document.createElement('span'); 
+        const isNecessaryButton = getIsNecessaryButton(); 
         const explainInput = document.createElement('input');
         const removeButton = document.createElement('button');
 
@@ -1109,11 +1109,7 @@ function renderform(container,config){
         valueInput.className = 'param-value-input';
         typeInput.className = 'type-input';
         typeInput.readOnly = true; // 类型输入框只读，点击时显示下拉列表
-        isNecessaryButton.innerHTML = '<i class="bi bi-asterisk"></i>';
-        isNecessaryButton.className = 'is-necessary-btn';
-        isNecessaryTip.className = 'is-necessary-tip';
-        isNecessaryTip.textContent = '是否必须';
-        isNecessaryTip.style.display = 'none';
+
         explainInput.className = 'explain-input';
         removeButton.innerHTML = '<i class="bi bi-dash-lg"></i>';
         removeButton.className = 'remove-btn';
@@ -1128,7 +1124,7 @@ function renderform(container,config){
             row.dataset.id = Data.id;
             if(Data.isNecessary){
                 isNecessaryButton.classList.add('active');
-                isNecessaryTip.textContent = '必须';
+                isNecessaryButton.querySelector('.is-necessary-tip').textContent = '必须';
             }
         }else{
             isNecessaryButton.style.visibility = 'hidden'; // 新增空行时隐藏是否必须按钮
@@ -1146,7 +1142,7 @@ function renderform(container,config){
             else if(item.key === 'isNecessary') row.appendChild(isNecessaryButton);
             else if(item.key === 'explanation') row.appendChild(explainInput);
         });
-        isNecessaryButton.appendChild(isNecessaryTip);
+        // isNecessaryButton.appendChild(isNecessaryTip);
         row.appendChild(removeButton);
         
         // 失焦处理：和原逻辑保持一致（新增/更新）
@@ -1195,21 +1191,6 @@ function renderform(container,config){
             },300);
         };
         
-        isNecessaryButton.addEventListener('mouseover', function(){
-            isNecessaryTip.style.display = 'block';
-        });
-        isNecessaryButton.addEventListener('mouseout', function(){
-            isNecessaryTip.style.display = 'none';
-        });
-        isNecessaryButton.addEventListener('click', function(){
-            if(isNecessaryButton.classList.contains('active')){
-                isNecessaryButton.classList.remove('active');
-                isNecessaryTip.textContent = '是否必须';
-            } else {
-                isNecessaryButton.classList.add('active');
-                isNecessaryTip.textContent = '必须';
-            }
-        });
         isNecessaryButton.addEventListener('click', updateLi); // 点击是否必须按钮时也触发更新逻辑
 
 
@@ -1670,7 +1651,7 @@ function renderBodyNodeForm(container){
     container.dataset.rootId=rootId; // 确保根节点id在dataset中，后续发送请求时可以用到
     console.log('apiId:', container.dataset.apiId, 'responseId:', container.dataset.responseId,'rootId:', container.dataset.rootId);
 
-    document.addEventListener('click', closeActiveTypeDropdown); // 点击表格时关闭其他下拉列表
+    document.addEventListener('click', closeActiveTypeDropdown); // 点击表格时关闭其他类型下拉列表
 
     container.style.opacity = '0';
     container.style.transition = 'opacity 0.2s ease';
@@ -1695,6 +1676,7 @@ function renderBodyNodeForm(container){
         const formDataLi=document.createElement('li');
         const keyInput=document.createElement('input');
         const valueInput=document.createElement('input');
+        const isNecessaryButton=getIsNecessaryButton();
         const typeInput=document.createElement('input');
         const explainInput=document.createElement('input');
 
@@ -1731,6 +1713,11 @@ function renderBodyNodeForm(container){
             typeInput.value=typeList.object;
         }
 
+        if(is_root){
+             // 根节点不需要是否必须按钮
+            isNecessaryButton.style.visibility = 'hidden';
+        }
+
         explainInput.placeholder='说明';
         explainInput.className = 'explain-input';
         
@@ -1748,6 +1735,7 @@ function renderBodyNodeForm(container){
 
         formDataLi.appendChild(keyInput);
         formDataLi.appendChild(typeInput);
+        formDataLi.appendChild(isNecessaryButton);
         formDataLi.appendChild(valueInput);
         formDataLi.appendChild(explainInput);
         formDataLi.appendChild(addButton);
@@ -1769,6 +1757,9 @@ function renderBodyNodeForm(container){
             valueInput.value=Data.value||'';
             typeInput.value=Data.type||'';
             explainInput.value=Data.explanation||'';
+            isNecessaryButton.style.visibility = 'visible';
+            isNecessaryButton.classList.toggle('active', Data.isNecessary);
+            isNecessaryButton.querySelector('.is-necessary-tip').textContent = Data.isNecessary ? '必需' : '是否必须';
 
             
             //获取父节点，在父节点的左内边距上再加一段边距，绑定父节点（绑定父节点id，因为父节点只会有一个，子节点可能有无数个）
@@ -1803,11 +1794,13 @@ function renderBodyNodeForm(container){
 
         //监听鼠标离开事件
         formDataLi.addEventListener('focusout', updateLi);
-        
+        //点击是否必须按钮时也触发更新逻辑
+        isNecessaryButton.addEventListener('click', updateLi); 
+
         function updateLi(e) {
-            setTimeout(() => {
+            
             // 只有当离开的元素是输入框时才进行验证，避免过早验证
-            if(e.target.tagName.toLowerCase() != 'input') {
+            if(e.target.tagName.toLowerCase() != 'input'&& e.target !== isNecessaryButton) {
                 return;
             }
         
@@ -1845,7 +1838,8 @@ function renderBodyNodeForm(container){
                         key: keyInput.value.trim(),
                         value: valueInput.value.trim(),
                         type: typeInput.value.trim(),
-                        explanation: explainInput.value.trim()
+                        explanation: explainInput.value.trim(),
+                        isNecessary: isNecessaryButton.classList.contains('active') ? true : false
                     });
                     console.log('更新节点数据：', node);
                 }else{
@@ -1861,7 +1855,7 @@ function renderBodyNodeForm(container){
 
                 updateResponseBody();
             }
-            },300); // 延迟300毫秒执行，避免频繁触发
+            
         };
         
         //在父项下面添加新列表项，形成树结构
@@ -1984,13 +1978,14 @@ function renderBodyNodeForm(container){
 
             const jsonStr=data.responseBody;
             console.log('获取到的json：', JSON.parse(jsonStr));
-            //拆解json，获得参数列表，每一条要包含key,type,value,explanation
+            //拆解json，获得参数列表，每一条要包含key,type,value,explanation,isNecessary
             const root=TreeNode.convertFromJson(JSON.parse(jsonStr));
             container.dataset.rootId=root.id;
             //递归函数
             function buildForm(parent,root){
                 if(!root) return;
                 const data=root.toPlainObject();
+                //console.log('buildForm data:', data);
                 data.id=root.id;
                 //console.log('parent:', parent, 'root:', root);
                 if(parent){

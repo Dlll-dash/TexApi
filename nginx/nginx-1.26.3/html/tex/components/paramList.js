@@ -17,7 +17,7 @@ function createParamList(params){
         explanationSpan.className = "param-explanation";
 
         const isNecessarySpan=document.createElement('span');
-        isNecessarySpan.textContent = param.isNecessary ? '必填' : '可选';
+        isNecessarySpan.textContent = param.isNecessary ? '必需' : '可选';
         isNecessarySpan.className = param.isNecessary ? "param-is-necessary-display" : "param-is-not-necessary-display";
 
         paramItem.appendChild(nameSpan);

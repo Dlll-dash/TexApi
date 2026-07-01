@@ -65,12 +65,18 @@ export function createResponsePreviewDiv(response,responsePreviewDiv) {
                     const explanationCell = document.createElement('td');
                     explanationCell.textContent = value.explanation || '';
                     explanationCell.className = 'param-explanation';
+
+                    const isNecessaryCell = document.createElement('td');
+                    isNecessaryCell.textContent = value.isNecessary ? '必需' : '可选';
+                    isNecessaryCell.className = value.isNecessary ? "response-is-necessary-display" : "response-is-not-necessary-display";
+
                     if(depth>0){
                         li.appendChild(connectorCell);
                     }
                     li.appendChild(keyCell);
                     li.appendChild(typeCell);
                     li.appendChild(explanationCell);
+                    li.appendChild(isNecessaryCell);
                     tableBody.appendChild(li);
 
                     if (value.type === typeList.object && value.value && typeof value.value === 'object') {

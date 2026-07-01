@@ -6,7 +6,7 @@ const nodeMap=NodeMapManager.getInstance();
 
 // Body 树节点类
 class TreeNode {
-  constructor({ key, type, value, explanation }) {
+  constructor({ key, type, value, explanation, isNecessary }) {
     // 随机ID
     this.id = getRandomId();
 
@@ -14,7 +14,7 @@ class TreeNode {
     this.type = type;
     this.value = value;
     this.explanation = explanation;
-
+    this.isNecessary = isNecessary;
     // 子节点列表
     this.children = [];
 
@@ -70,11 +70,12 @@ class TreeNode {
   }
 
   //更新节点值
-  set({key,type,value,explanation}){
+  set({key,type,value,explanation,isNecessary}){
     this.key=key;
     this.type=type;
     this.value=value;
     this.explanation=explanation;
+    this.isNecessary=isNecessary;
 
     if(this.type!==typeList.object&&this.hasChild()){
       //如果非object就删除所有子节点。
@@ -90,7 +91,8 @@ class TreeNode {
       key: this.key,
       type: this.type,
       value: this.value,
-      explanation: this.explanation
+      explanation: this.explanation,
+      isNecessary: this.isNecessary
     };
   }
 
@@ -151,7 +153,8 @@ class TreeNode {
     root.children.forEach(child => {
       const baseAttr = {
         type: child.type,
-        explanation: child.explanation
+        explanation: child.explanation,
+        isNecessary: child.isNecessary
       };
 
       if (child.type !== typeList.object) {
@@ -185,6 +188,7 @@ class TreeNode {
       type: typeList.object,
       value: null,
       explanation: "",
+      isNecessary: false
     });
     nodeMap.set(root.id,root); //存入Map映射
     const buildTree = (parent, data) => {
@@ -198,6 +202,7 @@ class TreeNode {
           type: item.type || '',
           value: item.type === typeList.object ? null : item.value,
           explanation: item.explanation || "",
+          isNecessary: item.isNecessary || false
         });
         nodeMap.set(node.id,node); //存入Map映射
         parent.addChild(node);
