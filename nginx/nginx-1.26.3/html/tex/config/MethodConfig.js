@@ -1,8 +1,8 @@
 const methodlist= ['GET', 'POST', 'PUT', 'DELETE'];
 
 const methodColors = {
-    'GET': '#09ff01',
-    'POST': '#ff9901',
+    'GET': '#46dd41',
+    'POST': '#f37b13',
     'PUT': '#0ab9fe',
     'DELETE': '#ff0101',
     'DEFAULT': '#666'
