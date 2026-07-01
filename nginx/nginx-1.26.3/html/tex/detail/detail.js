@@ -466,10 +466,7 @@ function renderTestWindow(apiData){
 async function sendApiRequest(apiData,method){
     
     let requestData = {};
-    if(method === 'POST' ) {
-        // 构造请求体数据，具体结构根据后端接口要求调整
-        requestData = apiData; // 这里直接使用apiData作为请求体，后面也可以根据需要构造更具体的数据结构
-    }else if(method === 'PUT'){
+    if(method === 'PUT'||method === 'POST'){
         requestData={
             id: apiData.id,
             apiName: apiData.apiName,
@@ -1012,6 +1009,7 @@ async function sendRequest(param, id, dataType, method) {
                 type: param[2],
                 explanation: param[3],
                 apiId: param[4],
+                isNecessary: param[5],
                 formatType: dataType
             };
         }
@@ -1101,6 +1099,8 @@ function renderform(container,config){
         const keyInput = document.createElement('input');
         const valueInput = document.createElement('input');
         const typeInput = document.createElement('input');
+        const isNecessaryButton = document.createElement('button');
+        const isNecessaryTip = document.createElement('span'); 
         const explainInput = document.createElement('input');
         const removeButton = document.createElement('button');
 
@@ -1109,6 +1109,11 @@ function renderform(container,config){
         valueInput.className = 'param-value-input';
         typeInput.className = 'type-input';
         typeInput.readOnly = true; // 类型输入框只读，点击时显示下拉列表
+        isNecessaryButton.innerHTML = '<i class="bi bi-asterisk"></i>';
+        isNecessaryButton.className = 'is-necessary-btn';
+        isNecessaryTip.className = 'is-necessary-tip';
+        isNecessaryTip.textContent = '是否必须';
+        isNecessaryTip.style.display = 'none';
         explainInput.className = 'explain-input';
         removeButton.innerHTML = '<i class="bi bi-dash-lg"></i>';
         removeButton.className = 'remove-btn';
@@ -1121,6 +1126,12 @@ function renderform(container,config){
             typeInput.value = Data.type || '';
             explainInput.value = Data.explanation || '';
             row.dataset.id = Data.id;
+            if(Data.isNecessary){
+                isNecessaryButton.classList.add('active');
+                isNecessaryTip.textContent = '必须';
+            }
+        }else{
+            isNecessaryButton.style.visibility = 'hidden'; // 新增空行时隐藏是否必须按钮
         }
         
         // 创建类型下拉列表容器
@@ -1132,8 +1143,10 @@ function renderform(container,config){
             if(item.key === 'name') row.appendChild(keyInput);
             else if(item.key === 'value') row.appendChild(valueInput);
             else if(item.key === 'type') row.appendChild(typeInput);
+            else if(item.key === 'isNecessary') row.appendChild(isNecessaryButton);
             else if(item.key === 'explanation') row.appendChild(explainInput);
         });
+        isNecessaryButton.appendChild(isNecessaryTip);
         row.appendChild(removeButton);
         
         // 失焦处理：和原逻辑保持一致（新增/更新）
@@ -1143,8 +1156,10 @@ function renderform(container,config){
         }
         function updateLi(e){
             setTimeout(() => {
-            if(e.target.tagName.toLowerCase() !== 'input') return;
-
+            if(e.target.tagName.toLowerCase() !== 'input'&& e.target !== isNecessaryButton) return;
+            if(keyInput.value.trim()&&!typeInput.value.trim()){
+                typeInput.value = queryTypeList[0]; // 默认选择第一个类型
+            }
             if(keyInput.value.trim() || valueInput.value.trim() || typeInput.value.trim() || explainInput.value.trim()){
                 if(!keyInput.value.trim() && (valueInput.value.trim() || typeInput.value.trim() || explainInput.value.trim())){
                     keyInput.style.outline = '1px solid #e53e3e';
@@ -1154,14 +1169,16 @@ function renderform(container,config){
                     keyInput.style.outline = '';
                     keyInput.placeholder = '添加参数';
                 }
-
+                
                 if(!row.dataset.id){
                     // 新条目：先保持本地添加一空行
                     addFormDataItem(null);
                 }
-
+                isNecessaryButton.style.display = 'inline-block'; // 新增行后显示是否必须按钮
                 const apiId = document.getElementById('requestArea').dataset.apiId;
-                const param = [keyInput.value.trim(), valueInput.value.trim(), typeInput.value.trim(), explainInput.value.trim(), apiId];
+                const isNecessary = isNecessaryButton.classList.contains('active') ? true : false;
+                //console.log('isNecessary:', isNecessary);
+                const param = [keyInput.value.trim(), valueInput.value.trim(), typeInput.value.trim(), explainInput.value.trim(), apiId, isNecessary];
                 const dataType = container.dataset.type;
                 const method = row.dataset.id ? 'PUT' : 'POST';
 
@@ -1177,6 +1194,25 @@ function renderform(container,config){
             updateRemoveButtons();
             },300);
         };
+        
+        isNecessaryButton.addEventListener('mouseover', function(){
+            isNecessaryTip.style.display = 'block';
+        });
+        isNecessaryButton.addEventListener('mouseout', function(){
+            isNecessaryTip.style.display = 'none';
+        });
+        isNecessaryButton.addEventListener('click', function(){
+            if(isNecessaryButton.classList.contains('active')){
+                isNecessaryButton.classList.remove('active');
+                isNecessaryTip.textContent = '是否必须';
+            } else {
+                isNecessaryButton.classList.add('active');
+                isNecessaryTip.textContent = '必须';
+            }
+        });
+        isNecessaryButton.addEventListener('click', updateLi); // 点击是否必须按钮时也触发更新逻辑
+
+
 
         // 删除按钮行为：两步确认
         removeButton.dataset.confirmed = 'false';
@@ -1219,7 +1255,7 @@ function renderform(container,config){
             const paramsList = res.data.data || [];
             if(paramsList.length > 0){
                 paramsList.forEach(param => {
-                    const paramData = { name: param.name, value: param.value, type: param.type, explanation: param.explanation, id: param.id };
+                    const paramData = { name: param.name, value: param.value, type: param.type, explanation: param.explanation, id: param.id, isNecessary: param.isNecessary };
                     addFormDataItem(paramData);
                 });
             }

@@ -18,4 +18,6 @@ public class ParamDTO {
     String formatType;
     //所属接口id
     Long apiId;
+    //是否必须
+    Boolean isNecessary;
 }

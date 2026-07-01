@@ -29,6 +29,9 @@ public class RequestParamsServiceImpl implements RequestParamsService {
         if(param.getName()==null||param.getName().isEmpty()){
             throw new InputException(MessageConstant.PARAM_NAME_EMPTY);
         }
+        if(param.getIsNecessary()==null){
+            param.setIsNecessary(false);
+        }
         requestParamsMapper.addParam(param);
         return param;
     }

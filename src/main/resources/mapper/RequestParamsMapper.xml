@@ -3,9 +3,9 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="com.tex.texapi.server.mapper.RequestParamsMapper">
     <insert id="addParam" keyProperty="id" useGeneratedKeys="true">
-        insert into request_params (name, value, type, explanation, api_id, format_type)
+        insert into request_params (name, value, type, explanation, api_id, format_type, is_necessary)
                                     VALUES
-                                (#{name},#{value},#{type},#{explanation},#{apiId},#{formatType});
+                                (#{name},#{value},#{type},#{explanation},#{apiId},#{formatType},#{isNecessary});
     </insert>
     <update id="updateParam">
         update request_params set
@@ -13,7 +13,8 @@
                 name = #{name},
                 value = #{value},
                 type = #{type},
-                explanation = #{explanation}
+                explanation = #{explanation},
+                is_necessary=#{isNecessary}
         where id = #{id}
     </update>
 

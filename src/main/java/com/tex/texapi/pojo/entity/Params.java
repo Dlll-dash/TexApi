@@ -24,4 +24,6 @@ public class Params {
     String explanation;
     //所属接口id
     Long apiId;
+    //是否必须
+    Boolean isNecessary;
 }
