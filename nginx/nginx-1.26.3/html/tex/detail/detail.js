@@ -2116,6 +2116,11 @@ function renderPreview(apiData){
     // paramsTitle.style.marginTop = "1.5rem";
     container.appendChild(paramsTitle);
 
+    const noParamsMessage = document.createElement('div');
+    noParamsMessage.textContent = "该接口没有请求参数";
+    noParamsMessage.className = "no-params-message";
+    container.appendChild(noParamsMessage);
+
     const queryParamsDiv=document.createElement('div');
     queryParamsDiv.className = "preview-params-div";
 
@@ -2128,6 +2133,7 @@ function renderPreview(apiData){
 
     queryInfoSpan.appendChild(queryTitle);
     queryParamsDiv.appendChild(queryInfoSpan);
+    
 
     request.get(`/request/param/list/${apiData.id}`,{
             params: {
@@ -2139,6 +2145,7 @@ function renderPreview(apiData){
                 const paramsList = createParamList(data);
                 queryParamsDiv.appendChild(paramsList);
                 queryParamsDiv.style.display = 'block'; // 显示Query参数区域
+                noParamsMessage.style.display = 'none'; // 隐藏“没有请求参数”提示
             }
         })
     container.appendChild(queryParamsDiv);
@@ -2164,6 +2171,7 @@ function renderPreview(apiData){
 
     bodyParamsDiv.appendChild(bodyInfoSpan);
     container.appendChild(bodyParamsDiv);
+    
     //console.log('当前请求参数类型：', localStorage.getItem('contentType'),typeof localStorage.getItem('contentType'));
     if(localStorage.getItem('contentType')!=requestDataType.None) {
         request.get(`/request/param/list/${apiData.id}`,{
@@ -2176,10 +2184,13 @@ function renderPreview(apiData){
                 const paramsList = createParamList(data);
                 bodyParamsDiv.appendChild(paramsList);
                 bodyParamsDiv.style.display = 'block'; // 显示Body参数区域
+                noParamsMessage.style.display = 'none'; // 隐藏“没有请求参数”提示
             }
         })
-        
     }
+    
+    
+    
     
     //把响应信息也展示在预览窗口
     const responseTitle=document.createElement('h3');

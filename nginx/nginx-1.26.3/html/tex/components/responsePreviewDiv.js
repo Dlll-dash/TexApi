@@ -86,11 +86,11 @@ export function createResponsePreviewDiv(response,responsePreviewDiv) {
             }
             
             renderResponseBody(responseBody);
-            //console.log('完成响应体渲染，表格内容：', tableBody.innerHTML);
+            console.log('完成响应体渲染，表格内容：', tableBody.innerHTML);
             responseTable.appendChild(tableBody);
             responsePreviewDiv.appendChild(responseTable);
             renderedAsTable = true;
-
+            
             
         } catch (e) {
             const errorLi = document.createElement('li');
@@ -98,7 +98,13 @@ export function createResponsePreviewDiv(response,responsePreviewDiv) {
             errorLi.className = 'response-error-label';
             responseUl.appendChild(errorLi);
         }
+    }else{
+        const noResponseLi = document.createElement('li');
+        noResponseLi.textContent = "该接口没有响应体";
+        noResponseLi.className = 'response-no-label';
+        responseUl.appendChild(noResponseLi);
     }
+    
     if (!renderedAsTable) {
         responsePreviewDiv.appendChild(responseUl);
     }
