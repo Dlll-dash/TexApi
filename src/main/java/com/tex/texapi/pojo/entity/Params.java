@@ -26,4 +26,6 @@ public class Params {
     Long apiId;
     //是否必须
     Boolean isNecessary;
+    //是否选中
+    Boolean isChecked;
 }

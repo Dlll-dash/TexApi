@@ -108,7 +108,9 @@ public class ApiServiceImpl implements ApiService {
 
         //遍历每个Query参数，加入到url上
         params.forEach(p ->{
-            urlBuilder.addQueryParameter(p.getName(),p.getValue());
+            if(p.getIsChecked()) {
+                urlBuilder.addQueryParameter(p.getName(), p.getValue());
+            }
         } );
 
         String url=urlBuilder.toString();
@@ -134,7 +136,9 @@ public class ApiServiceImpl implements ApiService {
 
                 if(bodyParams!=null&&!bodyParams.isEmpty()) {
                     bodyParams.forEach(p -> {
-                        builder.addFormDataPart(p.getName(), p.getValue());
+                        if(p.getIsChecked()) {
+                            builder.addFormDataPart(p.getName(), p.getValue());
+                        }
                     });
                 }
                 requestBody = builder.build();
@@ -152,7 +156,9 @@ public class ApiServiceImpl implements ApiService {
             //x-www-urlencode构建
             FormBody.Builder builder=new FormBody.Builder();
             bodyParams.forEach(p->{
-                builder.add(p.getName(),p.getValue());
+                if(p.getIsChecked()) {
+                    builder.add(p.getName(), p.getValue());
+                }
             });
             requestBody=builder.build();
         }
@@ -169,9 +175,11 @@ public class ApiServiceImpl implements ApiService {
         }
         //构建Headers
         Map<String,String>mp=headerParams.stream()
+                .filter(param->param.getIsChecked())
                 .collect(Collectors.toMap(
                         Params::getName,
-                        Params::getValue
+                        Params::getValue,
+                        (oldV,newV)->newV
                 ));
         Headers headers=Headers.of(mp);
 

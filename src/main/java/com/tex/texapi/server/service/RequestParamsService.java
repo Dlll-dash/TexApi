@@ -1,6 +1,7 @@
 package com.tex.texapi.server.service;
 
 import com.tex.texapi.pojo.dto.ParamDTO;
+import com.tex.texapi.pojo.dto.UpdateParamDTO;
 import com.tex.texapi.pojo.entity.Params;
 
 import java.util.List;
@@ -24,11 +25,11 @@ public interface RequestParamsService {
 
     /**
      * 更新参数信息
-     * @param paramDTO
+     * @param updateParamDTO
      * @param id
      * @return
      */
-    void upadateParam(ParamDTO paramDTO,Long id);
+    void upadateParam(UpdateParamDTO updateParamDTO, Long id);
 
     /**
      * 删除参数

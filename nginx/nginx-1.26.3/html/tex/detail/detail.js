@@ -15,6 +15,7 @@ import { createResponsePreviewDiv } from "../components/responsePreviewDiv.js";
 import { createResponseJsonExampleDiv } from "../components/responseJsonExampleDiv.js";
 import {createTypeDropdown,closeActiveTypeDropdown,setupTypeDropdownClose} from "../components/typeDropdown.js";
 import {getIsNecessaryButton} from "../components/isNecessaryButton.js";
+import {getCheckButton,toCheckSquare,toDashSquare,toSquare,dashSquareIcon,squareIcon,checkSquareIcon} from "../components/checkButton.js";
 
 const nodeMap=NodeMapManager.getInstance();
 let detailMenuOutsideCloseBound = false;
@@ -1011,6 +1012,7 @@ async function sendRequest(param, id, dataType, method) {
                 explanation: param[3],
                 apiId: param[4],
                 isNecessary: param[5],
+                isChecked: param[6],
                 formatType: dataType
             };
         }
@@ -1066,6 +1068,87 @@ function renderform(container,config){
     const headerLi = document.createElement('li');
     headerLi.className = 'param-header-row';
 
+    const checkAllButton = getCheckButton(); // 获取是否必须按钮
+    checkAllButton.style.visibility = 'hidden'; // 隐藏全选按钮
+    if(config===debugFormConfig){
+        headerLi.appendChild(checkAllButton);
+    }
+    let checkBtnSum=0;
+    let checkedBtn=0;
+    checkAllButton.addEventListener('click', function(e) {
+        //console.log("全选按钮点击事件触发");
+        e.stopPropagation();
+        //重新计算checkButton的总数和已选中的数量
+        checkBtnSum=0;
+        checkedBtn=0;
+        //此时checkButton的状态已经改变，检查当前所有checkButton的状态
+        container.querySelectorAll('.check-button').forEach(btn => {
+            //console.log("检查按钮:",btn,"是否选中:",btn.classList.contains('active'));
+            if(btn!=checkAllButton){
+                checkBtnSum++;   
+                if(btn.classList.contains('active')){
+                    checkedBtn++;
+                }
+            }
+            
+        });
+        //console.log("checkBtnSum:",checkBtnSum,"checkedBtn:",checkedBtn);
+        function selectAll() {
+            container.querySelectorAll('.check-button').forEach(btn => {
+                if(btn!=checkAllButton){
+                    btn.classList.add('active');
+                    toCheckSquare(btn);
+                }
+            });
+            
+            checkedBtn=checkBtnSum;
+        }
+        function deselectAll() {
+            container.querySelectorAll('.check-button.active').forEach(btn => {
+                if(btn!=checkAllButton){
+                    toSquare(btn);
+                    btn.classList.remove('active');
+                }
+            });
+            checkedBtn=0;
+        }
+        if(checkBtnSum>0){
+            if(checkedBtn === checkBtnSum){
+                //说明所有checkButton都被选中,要变成全不选
+                toSquare(checkAllButton);
+                
+                e.stopPropagation();
+                //点击全选按钮，取消所有checkButton的选中状态
+                deselectAll();
+                
+            }else if(checkedBtn>0&&checkedBtn < checkBtnSum){
+                //说明有的checkButton被选中，有的没有被选中,要变成全选
+                toCheckSquare(checkAllButton);
+                //点击全选按钮，选中所有checkButton
+                if(!checkAllButton.classList.contains('active')){
+                    checkAllButton.classList.add('active');
+                }
+                e.stopPropagation();
+                selectAll();
+                
+            }else if(checkedBtn === 0){
+                //说明所有checkButton都没有被选中，要变成全选
+                toCheckSquare(checkAllButton);
+                
+                e.stopPropagation();
+                //点击全选按钮，选中所有checkButton
+                selectAll();
+            
+        }else{
+            //没有任何选中，要变成全选
+            toCheckSquare(checkAllButton);
+            e.stopPropagation();
+            //点击全选按钮，选中所有checkButton
+            selectAll();
+        }
+        }
+    });
+    
     // 使用 config 来生成表头列，保持顺序一致
     config.forEach(item => {
         const span = document.createElement('span');
@@ -1093,10 +1176,13 @@ function renderform(container,config){
 
     // 添加数据行（保持原有输入类名，方便样式复用）
     function addFormDataItem(Data){
+        
         const row = document.createElement('li');
         row.className = 'param-data-row';
         row.style.position = 'relative';
 
+        const checkButton = getCheckButton();
+        
         const keyInput = document.createElement('input');
         const valueInput = document.createElement('input');
         const typeInput = document.createElement('input');
@@ -1126,14 +1212,30 @@ function renderform(container,config){
                 isNecessaryButton.classList.add('active');
                 isNecessaryButton.querySelector('.is-necessary-tip').textContent = '必须';
             }
+            //console.log("Data.isChecked:",Data.isChecked);
+            if(!Data.isChecked){
+                checkButton.classList.remove('active');
+                toSquare(checkButton);
+            }else{
+                checkButton.classList.add('active');
+                toCheckSquare(checkButton);
+                checkedBtn++;
+            }
+            checkBtnSum++;
+            
+            updateCheckAllButtonState(); // 初始化全选按钮状态; 
         }else{
             isNecessaryButton.style.visibility = 'hidden'; // 新增空行时隐藏是否必须按钮
+            checkButton.style.visibility = 'hidden'; // 新增空行时隐藏是否选中按钮
         }
         
         // 创建类型下拉列表容器
         const typeDropdownDiv = createTypeDropdown(queryTypeList, typeInput, row);
 
-
+        if(config===debugFormConfig){
+            //只有是调试表格才有勾选
+            row.appendChild(checkButton);
+        }
         // 插入输入项，按照 config 的字段顺序
         config.forEach(item => {
             if(item.key === 'name') row.appendChild(keyInput);
@@ -1142,9 +1244,14 @@ function renderform(container,config){
             else if(item.key === 'isNecessary') row.appendChild(isNecessaryButton);
             else if(item.key === 'explanation') row.appendChild(explainInput);
         });
-        // isNecessaryButton.appendChild(isNecessaryTip);
         row.appendChild(removeButton);
-        
+        checkAllButton.addEventListener('click', function(e){
+            e.stopPropagation();
+            ul.querySelectorAll('li').forEach(row => {
+                // 更新每行的状态
+                row.dispatchEvent(new Event('focusout')); // 触发失焦事件，保存数据
+            })
+        });
         // 失焦处理：和原逻辑保持一致（新增/更新）
         row.addEventListener('focusout',updateLi); 
         for(const option of typeDropdownDiv.children){
@@ -1152,7 +1259,10 @@ function renderform(container,config){
         }
         function updateLi(e){
             setTimeout(() => {
-            if(e.target.tagName.toLowerCase() !== 'input'&& e.target !== isNecessaryButton) return;
+            const isNecessaryButton = row.querySelector('.is-necessary-btn');
+            const checkButton = row.querySelector('.check-button');
+
+            if(e.target.tagName.toLowerCase() !== 'input'&& !isNecessaryButton&&!checkButton) return;
             if(keyInput.value.trim()&&!typeInput.value.trim()){
                 typeInput.value = queryTypeList[0]; // 默认选择第一个类型
             }
@@ -1170,14 +1280,17 @@ function renderform(container,config){
                     // 新条目：先保持本地添加一空行
                     addFormDataItem(null);
                 }
-                isNecessaryButton.style.display = 'inline-block'; // 新增行后显示是否必须按钮
+                isNecessaryButton.style.visibility = 'visible'; // 新增行后显示是否必须按钮
+                checkButton.style.visibility = 'visible'; // 新增行后显示是否选中按钮
+                checkAllButton.style.visibility = 'visible'; // 新增行后显示全选按钮
                 const apiId = document.getElementById('requestArea').dataset.apiId;
                 const isNecessary = isNecessaryButton.classList.contains('active') ? true : false;
+                const isChecked = checkButton.classList.contains('active') ? true : false;
                 //console.log('isNecessary:', isNecessary);
-                const param = [keyInput.value.trim(), valueInput.value.trim(), typeInput.value.trim(), explainInput.value.trim(), apiId, isNecessary];
+                const param = [keyInput.value.trim(), valueInput.value.trim(), typeInput.value.trim(), explainInput.value.trim(), apiId, isNecessary, isChecked];
                 const dataType = container.dataset.type;
                 const method = row.dataset.id ? 'PUT' : 'POST';
-
+                
                 sendRequest(param, row.dataset.id, dataType, method)
                 .then(res => {
                     if(res.data && res.data.data && res.data.data.id){
@@ -1192,8 +1305,43 @@ function renderform(container,config){
         };
         
         isNecessaryButton.addEventListener('click', updateLi); // 点击是否必须按钮时也触发更新逻辑
+       
+        checkButton.addEventListener('click', function(e){
+            if(checkButton.classList.contains('active')){
+                checkedBtn++;
+            } else {
+                checkedBtn--;
+            }
+            updateCheckAllButtonState();
+        });
+        //更新事件要放在最后
+        checkButton.addEventListener('click', updateLi); // 点击是否选中按钮时也触发更新逻辑
 
-
+        function updateCheckAllButtonState() {
+            //console.log("更新全选按钮状态：checkedBtn:",checkedBtn,"checkBtnSum:",checkBtnSum);
+            if(checkedBtn === checkBtnSum){
+                toCheckSquare(checkAllButton);
+                if(!checkAllButton.classList.contains('active')){
+                    checkAllButton.classList.add('active');
+                }
+            } else if(checkedBtn === 0){
+                toSquare(checkAllButton);
+                if(checkAllButton.classList.contains('active')){
+                    checkAllButton.classList.remove('active');
+                }
+            }else if(checkedBtn > 0 && checkedBtn < checkBtnSum){
+                toDashSquare(checkAllButton);
+                if(!checkAllButton.classList.contains('active')){
+                    checkAllButton.classList.add('active');
+                }
+            }
+            if(checkBtnSum === 0){
+                //如果没有任何checkButton，隐藏全选按钮
+                checkAllButton.style.visibility = 'hidden';
+            }else{
+                checkAllButton.style.visibility = 'visible';
+            }
+        }
 
         // 删除按钮行为：两步确认
         removeButton.dataset.confirmed = 'false';
@@ -1218,6 +1366,15 @@ function renderform(container,config){
                 removeButton.dataset.confirmed = 'true';
             }
         };
+        removeButton.addEventListener('click', function(e){
+            e.stopPropagation();
+            //检查删除后 checkButton 是否全为选中
+            if(checkButton.classList.contains('active')){
+                checkedBtn--;
+            }
+            checkBtnSum--;
+            updateCheckAllButtonState();
+        });
         removeButton.addEventListener('mouseout', function(){
             this.classList.remove('active');
             this.dataset.confirmed = false;
@@ -1236,13 +1393,14 @@ function renderform(container,config){
             const paramsList = res.data.data || [];
             if(paramsList.length > 0){
                 paramsList.forEach(param => {
-                    const paramData = { name: param.name, value: param.value, type: param.type, explanation: param.explanation, id: param.id, isNecessary: param.isNecessary };
+                    const paramData = { name: param.name, value: param.value, type: param.type, explanation: param.explanation, id: param.id, isNecessary: param.isNecessary,isChecked: param.isChecked };
                     addFormDataItem(paramData);
                 });
             }
             addFormDataItem(null); // 保持至少一个空行
             container.appendChild(ul);
             setTimeout(() => { container.style.opacity = 1; }, 0);
+            
         }).catch(err => {
             console.error('获取参数列表失败：', err);
             container.appendChild(ul);
@@ -1282,6 +1440,7 @@ function renderDesign(apiData,config){
 
     // 复用调试窗口的接口基本信息展示部分（url，请求参数），保持设计窗口和调试窗口风格一致
     renderDebug(apiData,config); 
+    
     const requestInfo = document.getElementById('requestInfo');
 
     const apiInfoArea = document.createElement('div');
@@ -1628,7 +1787,7 @@ function renderDesign(apiData,config){
 
     responseDesign.appendChild(responseBodyArea);
     container.appendChild(responseDesign);
-
+    
 }
 
 

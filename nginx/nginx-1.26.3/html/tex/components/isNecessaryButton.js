@@ -24,6 +24,6 @@ export function getIsNecessaryButton() {
         }
     });
     isNecessaryButton.appendChild(isNecessaryTip);
-
+    
     return isNecessaryButton;
 }

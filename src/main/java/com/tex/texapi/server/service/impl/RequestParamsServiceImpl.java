@@ -3,6 +3,7 @@ package com.tex.texapi.server.service.impl;
 import com.tex.texapi.common.constant.MessageConstant;
 import com.tex.texapi.common.exception.InputException;
 import com.tex.texapi.pojo.dto.ParamDTO;
+import com.tex.texapi.pojo.dto.UpdateParamDTO;
 import com.tex.texapi.pojo.entity.Params;
 import com.tex.texapi.server.mapper.RequestParamsMapper;
 import com.tex.texapi.server.service.RequestParamsService;
@@ -32,6 +33,9 @@ public class RequestParamsServiceImpl implements RequestParamsService {
         if(param.getIsNecessary()==null){
             param.setIsNecessary(false);
         }
+        if(param.getIsChecked()==null){
+            param.setIsChecked(true);
+        }
         requestParamsMapper.addParam(param);
         return param;
     }
@@ -48,13 +52,13 @@ public class RequestParamsServiceImpl implements RequestParamsService {
     }
     /**
      * 修改参数
-     * @param paramDTO
+     * @param updateParamDTO
      * @param id 参数id
      */
     @Override
-    public void upadateParam(ParamDTO paramDTO,Long id) {
+    public void upadateParam(UpdateParamDTO updateParamDTO, Long id) {
         Params param=new Params();
-        BeanUtils.copyProperties(paramDTO,param);
+        BeanUtils.copyProperties(updateParamDTO,param);
         param.setId(id);
         requestParamsMapper.updateParam(param);
     }

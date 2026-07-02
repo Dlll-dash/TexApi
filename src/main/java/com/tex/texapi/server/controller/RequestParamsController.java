@@ -2,6 +2,7 @@ package com.tex.texapi.server.controller;
 
 import com.tex.texapi.common.result.Result;
 import com.tex.texapi.pojo.dto.ParamDTO;
+import com.tex.texapi.pojo.dto.UpdateParamDTO;
 import com.tex.texapi.pojo.entity.Params;
 import com.tex.texapi.server.service.RequestParamsService;
 import lombok.extern.slf4j.Slf4j;
@@ -64,10 +65,10 @@ public class RequestParamsController {
      * @return
      */
     @PutMapping("/param/{id}")
-    public Result updateParam(@RequestBody ParamDTO paramDTO,@PathVariable Long id){
-        log.info("更新参数：{}, {}",id,paramDTO);
-        requestParamsService.upadateParam(paramDTO,id);
-        clearCache("params_"+paramDTO.getApiId()+"_"+paramDTO.getFormatType());
+    public Result updateParam(@RequestBody UpdateParamDTO updateParamDTO, @PathVariable Long id){
+        log.info("更新参数：{}, {}",id,updateParamDTO);
+        requestParamsService.upadateParam(updateParamDTO,id);
+        clearCache("params_"+updateParamDTO.getApiId()+"_"+updateParamDTO.getFormatType());
         return Result.success();
     }
 
