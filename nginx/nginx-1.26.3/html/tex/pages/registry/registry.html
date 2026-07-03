@@ -6,6 +6,8 @@
     <link rel="icon" href="../../favicon .ico" type="image/x-icon">
     <title>TexApi-注册</title>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <!-- CDN 引入 anime.js，用于动画效果 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -19,17 +21,94 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            background-color: #f5f7fa;
-            padding: 1rem;
+            background: linear-gradient(135deg, #e8f0f8 0%, #dce8f4 25%, #e3edf7 50%, #d6e6f5 75%, #eaf3fb 100%);
+            background-size: 400% 400%;
+            animation: bgShift 20s ease-in-out infinite;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* 背景渐变动画 */
+        @keyframes bgShift {
+            0%, 100% { background-position: 0% 50%; }
+            25% { background-position: 100% 0%; }
+            50% { background-position: 100% 100%; }
+            75% { background-position: 0% 100%; }
+        }
+
+        /* 微妙网格纹理覆盖层 */
+        body::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(66, 153, 225, 0.04) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(66, 153, 225, 0.04) 1px, transparent 1px);
+            background-size: 60px 60px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* 背景加深覆盖层 — 由 JS 通过 --bg-deepen 控制透明度 */
+        body::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: rgba(20, 40, 70, 1);
+            opacity: var(--bg-deepen, 0);
+            pointer-events: none;
+            z-index: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        /* 浮动几何装饰元素 */
+        .bg-ornament {
+            position: absolute;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 0;
+            filter: blur(80px);
+        }
+
+        /* 鼠标跟随光晕凹陷层 */
+        .mouse-glow {
+            position: fixed;
+            pointer-events: none;
+            z-index: 1;
+            width: 600px;
+            height: 600px;
+            border-radius: 50%;
+            background: radial-gradient(circle at center,
+                    rgba(30, 60, 100, 0.10) 0%,
+                    rgba(40, 80, 130, 0.06) 25%,
+                    rgba(66, 120, 180, 0.03) 50%,
+                    transparent 70%);
+            transform: translate(-50%, -50%);
+            will-change: left, top;
+            transition: left 0.15s ease-out, top 0.15s ease-out;
         }
 
         .register-card {
             width: 100%;
             max-width: 460px;
             padding: 2.2rem;
-            background: #ffffff;
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            background: rgba(255, 255, 255, 0.82);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            box-shadow:
+                0 4px 24px rgba(66, 153, 225, 0.08),
+                0 20px 60px rgba(66, 153, 225, 0.06);
+            position: relative;
+            z-index: 2;
+            transition: box-shadow 0.4s ease;
+        }
+
+        .register-card:hover {
+            box-shadow:
+                0 4px 28px rgba(66, 153, 225, 0.12),
+                0 24px 72px rgba(66, 153, 225, 0.10);
         }
 
         .register-card h1 {
@@ -142,6 +221,15 @@
     </style>
 </head>
 <body>
+    <!-- 背景浮动几何装饰 -->
+    <div class="bg-ornament" id="ornament1"></div>
+    <div class="bg-ornament" id="ornament2"></div>
+    <div class="bg-ornament" id="ornament3"></div>
+    <div class="bg-ornament" id="ornament4"></div>
+
+    <!-- 鼠标跟随光晕凹陷层 -->
+    <div class="mouse-glow" id="mouseGlow"></div>
+
     <form id="registerForm" class="register-card" action="">
         <h1>TexApi</h1>
         <p>创建你的账号</p>
@@ -180,6 +268,8 @@
             已有账号？<a href="../../index.html">去登录</a>
         </div>
     </form>
+    <script src="../../components/dotWaveBackground.js"></script>
+    <script src="registry-bg.js"></script>
     <script type="module" src="registry.js"></script>
 </body>
 </html>
