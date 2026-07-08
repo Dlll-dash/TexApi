@@ -3,20 +3,20 @@ export function createResponseJsonExampleDiv(response,rightDiv) {
 
     if (rightDiv) {
         // inject styles once
-        if (!document.getElementById('response-json-highlight-style')) {
-            const style = document.createElement('style');
-            style.id = 'response-json-highlight-style';
-            const keyColor = '#569cd6';
-            const valueColor = '#9cdcfe';
-            style.textContent = `
+        // if (!document.getElementById('response-json-highlight-style')) {
+        //     const style = document.createElement('style');
+        //     style.id = 'response-json-highlight-style';
+        //     const keyColor = '#569cd6';
+        //     const valueColor = '#9cdcfe';
+        //     style.textContent = `
             
-            .json-punct { color: #d4d4d4; }
-            .json-key { color: ${keyColor};  }
-            .json-string { color: ${valueColor}; }
-            .json-number, .json-boolean, .json-null { color: ${valueColor}; }
-            `;
-            document.head.appendChild(style);
-        }
+        //     .json-punct { color: #d4d4d4; }
+        //     .json-key { color: ${keyColor};  }
+        //     .json-string { color: ${valueColor}; }
+        //     .json-number, .json-boolean, .json-null { color: ${valueColor}; }
+        //     `;
+        //     document.head.appendChild(style);
+        // }
 
         function buildHighlightedJson(prettyJson) {
             const fragment = document.createDocumentFragment();

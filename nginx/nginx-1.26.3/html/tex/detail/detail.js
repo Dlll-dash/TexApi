@@ -2236,6 +2236,56 @@ function renderPreview(apiData){
     url_statusDiv.appendChild(statusSpan);
     container.appendChild(url_statusDiv);
 
+    //导出按钮
+    const exportButton = document.createElement('button');
+    exportButton.innerHTML='<i class="bi bi-box-arrow-up-right"></i>';
+    exportButton.className = 'export-btn';
+    
+    const exportButtonTip= document.createElement('span');
+    exportButtonTip.className = 'export-btn-tip';
+    exportButtonTip.textContent = '导出接口文档';
+    exportButton.appendChild(exportButtonTip);
+
+    exportButton.addEventListener('mouseover', function() {
+        exportButtonTip.style.display = 'block';
+    });
+    exportButton.addEventListener('mouseout', function() {
+        exportButtonTip.style.display = 'none';
+    });
+
+    exportButton.addEventListener('click', function() {
+        statusUl.style.display = 'none'; // 隐藏状态下拉框，避免导出时被包含
+        const exportContainer = document.createElement('div');
+        exportContainer.className = 'export-container';
+        exportContainer.appendChild(container.cloneNode(true)); // 克隆当前预览内容
+        const fragment = exportContainer.outerHTML;
+        const css=document.getElementById('export-style').innerHTML;
+        const htmlContent=`
+        <!DOCTYPE html>
+        <html lang="zh-CN">
+            <head>
+                <meta charset="UTF-8">
+                <title>${apiData.apiName || '未命名接口'}</title>
+                <style>
+                    ${css}
+                </style>
+            </head>
+            <body>
+                ${fragment}
+            </body>
+        </html>
+        `;
+        const blob=new Blob([htmlContent],{type:'text/html'});
+        const url=URL.createObjectURL(blob);
+        const a=document.createElement('a');
+        a.href=url;
+        a.download=`${apiData.apiName || '未命名接口'}.html`;
+        a.click();
+        URL.revokeObjectURL(url);
+    });
+
+    url_statusDiv.appendChild(exportButton);
+
     const apiInfoDiv=document.createElement('div');
     apiInfoDiv.className = "api-info-div";
 
@@ -2275,11 +2325,6 @@ function renderPreview(apiData){
     // paramsTitle.style.marginTop = "1.5rem";
     container.appendChild(paramsTitle);
 
-    const noParamsMessage = document.createElement('div');
-    noParamsMessage.textContent = "该接口没有请求参数";
-    noParamsMessage.className = "no-params-message";
-    container.appendChild(noParamsMessage);
-
     const queryParamsDiv=document.createElement('div');
     queryParamsDiv.className = "preview-params-div";
 
@@ -2304,11 +2349,39 @@ function renderPreview(apiData){
                 const paramsList = createParamList(data);
                 queryParamsDiv.appendChild(paramsList);
                 queryParamsDiv.style.display = 'block'; // 显示Query参数区域
-                noParamsMessage.style.display = 'none'; // 隐藏“没有请求参数”提示
             }
         })
     container.appendChild(queryParamsDiv);
     
+    const headersParamsDiv=document.createElement('div');
+    headersParamsDiv.className = "preview-params-div";
+
+    const headersInfoSpan=document.createElement('span');
+    headersInfoSpan.className = 'preview-headers-info';
+
+    const headersTitle=document.createElement('span');
+    headersTitle.textContent = "Headers 参数";
+    headersTitle.className = "headers-title";
+
+    headersInfoSpan.appendChild(headersTitle);
+    headersParamsDiv.appendChild(headersInfoSpan);
+
+    request.get(`/request/param/list/${apiData.id}`,{
+            params: {
+                formatType: requestDataType.Header
+            }
+        }).then(res => {
+            const data = res.data.data || [];
+            if(data.length > 0) {
+                const paramsList = createParamList(data);
+                headersParamsDiv.appendChild(paramsList);
+                headersParamsDiv.style.display = 'block'; // 显示Headers参数区域
+            }
+        })
+
+    container.appendChild(headersParamsDiv);
+
+
 
     const bodyParamsDiv=document.createElement('div');
     bodyParamsDiv.className = "preview-params-div";
@@ -2343,7 +2416,6 @@ function renderPreview(apiData){
                 const paramsList = createParamList(data);
                 bodyParamsDiv.appendChild(paramsList);
                 bodyParamsDiv.style.display = 'block'; // 显示Body参数区域
-                noParamsMessage.style.display = 'none'; // 隐藏“没有请求参数”提示
             }
         })
     }

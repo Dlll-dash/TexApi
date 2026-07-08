@@ -86,7 +86,7 @@ export function createResponsePreviewDiv(response,responsePreviewDiv) {
             }
             
             renderResponseBody(responseBody);
-            console.log('完成响应体渲染，表格内容：', tableBody.innerHTML);
+            //console.log('完成响应体渲染，表格内容：', tableBody.innerHTML);
             responseTable.appendChild(tableBody);
             responsePreviewDiv.appendChild(responseTable);
             renderedAsTable = true;
