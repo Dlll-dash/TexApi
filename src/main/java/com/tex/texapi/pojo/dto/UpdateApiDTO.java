@@ -27,5 +27,7 @@ public class UpdateApiDTO {
     //状态 0 开发中 1 维护中 2 已发行
     Integer status;
 
+    //分类id
+    Long categoryId;
 
 }

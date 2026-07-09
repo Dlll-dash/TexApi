@@ -156,7 +156,7 @@ public class ApiServiceImpl implements ApiService {
             //x-www-urlencode构建
             FormBody.Builder builder=new FormBody.Builder();
             bodyParams.forEach(p->{
-                if(p.getIsChecked()) {
+                if(p.getIsChecked()!=null&&p.getIsChecked()==true) {
                     builder.add(p.getName(), p.getValue());
                 }
             });

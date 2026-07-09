@@ -99,6 +99,59 @@
             margin: 0.5rem 0;
         }
 
+        .empty-api-tip {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            min-height: 300px;
+            gap: 0.6rem;
+            opacity: 0;
+            animation: fadeInUp 0.5s ease forwards;
+        }
+
+        .empty-api-icon {
+            width: 72px;
+            height: 72px;
+            border-radius: 50%;
+            background: #ebf4ff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 0.4rem;
+        }
+
+        .empty-api-icon i {
+            font-size: 2rem;
+            color: #4299e1;
+        }
+
+        .empty-api-title {
+            font-size: 1.1rem;
+            font-weight: 500;
+            color: #2d3748;
+        }
+
+        .empty-api-desc {
+            font-size: 0.9rem;
+            color: #a0aec0;
+            max-width: 280px;
+            text-align: center;
+            line-height: 1.5;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(8px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
         /* 接口列表样式 */
         ul.api-list-ul {
             list-style: none;
@@ -192,11 +245,10 @@
         }
 
         .status-dot {
-            width: 10px;
-            height: 10px;
+            width: 8px;
+            height: 8px;
             border-radius: 50%;
             margin-right: 0.5rem;
-            box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.95);
         }
 
         .status-tooltip {
@@ -415,6 +467,20 @@
             color: #ffffff;
         }
 
+        .confirm-message {
+            color: #4a5568;
+            font-size: 0.95rem;
+            margin-bottom: 1rem;
+            line-height: 1.5;
+        }
+
+        .btn-danger {
+            background: #e53e3e !important;
+        }
+        .btn-danger:hover {
+            background: #c53030 !important;
+        }
+
         .add-api-btn {
             padding: 0.45rem 0.4rem;
             border: none;
@@ -453,6 +519,245 @@
         li.api-list-li:last-child {
             margin-bottom: 0;
         }
+
+        /* ========== Tree Table Styles ========== */
+        .tree-table-ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 0.1rem;
+        }
+
+        .tree-children-ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            max-height: 5000px;
+            overflow: visible;
+            transition: max-height 0.3s ease, opacity 0.25s ease;
+            opacity: 1;
+        }
+
+        .tree-children-ul.collapsed {
+            max-height: 0;
+            opacity: 0;
+            overflow: hidden;
+            transition: max-height 0.25s ease, opacity 0.2s ease;
+        }
+
+        /* Category row */
+        .tree-category-row {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.45rem 0.5rem;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            user-select: none;
+        }
+
+        .tree-category-row:hover {
+            background-color: #edf0f2;
+        }
+
+        .tree-arrow {
+            flex-shrink: 0;
+            width: 1.2rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: #718096;
+            font-size: 0.75rem;
+            transition: transform 0.2s ease, color 0.2s ease;
+        }
+
+        .tree-arrow:hover {
+            color: #4299e1;
+        }
+
+        .tree-folder {
+            flex-shrink: 0;
+            width: 1.2rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: #718096;
+            font-size: 0.95rem;
+        }
+
+        .tree-category-name {
+            flex: 1;
+            font-weight: 500;
+            color:#777777;
+            font-size: 1rem;
+        }
+
+        /* API row (within tree) */
+        .tree-api-row {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.45rem 0.5rem;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            position: relative;
+        }
+
+        .tree-api-row:hover {
+            background-color: #edf0f2;
+        }
+
+        .tree-api-row.active {
+            background-color: #edf0f2;
+        }
+
+        .tree-api-row .method {
+            font-weight: 600;
+            font-size: 0.9rem;
+            min-width: 52px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+
+        .tree-api-row .name {
+            flex: 1;
+            font-weight: 300;
+            color: #718096;
+            font-size: 1.05rem;
+        }
+
+        /* More menu within tree */
+        .tree-menu-container {
+            position: relative;
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2;
+        }
+
+        @media (hover: hover) and (pointer: fine) {
+            .tree-category-row .tree-menu-container,
+            .tree-api-row .tree-menu-container {
+                opacity: 0;
+                visibility: hidden;
+                pointer-events: none;
+                transform: translateX(6px);
+                transition: opacity 0.2s ease, transform 0.2s ease, visibility 0s linear 0.2s;
+            }
+
+            .tree-category-row:hover .tree-menu-container,
+            .tree-category-row:focus-within .tree-menu-container,
+            .tree-menu-container.is-open,
+            .tree-api-row:hover .tree-menu-container,
+            .tree-api-row:focus-within .tree-menu-container {
+                opacity: 1;
+                visibility: visible;
+                pointer-events: auto;
+                transform: translateX(0);
+                transition-delay: 0s;
+            }
+        }
+
+        @media (hover: none) {
+            .tree-menu-container {
+                opacity: 1;
+                visibility: visible;
+                pointer-events: auto;
+                transform: translateX(0);
+            }
+        }
+
+        .tree-option-list {
+            position: absolute;
+            top: calc(100% + 6px);
+            right: 0;
+            display: none;
+            z-index: 2000;
+            min-width: 126px;
+            width: max-content;
+            padding: 0.25rem 0;
+            background-color: #ffffff;
+            border: 1px solid #e8e8e8;
+            border-radius: 8px;
+            box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);
+        }
+
+        .tree-menu-container.is-open .tree-option-list {
+            display: block;
+        }
+
+        .tree-option-item {
+            width: 100%;
+            border: none;
+            background: transparent;
+            padding: 0.55rem 0.85rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.45rem;
+            font-weight: 500;
+            color: #2d3748;
+            text-align: left;
+            white-space: nowrap;
+            transition: background-color 0.2s ease, color 0.2s ease;
+        }
+
+        .tree-option-item:hover {
+            background-color: #f5f7fa;
+        }
+
+        .tree-option-item.danger {
+            color: #e53e3e;
+        }
+
+        .tree-option-item.danger:hover {
+            background-color: #fff5f5;
+        }
+
+        .tree-option-item .menu-icon {
+            width: 1rem;
+            flex-shrink: 0;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .tree-option-item .menu-icon svg {
+            width: 1rem;
+            height: 1rem;
+        }
+
+        .add-category-btn {
+            padding: 0.45rem 0.4rem;
+            border: none;
+            border-radius: 6px;
+            background-color: transparent;
+            color: #64748b;
+            cursor: pointer;
+            transition: background-color 0.2s ease, color 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.45rem;
+            margin-top: 0.2rem;
+            font-size: 0.98rem;
+            font-weight: 500;
+        }
+
+        .add-category-btn:hover {
+            color: #f6ad55;
+            background-color: #fffbeb;
+        }
+
+        .add-category-btn i {
+            font-size: 1.05rem;
+        }
+        /* ========== End Tree Table Styles ========== */
 
         /* 接口名称样式 */
         .api-name {
@@ -1509,7 +1814,7 @@
 
         
 
-        .preview-body-info,.preview-query-info {
+        .preview-body-info,.preview-query-info,.preview-headers-info {
             display: flex;
             align-items: center;
             gap: 0.5rem;
@@ -1915,7 +2220,7 @@
 
         
 
-        .export-container .preview-body-info,.export-container .preview-query-info {
+        .export-container .preview-body-info,.export-container .preview-query-info,.export-container .preview-headers-info {
             display: flex;
             align-items: center;
             gap: 0.5rem;
@@ -2152,26 +2457,11 @@
     <div id="apiList"></div>
     <div id="testWindow">
         <div id="tabContainer" class="test-tab-container">
-                <span class="test-tab active" data-tab="debug" id="debugTab">调试</span>
-                <span class="test-tab" data-tab="design" id="designTab">设计</span>
-                <span class="test-tab" data-tab="preview" id="previewTab">预览</span>
         </div>
         <div id="subWindow"></div>
     </div>
 
 
-    <div id="rename-backdrop" class="rename-modal-backdrop" aria-hidden="true">
-        <div class="rename-modal" role="dialog" aria-modal="true" aria-labelledby="rename-title">
-            <h3 id="rename-title">重命名接口</h3>
-            <label for="rename-input">接口名称</label>
-            <input id="rename-input" type="text" maxlength="60" autocomplete="off" />
-            <div class="modal-actions">
-                <button id="rename-cancel" class="btn-secondary" type="button">取消</button>
-                <button id="rename-confirm" class="btn-primary" type="button">确定</button>
-            </div>
-        </div>
-    </div>
-    
     <script type="module" src="detail.js"></script>
 </body>
 </html>

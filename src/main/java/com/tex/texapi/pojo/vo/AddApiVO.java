@@ -41,4 +41,7 @@ public class AddApiVO {
 
     //责任人
     String inChargeUser;
+
+    //分类id
+    Long categoryId;
 }

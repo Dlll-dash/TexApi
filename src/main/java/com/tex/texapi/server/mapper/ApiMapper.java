@@ -60,4 +60,10 @@ public interface ApiMapper {
      */
     @Delete("delete from api where id=#{id}")
     void deleteById(Long id);
+
+    /**
+     * 根据分类ids批量删除接口
+     * @param categoryIds
+     */
+    void deleteBatchByCategoryId(List<Long> categoryIds);
 }

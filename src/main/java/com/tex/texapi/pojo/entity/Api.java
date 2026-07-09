@@ -48,6 +48,9 @@ public class Api {
     //责任人
     String inChargeUser;
 
+    //分类
+    Long categoryId;
+
     //接口状态
     public static final int DEVELOPING = 1;
     public static final int MAINTAINING = 0;

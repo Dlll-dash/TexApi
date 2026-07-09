@@ -16,15 +16,12 @@ import { createResponseJsonExampleDiv } from "../components/responseJsonExampleD
 import {createTypeDropdown,closeActiveTypeDropdown,setupTypeDropdownClose} from "../components/typeDropdown.js";
 import {getIsNecessaryButton} from "../components/isNecessaryButton.js";
 import {getCheckButton,toCheckSquare,toDashSquare,toSquare,dashSquareIcon,squareIcon,checkSquareIcon} from "../components/checkButton.js";
+import { createTreeTable } from "../components/treeTable.js";
+import { createPromptModal } from "../components/modal.js";
 
 const nodeMap=NodeMapManager.getInstance();
+let treeTableRef = null;
 let detailMenuOutsideCloseBound = false;
-let detailRenameModalBound = false;
-
-const detailRenameState = {
-    apiId: null,
-    apiName: ''
-};
 
 function createDetailMenuButton(label, svgPath, className = '') {
     const button = document.createElement('button');
@@ -51,348 +48,93 @@ function closeAllDetailMenus() {
     });
 }
 
-// function closeActiveTypeDropdown() {
-//     if (!activeTypeListDiv) {
-//         return;
-//     }
-//     activeTypeListDiv.style.display = 'none';
-//     activeTypeListDiv = null;
-// }
+function initTreeTable() {
+    if (treeTableRef) return;
 
-function getDetailRenameModalElements() {
-    return {
-        backdrop: document.getElementById('rename-backdrop'),
-        input: document.getElementById('rename-input'),
-        cancel: document.getElementById('rename-cancel'),
-        confirm: document.getElementById('rename-confirm')
-    };
-}
+    const container = document.getElementById('apiList');
+    if (!container) return;
 
-function openRenameModal(apiItem) {
-    const { backdrop, input } = getDetailRenameModalElements();
-    if (!backdrop || !input) {
-        return;
-    }
-
-    detailRenameState.apiId = apiItem?.id ?? null;
-    detailRenameState.apiName = apiItem?.apiName || '';
-    input.value = detailRenameState.apiName;
-    backdrop.classList.add('is-open');
-    backdrop.setAttribute('aria-hidden', 'false');
-
-    setTimeout(() => {
-        input.focus();
-        input.select();
-    }, 0);
-}
-
-function closeRenameModal() {
-    const { backdrop, input } = getDetailRenameModalElements();
-    if (backdrop) {
-        backdrop.classList.remove('is-open');
-        backdrop.setAttribute('aria-hidden', 'true');
-    }
-    if (input) {
-        input.value = '';
-    }
-
-    detailRenameState.apiId = null;
-    detailRenameState.apiName = '';
-}
-
-async function submitRename() {
-    const { input } = getDetailRenameModalElements();
-    if (!input || detailRenameState.apiId == null) {
-        return;
-    }
-
-    const nextName = input.value.trim();
-    if (!nextName) {
-        alert('接口名称不能为空');
-        input.focus();
-        return;
-    }
-
-    const selectedApiId = detailRenameState.apiId;
-
-    try {
-        await request.put('http://localhost/tex/api/updateInfo', {
-            id: selectedApiId,
-            apiName: nextName
-        });
-
-        closeRenameModal();
-        await fetchApiListAndRender({ id: selectedApiId });
-    } catch (err) {
-        console.error('重命名接口失败：', err);
-        alert('重命名失败：' + (err.response?.data?.msg || err.message || '未知错误'));
-    }
-}
-
-function bindDetailRenameModalEvents() {
-    if (detailRenameModalBound) {
-        return;
-    }
-
-    const { backdrop, cancel, confirm } = getDetailRenameModalElements();
-
-    if (cancel) {
-        cancel.addEventListener('click', closeRenameModal);
-    }
-    if (confirm) {
-        confirm.addEventListener('click', submitRename);
-    }
-    if (backdrop) {
-        backdrop.addEventListener('click', (event) => {
-            if (event.target === backdrop) {
-                closeRenameModal();
-            }
-        });
-    }
-
-    document.addEventListener('keydown', (event) => {
-        if (event.key === 'Escape') {
-            closeRenameModal();
-            closeAllDetailMenus();
-        }
-    });
-
-    detailRenameModalBound = true;
-}
-
-async function fetchApiListAndRender(selectApi = null) {
     const params = getUrlParams();
-    if (!params.id) {
-        return [];
-    }
+    if (!params.id) return;
 
-    const res = await request.get(`http://localhost/tex/api/list/${params.id}`);
-
-    const data = res?.data?.data || [];
-    renderApiList(data, { selectApi });
-    return data;
-}
-
-function isSameApi(item, selectApi) {
-    if (!item || !selectApi) {
-        return false;
-    }
-
-    if (selectApi.id != null && item.id != null) {
-        return String(item.id) === String(selectApi.id);
-    }
-
-    const sameName = selectApi.apiName === undefined || item.apiName === selectApi.apiName;
-    const sameMethod = selectApi.requestMethod === undefined || item.requestMethod === selectApi.requestMethod;
-    const sameProject = selectApi.projectId === undefined || String(item.projectId) === String(selectApi.projectId);
-    const sameStatus = selectApi.status === undefined || item.status === selectApi.status;
-
-    return sameName && sameMethod && sameProject && sameStatus;
-}
-
-
-/**
- * 渲染接口列表
- * @param {传入api列表} apiData 
- * @returns 
- */
- function renderApiList(apiData, options = {}){
-    //console.log("渲染界面..");
-     const { selectApi = null } = options;
-    const container=document.getElementById('apiList');
-    if(!container){
-        //console.log("container为空");
-        return;
-    }
-    container.innerHTML= "";
+    const apiRenameModal = createPromptModal('api-rename-modal', '重命名接口');
 
     if (!detailMenuOutsideCloseBound) {
         document.addEventListener('click', closeAllDetailMenus);
         detailMenuOutsideCloseBound = true;
     }
 
-    //创建标题
-    const title=document.createElement('h2');
-    title.className = "api-list-title";
-    title.textContent="项目接口";
-    container.appendChild(title);
+    treeTableRef = createTreeTable(container, {
+        projectId: params.id,
 
-    //创建列表节点
-    const ul=document.createElement('ul');
-    ul.className = "api-list-ul"; // 新增统一类名，方便样式控制
-    container.appendChild(ul);
-
-    // 处理非列表或无数据情况（使用美化的空提示类）
-    if (!Array.isArray(apiData) || apiData.length === 0) {
-        const emptyTip = document.createElement('div');
-        emptyTip.className = "empty-tip"; // 关联CSS类
-        emptyTip.textContent = "暂无接口数据";
-        container.appendChild(emptyTip);
-    }
-
-    if (Array.isArray(apiData)) {
-        let activeLi = null;
-        let activeItem = null;
-        apiData.forEach(item=>{
-        //console.log("表单项：",item);
-        const li = document.createElement('li');
-        li.className = "api-list-li"; // 新增统一类名
-        li.dataset.apiId = item.id ?? '';
-
-        const methodSpan=document.createElement('span');
-        const nameSpan=document.createElement('span');
-
-        methodSpan.textContent=item.requestMethod;
-        methodSpan.className='method';
-        
-
-        nameSpan.textContent=item.apiName;
-        nameSpan.className='name';
-        
-        // 按请求方法设置不同颜色，保持原有逻辑
-        methodSpan.style.color = methodColors[item.requestMethod] || methodColors['DEFAULT'];
-        //methodSpan.style.backgroundColor = methodBackroundColors[item.requestMethod] || methodBackroundColors['DEFAULT'];
-
-        li.appendChild(methodSpan);
-        li.appendChild(nameSpan);
-
-        // 状态圆点
-        if (item.status !== undefined && statusColors[item.status]) {
-            const statusWrap = document.createElement('div');
-            statusWrap.className = 'status-indicator';
-
-            const statusDot = document.createElement('span');
-            statusDot.className = 'status-dot';
-            statusDot.style.backgroundColor = statusColors[item.status];
-
-            const statusTooltip = document.createElement('span');
-            statusTooltip.className = 'status-tooltip';
-            statusTooltip.textContent = statusText[item.status] || '未知状态';
-
-            statusWrap.appendChild(statusDot);
-            statusWrap.appendChild(statusTooltip);
-            li.appendChild(statusWrap);
-        }
-
-        // 更多操作菜单
-        const moreMenuContainer = document.createElement('div');
-        moreMenuContainer.className = 'more-menu-container';
-        moreMenuContainer.addEventListener('click', (event) => {
-            event.stopPropagation();
-        });
-
-        const moreMenuButton = document.createElement('button');
-        moreMenuButton.type = 'button';
-        moreMenuButton.className = 'more-menu-trigger';
-        moreMenuButton.setAttribute('aria-label', '更多操作');
-        moreMenuButton.innerHTML = `<i class="bi bi-three-dots"></i>`;
-        
-        const optionList = document.createElement('div');
-        optionList.className = 'detail-option-list';
-
-        // 重命名选项
-        const renameOption = createDetailMenuButton('重命名', `
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path>
-            </svg>
-        `, 'detail-option-item');
-        renameOption.onclick = function(e) {
-            e.stopPropagation();
+        onApiSelect: (apiData) => {
             closeAllDetailMenus();
-            openRenameModal(item);
-        };
-
-        // 删除选项
-        const deleteOption = createDetailMenuButton('删除', `
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <polyline points="3 6 5 6 21 6"></polyline>
-                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-            </svg>
-        `, 'detail-option-item danger');
-        deleteOption.onclick =async function(e) {
-            e.stopPropagation();
-            closeAllDetailMenus();
-            console.log("Delete clicked for", item.apiName);
-            await request.delete(`http://localhost/tex/api/delete/${item.id}`);
-            //刷新列表
-            fetchApiListAndRender();
-        };
-
-        optionList.appendChild(renameOption);
-        optionList.appendChild(deleteOption);
-        moreMenuButton.onclick = function(e) {
-            e.stopPropagation();
-            const isOpen = moreMenuContainer.classList.contains('is-open');
-            closeAllDetailMenus();
-            if (!isOpen) {
-                moreMenuContainer.classList.add('is-open');
-            }
-        };
-        moreMenuContainer.appendChild(moreMenuButton);
-        moreMenuContainer.appendChild(optionList);
-
-        li.appendChild(moreMenuContainer);
-
-        //创建点击事件
-        li.onclick=function(){
-            closeAllDetailMenus();
-            // 移除其他项的active类
-            ul.querySelectorAll('li').forEach(sibling => sibling.classList.remove('active'));
-            li.classList.add('active'); // 添加点击效果
-            renderTestWindow(item);
-            //移除响应区域
+            renderTestWindow(apiData);
             document.getElementById('responseArea')?.remove();
             renderResponse(document.getElementById('testWindow'));
-        };
-        ul.appendChild(li);
+        },
 
-        if (!activeLi && !selectApi) {
-            activeLi = li;
-            activeItem = item;
-        }
+        onApiRename: async (apiData) => {
+            const newName = await apiRenameModal.open(apiData.apiName, '重命名接口');
+            if (newName) {
+                await request.put('http://localhost/tex/api/updateInfo', {
+                    id: apiData.id,
+                    apiName: newName
+                });
+                if (treeTableRef) treeTableRef.refresh();
+            }
+        },
 
-        if (selectApi && isSameApi(item, selectApi)) {
-            activeLi = li;
-            activeItem = item;
+        onApiDelete: async (apiData) => {
+            await request.delete(`http://localhost/tex/api/delete/${apiData.id}`);
+            if (treeTableRef) treeTableRef.refresh();
+        },
+
+        onApiAdd: async (categoryId) => {
+            const payload = {
+                apiName: '未命名接口',
+                requestMethod: 'GET',
+                projectId: params.id,
+                status: 1
+            };
+            if (categoryId) payload.categoryId = categoryId;
+
+            const res = await request.post('http://localhost/tex/api/add', payload);
+            return res?.data?.data || null;
+        },
+
+        onApiMove: async (apiData, targetCategoryId) => {
+            await request.put(`http://localhost/tex/api/update`, {
+                id: apiData.id,
+                categoryId: targetCategoryId
+            });
         }
     });
+}
 
-        if (!activeLi && apiData.length > 0) {
-            const apiItems = ul.querySelectorAll('li.api-list-li');
-            activeLi = selectApi ? apiItems[apiItems.length - 1] : apiItems[0];
-            activeItem = selectApi ? apiData[apiData.length - 1] : apiData[0];
-        }
+async function fetchApiListAndRender() {
+    const params = getUrlParams();
+    if (!params.id) return [];
 
-        if (activeLi && activeItem) {
-            activeLi.classList.add('active');
-            renderTestWindow(activeItem);
-        }
+    if (!treeTableRef) {
+        initTreeTable();
+    } else {
+        await treeTableRef.refresh();
     }
-
-    // 新增接口按钮
-    const addApiLi = document.createElement('li');
-    addApiLi.className = "add-api-btn";
-    addApiLi.innerHTML = `<i class="bi bi-plus-lg"></i> 新增接口`;
-    addApiLi.onclick = async function(e) {
-        e.stopPropagation();
-        closeAllDetailMenus();
-        //console.log("Add API clicked");
-        try {
-            const res = await request.post('http://localhost/tex/api/add', {
-                apiName: '未命名接口',
-                requestMethod: 'GET',// 默认GET
-                projectId: getUrlParams().id, 
-                status: 1 // 默认待开发状态
-
-            });
-
-            const createdApi = res?.data?.data || null;
-            await fetchApiListAndRender(createdApi);
-        } catch(err) {
-            console.error("Error adding API:", err);
-        }
-    };
-    ul.appendChild(addApiLi);
+    if(document.querySelectorAll('.tree-api-row').length==0){
+        
+        const emptyDiv=document.createElement('div');
+        emptyDiv.className = "empty-api-tip";
+        emptyDiv.innerHTML=`<div class="empty-api-icon"><i class="bi bi-folder-plus"></i></div>
+                            <div class="empty-api-title">暂无接口</div>
+                            <div class="empty-api-desc">请先在左侧选择一个分类，再点击 + 创建第一个接口</div>
+                            `;
+        const subWindow=document.getElementById('subWindow');
+        console.log("subWindow容器为空");
+        subWindow.appendChild(emptyDiv);
+    
+    }
+    return [];
 }
 
 /*
@@ -412,9 +154,14 @@ function renderTestWindow(apiData){
             //console.log("tabContainer容器为空");
             return;
         }
+        
 
     //右边的块区顶部，三个span区
-    const debugSpan=document.getElementById('debugTab');
+    const debugSpan=document.createElement('span');
+    debugSpan.id = 'debugTab';
+    debugSpan.textContent = '调试';
+    debugSpan.className = "test-tab"; // 默认激活
+
     //点击事件
     debugSpan.onclick=function(){
         // 切换标签样式
@@ -425,9 +172,11 @@ function renderTestWindow(apiData){
 
     };
 
-    const designSpan=document.getElementById('designTab');
+    const designSpan=document.createElement('span');
+    designSpan.id = 'designTab';
     designSpan.textContent='设计';
     designSpan.className = "test-tab";
+
     //点击事件
     designSpan.onclick=function(){
         tabContainer.querySelectorAll('span').forEach(tab => tab.classList.remove('active'));
@@ -441,7 +190,11 @@ function renderTestWindow(apiData){
         renderDesign(apiData,designFormConfig);
     };
 
-    const previewSpan=document.getElementById('previewTab');
+    const previewSpan=document.createElement('span');
+    previewSpan.id = 'previewTab';
+    previewSpan.textContent = '预览';
+    previewSpan.className = "test-tab";
+
     //点击事件
     previewSpan.onclick=function(){
         tabContainer.querySelectorAll('span').forEach(tab => tab.classList.remove('active'));
@@ -455,6 +208,10 @@ function renderTestWindow(apiData){
         renderPreview(apiData);
     };
 
+   
+    tabContainer.appendChild(debugSpan);
+    tabContainer.appendChild(designSpan);
+    tabContainer.appendChild(previewSpan);
     //默认打开debug区
     debugSpan.click();
 
@@ -2221,9 +1978,10 @@ function renderPreview(apiData){
     statusUl.querySelectorAll('.status-option-item').forEach(option => {
         option.addEventListener('click', function(e) {
             e.stopPropagation();
+            //console.log('apiData before update:', apiData);
             apiData.status = this.dataset.statusValue; // 更新接口数据中的状态字段，后续发送请求时可以用到
             const requestBodyData = {
-                "id": container.dataset.apiId,
+                "id": apiData.id,
                 "apiName": apiData.apiName, 
                 "explanation": apiData.explanation || '',
                 "status": statusSpan.dataset.status,
@@ -2513,7 +2271,6 @@ window.onload = async function () {
     const params=getUrlParams();
     //console.log("创建标题：",params.name);
     document.title='项目空间：'+(params.name || '未命名项目');
-    bindDetailRenameModalEvents();
 
     try{
     console.log("准备发送请求..");

@@ -3,8 +3,8 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="com.tex.texapi.server.mapper.ApiMapper">
     <insert id="addApi" keyProperty="id" useGeneratedKeys="true">
-        insert into api (project_id, api_name, request_url, request_method, status, explanation, in_charge_user, create_time,create_user,update_time,update_user)
-        VALUES (#{projectId}, #{apiName}, #{requestUrl}, #{requestMethod}, #{status}, #{explanation}, #{inChargeUser},#{createTime},#{createUser},#{updateTime},#{updateUser})
+        insert into api (project_id, api_name, request_url, request_method, status, explanation, in_charge_user, create_time,create_user,update_time,update_user,category_id)
+        VALUES (#{projectId}, #{apiName}, #{requestUrl}, #{requestMethod}, #{status}, #{explanation}, #{inChargeUser},#{createTime},#{createUser},#{updateTime},#{updateUser},#{categoryId})
     </insert>
 
     <update id="updateApi">
@@ -25,7 +25,10 @@
                     update_time = #{updateTime},
                 </if>
                 <if test="updateUser!=null">
-                    update_user = #{updateUser}
+                    update_user = #{updateUser},
+                </if>
+                <if test="categoryId !=null">
+                    category_id = #{categoryId}
                 </if>
 
         where id = #{id}
@@ -54,6 +57,14 @@
             </set>
         where id = #{id}
     </update>
+
+    <delete id="deleteBatchByCategoryId">
+        delete from api where category_id in
+        <foreach collection="categoryIds" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
     <select id="list" resultType="com.tex.texapi.pojo.entity.Api">
         select a.id,
                project_id,
@@ -65,6 +76,7 @@
                status,
                explanation,
                in_charge_user,
+               category_id,
                u1.name as create_user,
                u2.name as update_user
                from api a left join user u1 on a.create_user = u1.id left join user u2 on a.update_user=u2.id
