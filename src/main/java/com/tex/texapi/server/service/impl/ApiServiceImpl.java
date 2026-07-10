@@ -208,12 +208,14 @@ public class ApiServiceImpl implements ApiService {
 
             }
             //返回结果
+
             if(response==null){
                 throw new RequestException(MessageConstant.REQUEST_FAILED);
             }
+
             if(!response.isSuccessful()){
                 return RequestVO.builder()
-                        .body(null)
+                        .body(response.body().string())
                         .code(String.valueOf(response.code()))
                         .build();
             }
