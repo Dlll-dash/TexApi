@@ -148,7 +148,7 @@ document.addEventListener('DOMContentLoaded', () => {
             console.log('Response:', data);
             localStorage.setItem('token', data.token);
             localStorage.setItem('id', data.id);
-            window.location.href = '/home/home.html';
+            window.location.href = '/pages/home/home.html';
         } catch (err) {
             console.error('登录失败详情：', err);
             const errMsg = err.response?.data?.msg || err.message || '网络错误/后端接口未响应';

@@ -37,7 +37,7 @@ document.addEventListener('DOMContentLoaded', async function () {
             hash |= 0; // 转为32位整数
         }
         const idx = Math.abs(hash) % PROJECT_ICONS.length;
-        return `../assets/svg/project/${PROJECT_ICONS[idx]}.svg`;
+        return `../../assets/svg/project/${PROJECT_ICONS[idx]}.svg`;
     }
     // ========== 图标配置结束 ==========
 
@@ -293,7 +293,7 @@ document.addEventListener('DOMContentLoaded', async function () {
             li.addEventListener('click', () => {
                 if (itemMenu.classList.contains('is-open')) return;
                 // 拼接参数（编码特殊字符）
-                const targetUrl = `/detail/detail.html?id=${item.id}&name=${encodeURIComponent(item.name || "未命名项目")}`;
+                const targetUrl = `../detail/detail.html?id=${item.id}&name=${encodeURIComponent(item.name || "未命名项目")}`;
                 window.open(targetUrl, '_blank');
             });
 
