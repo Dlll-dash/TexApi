@@ -363,6 +363,9 @@ function renderDebug(apiData,config){
 
         const responseContent = document.querySelector('.response-content');
         const responseCode = document.querySelector('.response-area-code');
+        const responseTimeTitle = document.querySelector('.response-time-title');
+        const responseTime= document.querySelector('.response-area-time');
+        responseTime.textContent = '';
         const minLoadingTime = 30;
         const maxLoadingTime = 10000;
         const loadingHtml = `<div class="loading-container"><div class="loading-spinner"></div><span>加载中...</span></div>`;
@@ -388,6 +391,12 @@ function renderDebug(apiData,config){
 
             const elapsed = Date.now() - startTime;
             const remaining = Math.max(0, minLoadingTime - elapsed);
+            if (responseTime) {
+                responseTime.textContent = `${elapsed} ms`;
+                if (responseTimeTitle) {
+                    responseTimeTitle.style.display = 'inline-block';
+                }
+            }
             setTimeout(renderFn, remaining);
         }
 
@@ -415,6 +424,12 @@ function renderDebug(apiData,config){
             if (responseCode) {
                 responseCode.textContent = '';
                 responseCode.style.color = '';
+            }
+            if(responseTime) {
+                responseTime.textContent = `>${maxLoadingTime} ms`;
+                if (responseTimeTitle) {
+                    responseTimeTitle.style.display = 'inline-block';
+                }
             }
         }, maxLoadingTime);
 
@@ -570,6 +585,15 @@ function renderResponse(container){
 
     responseDiv.appendChild(responseTitleSpan);
     
+    //响应时间标题
+    const responseTimeTitle = document.createElement('span');
+    const responseTimeSpan = document.createElement('span');
+    responseTimeTitle.textContent = "响应时间：";
+    responseTimeTitle.className = "response-time-title";
+    responseTimeSpan.className = "response-area-time";
+    responseTimeTitle.appendChild(responseTimeSpan);
+    responseDiv.appendChild(responseTimeTitle);
+
     // 新增响应结果区域，美化调试窗口
     const responseArea = document.createElement('div');
     responseArea.className = "response-area";

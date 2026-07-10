@@ -21,7 +21,8 @@
             padding: 2rem 1rem;
             display: flex;
             gap: 1.5rem; /* 左侧列表和右侧区域的间距 */
-            min-height: 100vh; /* 铺满视口高度 */
+            height: 100vh; /* 固定视口高度 */
+            overflow: hidden; /* 禁止body层级滚动 */
         }
         /* 左侧接口列表容器（占1/4宽度） */
         .api-list-title {
@@ -41,7 +42,8 @@
             border-radius: 12px;
             box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
             padding: 1.5rem;
-            height: fit-content; /* 高度自适应内容 */
+            overflow-y: auto; /* 内容过多时独立滚动 */
+            max-height: calc(100vh - 4rem); /* 减去body上下padding */
         }
 
         /* 右侧测试窗口容器（占3/4宽度） */
@@ -54,6 +56,7 @@
             min-height: 600px; /* 基础高度 */
             display: flex;
             flex-direction: column;
+            overflow-y:scroll;
         }
 
         /* 子窗口容器 */
@@ -895,7 +898,7 @@
             overflow-y: scroll; /* 始终显示垂直滚动条 */
         }
 
-        .response-title {
+        .response-title,.response-time-title {
 
             padding: 0.5rem;
             margin-top: 0.5rem;
@@ -904,8 +907,17 @@
             color: #2d3748;
             /* margin-bottom: 0.5rem; */
         }
+        .response-time-title{
+            margin-left: 4rem;
+            display: none;
+        }
 
         .response-area-code{
+            font-size: 0.95rem;
+            font-weight: 600;
+        }
+        
+        .response-area-time{
             font-size: 0.95rem;
             font-weight: 600;
         }
