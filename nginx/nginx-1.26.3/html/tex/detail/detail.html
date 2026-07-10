@@ -877,12 +877,46 @@
 
         /* 响应区域样式 */
         .response-container {
-            /* position: relative; */
+            position: relative;
             border-top: 1px solid #e8e8e8;
             display: block;
             gap: 0.5rem;
-            margin-top: 5rem;
-            padding-top: 1rem;
+            /* margin-top: 5rem; */
+            padding-top: 0.5rem;
+        }
+
+        .resize-handle {
+            position: absolute;
+            top: -5px;
+            left: 0;
+            right: 0;
+            height: 10px;
+            cursor: row-resize;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            user-select: none;
+            z-index: 5;
+        }
+
+        .resize-handle::before {
+            content: '';
+            width: 2.5rem;
+            height: 3px;
+            border-radius: 2px;
+            background-color: #cbd5e0;
+            transition: width 0.15s ease, background-color 0.15s ease;
+        }
+
+        .resize-handle:hover::before {
+            width: 3rem;
+            background-color: #4299e1;
+        }
+
+        .resize-handle:active::before,
+        body.resize-active .resize-handle::before {
+            width: 4rem;
+            background-color: #3182ce;
         }
 
         .response-area {
@@ -892,16 +926,17 @@
             border-top-left-radius: 0px;
             border-top: transparent;
             margin-top: 0.5rem;
-            /* 限制最大高度，超出显示纵向滚动条（始终显示滚动条） */
-            max-height: 360px;
-            height: auto;
-            overflow-y: scroll; /* 始终显示垂直滚动条 */
+            /* 默认高度，用户可通过顶部手柄拖拽调整 */
+            height: 200px;
+            min-height: 60px;
+            max-height: 600px;
+            overflow-y: scroll;
         }
 
         .response-title,.response-time-title {
 
             padding: 0.5rem;
-            margin-top: 0.5rem;
+            margin-top: 1rem;
             font-size: 1rem;
             font-weight: 600;
             color: #2d3748;

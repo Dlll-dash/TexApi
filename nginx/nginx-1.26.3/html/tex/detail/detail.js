@@ -157,10 +157,14 @@ function renderTestWindow(apiData){
         
 
     //右边的块区顶部，三个span区
-    const debugSpan=document.createElement('span');
-    debugSpan.id = 'debugTab';
-    debugSpan.textContent = '调试';
-    debugSpan.className = "test-tab"; // 默认激活
+    let debugSpan = document.getElementById('debugTab');
+    //console.log("debugSpan:",debugSpan);
+    if(!debugSpan) {
+        debugSpan = document.createElement('span');
+        debugSpan.id = 'debugTab';
+        debugSpan.textContent = '调试';
+        debugSpan.className = "test-tab"; // 默认激活
+    }
 
     //点击事件
     debugSpan.onclick=function(){
@@ -172,10 +176,13 @@ function renderTestWindow(apiData){
 
     };
 
-    const designSpan=document.createElement('span');
-    designSpan.id = 'designTab';
-    designSpan.textContent='设计';
-    designSpan.className = "test-tab";
+    let designSpan = document.getElementById('designTab');
+    if(!designSpan) {
+        designSpan = document.createElement('span');
+        designSpan.id = 'designTab';
+        designSpan.textContent='设计';
+        designSpan.className = "test-tab";
+    }
 
     //点击事件
     designSpan.onclick=function(){
@@ -190,10 +197,13 @@ function renderTestWindow(apiData){
         renderDesign(apiData,designFormConfig);
     };
 
-    const previewSpan=document.createElement('span');
-    previewSpan.id = 'previewTab';
-    previewSpan.textContent = '预览';
-    previewSpan.className = "test-tab";
+    let previewSpan = document.getElementById('previewTab');
+    if(!previewSpan) {
+        previewSpan = document.createElement('span');
+        previewSpan.id = 'previewTab';
+        previewSpan.textContent = '预览';
+        previewSpan.className = "test-tab";
+    }
 
     //点击事件
     previewSpan.onclick=function(){
@@ -208,7 +218,7 @@ function renderTestWindow(apiData){
         renderPreview(apiData);
     };
 
-   
+    
     tabContainer.appendChild(debugSpan);
     tabContainer.appendChild(designSpan);
     tabContainer.appendChild(previewSpan);
@@ -594,6 +604,11 @@ function renderResponse(container){
     responseTimeTitle.appendChild(responseTimeSpan);
     responseDiv.appendChild(responseTimeTitle);
 
+    // 拖拽手柄，用于调整响应区域高度
+    const resizeHandle = document.createElement('div');
+    resizeHandle.className = 'resize-handle';
+    resizeHandle.title = '拖动调整高度';
+
     // 新增响应结果区域，美化调试窗口
     const responseArea = document.createElement('div');
     responseArea.className = "response-area";
@@ -603,9 +618,42 @@ function renderResponse(container){
     responseContent.style.color = "#adabab";// 默认提示文字颜色
 
     responseArea.appendChild(responseContent);
+    responseDiv.appendChild(resizeHandle);
     responseDiv.appendChild(responseArea);
 
+    // 将手柄移动到容器最顶部（作为上边界）
+    responseDiv.insertBefore(resizeHandle, responseDiv.firstChild);
+
     container.appendChild(responseDiv);
+
+    // === 拖拽调整响应区域高度 ===
+    let startY = 0;
+    let startHeight = 0;
+
+    resizeHandle.addEventListener('mousedown', function(e) {
+        e.preventDefault();
+        startY = e.clientY;
+        startHeight = responseArea.offsetHeight;
+
+        document.body.style.userSelect = 'none';
+        document.body.classList.add('resize-active');
+
+        function onMouseMove(e) {
+            const delta = startY - e.clientY; // 向上拖 = delta 为正 = 高度增大
+            const newHeight = Math.min(600, Math.max(80, startHeight + delta));
+            responseArea.style.height = newHeight + 'px';
+        }
+
+        function onMouseUp() {
+            document.body.style.userSelect = '';
+            document.body.classList.remove('resize-active');
+            document.removeEventListener('mousemove', onMouseMove);
+            document.removeEventListener('mouseup', onMouseUp);
+        }
+
+        document.addEventListener('mousemove', onMouseMove);
+        document.addEventListener('mouseup', onMouseUp);
+    });
 }
 
 //渲染Params参数列表
@@ -1413,6 +1461,7 @@ function renderDesign(apiData,config){
 
     responseContentTypeLabel.textContent='内容格式: ';
     responseContentType.value='JSON';
+    responseContentType.disabled=true; // 禁用输入框，用户无法修改内容格式
 
     responseContentTypeSpan.appendChild(responseContentTypeLabel);
     responseContentTypeSpan.appendChild(responseContentType);
