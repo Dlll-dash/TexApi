@@ -8,7 +8,8 @@
     </insert>
 
     <update id="updateApi">
-        update api set
+        update api
+            <set>
                 <if test="apiName!=null and apiName !=''">
                     api_name = #{apiName},
                 </if>
@@ -28,9 +29,9 @@
                     update_user = #{updateUser},
                 </if>
                 <if test="categoryId !=null">
-                    category_id = #{categoryId}
+                    category_id = #{categoryId},
                 </if>
-
+            </set>
         where id = #{id}
     </update>
     <update id="updateInfo">

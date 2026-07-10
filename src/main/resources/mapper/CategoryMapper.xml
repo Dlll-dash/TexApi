@@ -9,13 +9,15 @@
         VALUES (#{name}, #{projectId},#{parentId})
     </insert>
     <update id="update">
-        update category set
+        update category
+            <set>
                 <if test="name!=null and name !=''">
                     name = #{name},
                 </if>
                 <if test="parentId!=null">
                     parent_id = #{parentId}
                 </if>
+            </set>
         where id = #{id}
     </update>
     <delete id="deleteBatchIds">

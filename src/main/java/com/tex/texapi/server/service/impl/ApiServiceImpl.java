@@ -186,6 +186,7 @@ public class ApiServiceImpl implements ApiService {
         //发送请求
         String method=api.getRequestMethod();
         Response response=null;
+
         try {
             if (method.equals(Request.GET)) {
                 //GET请求
