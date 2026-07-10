@@ -140,8 +140,10 @@ public class ApiServiceImpl implements ApiService {
                             builder.addFormDataPart(p.getName(), p.getValue());
                         }
                     });
+                    requestBody = builder.build();
                 }
-                requestBody = builder.build();
+
+
             }catch (Exception e){
                 throw new RequestException(MessageConstant.REQUEST_FAILED);
             }

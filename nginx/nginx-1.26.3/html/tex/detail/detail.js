@@ -614,7 +614,7 @@ function renderResponse(container){
     responseArea.className = "response-area";
     const responseContent = document.createElement('pre');
     responseContent.className = "response-content";
-    responseContent.textContent = "点击发送按钮后显示响应结果";
+    responseContent.innerHTML = `<i class="bi bi-rocket-takeoff"></i> 点击发送按钮后显示响应结果`;
     responseContent.style.color = "#adabab";// 默认提示文字颜色
 
     responseArea.appendChild(responseContent);
@@ -902,79 +902,52 @@ function renderform(container,config){
     if(config===debugFormConfig){
         headerLi.appendChild(checkAllButton);
     }
-    let checkBtnSum=0;
-    let checkedBtn=0;
     checkAllButton.addEventListener('click', function(e) {
-        //console.log("全选按钮点击事件触发");
         e.stopPropagation();
-        //重新计算checkButton的总数和已选中的数量
-        checkBtnSum=0;
-        checkedBtn=0;
-        //此时checkButton的状态已经改变，检查当前所有checkButton的状态
-        container.querySelectorAll('.check-button').forEach(btn => {
-            //console.log("检查按钮:",btn,"是否选中:",btn.classList.contains('active'));
-            if(btn!=checkAllButton){
-                checkBtnSum++;   
+        let total = 0;
+        let selected = 0;
+        //计数是为了决定全选还是全不选
+        ul.querySelectorAll('.check-button').forEach(btn => {
+            if(btn !== checkAllButton && btn.style.visibility !== 'hidden'){
+                total++;
                 if(btn.classList.contains('active')){
-                    checkedBtn++;
+                    selected++;
                 }
             }
-            
         });
-        //console.log("checkBtnSum:",checkBtnSum,"checkedBtn:",checkedBtn);
+
         function selectAll() {
-            container.querySelectorAll('.check-button').forEach(btn => {
-                if(btn!=checkAllButton){
+            ul.querySelectorAll('.check-button').forEach(btn => {
+                if(btn !== checkAllButton && btn.style.visibility !== 'hidden'){
                     btn.classList.add('active');
                     toCheckSquare(btn);
                 }
             });
-            
-            checkedBtn=checkBtnSum;
         }
         function deselectAll() {
-            container.querySelectorAll('.check-button.active').forEach(btn => {
-                if(btn!=checkAllButton){
+            ul.querySelectorAll('.check-button.active').forEach(btn => {
+                if(btn !== checkAllButton && btn.style.visibility !== 'hidden'){
                     toSquare(btn);
                     btn.classList.remove('active');
                 }
             });
-            checkedBtn=0;
         }
-        if(checkBtnSum>0){
-            if(checkedBtn === checkBtnSum){
-                //说明所有checkButton都被选中,要变成全不选
+        if(total > 0){
+            if(selected === total){
                 toSquare(checkAllButton);
-                
-                e.stopPropagation();
-                //点击全选按钮，取消所有checkButton的选中状态
+                checkAllButton.classList.remove('active');
                 deselectAll();
-                
-            }else if(checkedBtn>0&&checkedBtn < checkBtnSum){
-                //说明有的checkButton被选中，有的没有被选中,要变成全选
+            }else if(selected > 0 && selected < total){
                 toCheckSquare(checkAllButton);
-                //点击全选按钮，选中所有checkButton
                 if(!checkAllButton.classList.contains('active')){
                     checkAllButton.classList.add('active');
                 }
-                e.stopPropagation();
                 selectAll();
-                
-            }else if(checkedBtn === 0){
-                //说明所有checkButton都没有被选中，要变成全选
+            }else if(selected === 0){
                 toCheckSquare(checkAllButton);
-                
-                e.stopPropagation();
-                //点击全选按钮，选中所有checkButton
+                checkAllButton.classList.add('active');
                 selectAll();
-            
-        }else{
-            //没有任何选中，要变成全选
-            toCheckSquare(checkAllButton);
-            e.stopPropagation();
-            //点击全选按钮，选中所有checkButton
-            selectAll();
-        }
+            }
         }
     });
     
@@ -1048,14 +1021,14 @@ function renderform(container,config){
             }else{
                 checkButton.classList.add('active');
                 toCheckSquare(checkButton);
-                checkedBtn++;
             }
-            checkBtnSum++;
             
-            updateCheckAllButtonState(); // 初始化全选按钮状态; 
+            
         }else{
             isNecessaryButton.style.visibility = 'hidden'; // 新增空行时隐藏是否必须按钮
             checkButton.style.visibility = 'hidden'; // 新增空行时隐藏是否选中按钮
+            checkButton.classList.remove('active'); // 空行不计入选中统计
+            toSquare(checkButton);
         }
         
         // 创建类型下拉列表容器
@@ -1064,6 +1037,7 @@ function renderform(container,config){
         if(config===debugFormConfig){
             //只有是调试表格才有勾选
             row.appendChild(checkButton);
+            updateCheckAllButtonState(); // 初始化全选按钮状态; 
         }
         // 插入输入项，按照 config 的字段顺序
         config.forEach(item => {
@@ -1111,7 +1085,7 @@ function renderform(container,config){
                 }
                 isNecessaryButton.style.visibility = 'visible'; // 新增行后显示是否必须按钮
                 checkButton.style.visibility = 'visible'; // 新增行后显示是否选中按钮
-                checkAllButton.style.visibility = 'visible'; // 新增行后显示全选按钮
+                updateCheckAllButtonState(); // 新增行后显示全选按钮
                 const apiId = document.getElementById('requestArea').dataset.apiId;
                 const isNecessary = isNecessaryButton.classList.contains('active') ? true : false;
                 const isChecked = checkButton.classList.contains('active') ? true : false;
@@ -1136,36 +1110,41 @@ function renderform(container,config){
         isNecessaryButton.addEventListener('click', updateLi); // 点击是否必须按钮时也触发更新逻辑
        
         checkButton.addEventListener('click', function(e){
-            if(checkButton.classList.contains('active')){
-                checkedBtn++;
-            } else {
-                checkedBtn--;
-            }
             updateCheckAllButtonState();
         });
         //更新事件要放在最后
         checkButton.addEventListener('click', updateLi); // 点击是否选中按钮时也触发更新逻辑
 
         function updateCheckAllButtonState() {
-            //console.log("更新全选按钮状态：checkedBtn:",checkedBtn,"checkBtnSum:",checkBtnSum);
-            if(checkedBtn === checkBtnSum){
+            let total = 0;
+            let selected = 0;
+            ul.querySelectorAll('.check-button').forEach(btn => {
+                if(btn !== checkAllButton && btn.style.visibility !== 'hidden'){
+                    total++;
+                    if(btn.classList.contains('active')){
+                        selected++;
+                    }
+                }
+            });
+            console.log("更新全选按钮状态：selected:",selected,"total:",total);
+
+            if(selected === total && total > 0){
                 toCheckSquare(checkAllButton);
                 if(!checkAllButton.classList.contains('active')){
                     checkAllButton.classList.add('active');
                 }
-            } else if(checkedBtn === 0){
+            } else if(selected === 0 && total > 0){
                 toSquare(checkAllButton);
                 if(checkAllButton.classList.contains('active')){
                     checkAllButton.classList.remove('active');
                 }
-            }else if(checkedBtn > 0 && checkedBtn < checkBtnSum){
+            }else if(selected > 0 && selected < total){
                 toDashSquare(checkAllButton);
                 if(!checkAllButton.classList.contains('active')){
                     checkAllButton.classList.add('active');
                 }
             }
-            if(checkBtnSum === 0){
-                //如果没有任何checkButton，隐藏全选按钮
+            if(total === 0){
                 checkAllButton.style.visibility = 'hidden';
             }else{
                 checkAllButton.style.visibility = 'visible';
@@ -1197,11 +1176,6 @@ function renderform(container,config){
         };
         removeButton.addEventListener('click', function(e){
             e.stopPropagation();
-            //检查删除后 checkButton 是否全为选中
-            if(checkButton.classList.contains('active')){
-                checkedBtn--;
-            }
-            checkBtnSum--;
             updateCheckAllButtonState();
         });
         removeButton.addEventListener('mouseout', function(){
@@ -1212,6 +1186,7 @@ function renderform(container,config){
 
         ul.appendChild(row);
         updateRemoveButtons();
+        updateCheckAllButtonState(); // 新增行后更新全选按钮状态
     }
 
     try{
