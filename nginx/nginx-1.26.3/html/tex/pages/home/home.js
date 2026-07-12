@@ -206,12 +206,22 @@ document.addEventListener('DOMContentLoaded', async function () {
         pageHead.appendChild(toolbarRow);
         container.appendChild(pageHead);
 
-        // 处理非列表或无数据情况（使用美化的空提示类）
+        // 无项目时的空状态（高级简约风格）
         if (!Array.isArray(apiData) || apiData.length === 0) {
-            const emptyTip = document.createElement('div');
-            emptyTip.className = "empty-tip"; // 关联CSS类
-            emptyTip.textContent = "暂无项目数据";
-            container.appendChild(emptyTip);
+            const emptyDiv = document.createElement('div');
+            emptyDiv.className = 'empty-project-tip';
+            emptyDiv.innerHTML = `
+                <div class="empty-project-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+                        <line x1="12" y1="11" x2="12" y2="17"></line>
+                        <line x1="9" y1="14" x2="15" y2="14"></line>
+                    </svg>
+                </div>
+                <div class="empty-project-title">还没有项目</div>
+                <div class="empty-project-desc">点击上方「+ 添加项目」创建您的第一个项目</div>
+            `;
+            container.appendChild(emptyDiv);
             return;
         }
 
