@@ -1448,6 +1448,7 @@ function renderDesign(apiData,config){
     responseContentType.className='response-content-type-input';
 
     responseContentTypeLabel.textContent='内容格式: ';
+    //TODO: 增加下拉选择框，支持多种内容格式选择
     responseContentType.value='JSON';
     responseContentType.disabled=true; // 禁用输入框，用户无法修改内容格式
 
@@ -1775,7 +1776,7 @@ function renderBodyNodeForm(container){
         isNecessaryButton.addEventListener('click', updateLi); 
 
         function updateLi(e) {
-            
+            setTimeout(() => {
             // 只有当离开的元素是输入框时才进行验证，避免过早验证
             if(e.target.tagName.toLowerCase() != 'input'&& e.target !== isNecessaryButton) {
                 return;
@@ -1809,7 +1810,9 @@ function renderBodyNodeForm(container){
                 }
 
                 //在树结构中找到当前节点，更新节点数据
+                
                 const node=nodeMap.get(formDataLi.id);
+                
                 if(node) {
                     node.set({
                         key: keyInput.value.trim(),
@@ -1832,8 +1835,8 @@ function renderBodyNodeForm(container){
 
                 updateResponseBody();
             }
-            
-        };
+        },300);
+        }
         
         //在父项下面添加新列表项，形成树结构
         if(Data.neigborId){
