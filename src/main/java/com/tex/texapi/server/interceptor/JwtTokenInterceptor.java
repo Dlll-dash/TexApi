@@ -46,9 +46,9 @@ public class JwtTokenInterceptor implements HandlerInterceptor {
         try {
             log.info("jwt校验:{}", token);
             Claims claims = JwtUtil.parseJWT(jwtProperties.getSeretKey(), token);
-            Long empId = Long.valueOf(claims.get(JwtClaimsConstant.USER_ID).toString());
-            BaseContext.setCurrentId(empId);
-            log.info("当前员工id：{}", empId);
+            Long userId = Long.valueOf(claims.get(JwtClaimsConstant.USER_ID).toString());
+            BaseContext.setCurrentId(userId);
+            log.info("当前用户id：{}", userId);
             //3、通过，放行
             return true;
         } catch (Exception ex) {
