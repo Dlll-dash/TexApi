@@ -117,12 +117,13 @@ cd TexApi
 
 ### 2. 初始化数据库
 
-在 MySQL 中创建数据库并导入初始化脚本：
+执行 `src/main/resources/db/init/create_table.sql` 脚本即可完成建库建表：
 
-```sql
-CREATE DATABASE tex_api DEFAULT CHARACTER SET utf8mb4;
--- 导入项目提供的 SQL 初始化脚本（如有）
+```bash
+mysql -u root -p < src/main/resources/db/init/create_table.sql
 ```
+
+该脚本会自动创建 `tex_api` 数据库及所有表结构（`user`、`project`、`project_user`、`category`、`api`、`request_params`、`response`）。
 
 ### 3. 配置环境
 
