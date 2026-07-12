@@ -233,4 +233,4 @@ start nginx
 
 ## 📄 License
 
-本项目仅供学习交流使用。
+本项目基于 [MIT License](LICENSE) 开源，Copyright © 2026 Kason Tang。
