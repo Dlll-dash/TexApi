@@ -402,7 +402,10 @@ function renderDebug(apiData,config){
             const elapsed = Date.now() - startTime;
             const remaining = Math.max(0, minLoadingTime - elapsed);
             if (responseTime) {
-                responseTime.textContent = `${elapsed} ms`;
+                const timeText = elapsed >= 1000
+                    ? `${(elapsed / 1000).toFixed(2)} s`
+                    : `${elapsed} ms`;
+                responseTime.textContent = timeText;
                 if (responseTimeTitle) {
                     responseTimeTitle.style.display = 'inline-block';
                 }
@@ -436,7 +439,10 @@ function renderDebug(apiData,config){
                 responseCode.style.color = '';
             }
             if(responseTime) {
-                responseTime.textContent = `>${maxLoadingTime} ms`;
+                const timeoutText = maxLoadingTime >= 1000
+                    ? `>${(maxLoadingTime / 1000).toFixed(2)} s`
+                    : `>${maxLoadingTime} ms`;
+                responseTime.textContent = timeoutText;
                 if (responseTimeTitle) {
                     responseTimeTitle.style.display = 'inline-block';
                 }
