@@ -11,7 +11,7 @@ const designFormConfig = [
     {key: 'type',label: '类型',className: 'type-input', placeholder: '',marginLeft: '12.7rem'},
     {key: 'isNecessary',label: '',className: 'is-necessary-btn', placeholder: '',marginLeft: '0rem'},
     {key: 'value',label: '示例值',className: 'param-value-input', placeholder: '',marginLeft: '3.5rem'},
-    {key: 'explanation',label: '说明',className: 'explain-input', placeholder: '',marginLeft: '13.8rem'}
+    {key: 'explanation',label: '说明',className: 'explain-input', placeholder: '',marginLeft: '13.2rem'}
 ];
 
 export {debugFormConfig,designFormConfig};
