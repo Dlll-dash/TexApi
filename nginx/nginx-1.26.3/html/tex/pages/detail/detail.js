@@ -70,6 +70,7 @@ function initTreeTable() {
         onApiSelect: (apiData) => {
             closeAllDetailMenus();
             renderTestWindow(apiData);
+            localStorage.setItem('selectedApiId', apiData.id);
             document.getElementById('responseArea')?.remove();
             renderResponse(document.getElementById('testWindow'));
         },
@@ -98,8 +99,8 @@ function initTreeTable() {
                 status: 1
             };
             if (categoryId) payload.categoryId = categoryId;
-
             const res = await request.post('http://localhost/tex/api/add', payload);
+            localStorage.setItem('selectedApiId', res?.data?.data?.id || '');
             return res?.data?.data || null;
         },
 
@@ -1139,7 +1140,7 @@ function renderform(container,config){
                     }
                 }
             });
-            console.log("更新全选按钮状态：selected:",selected,"total:",total);
+            //console.log("更新全选按钮状态：selected:",selected,"total:",total);
 
             if(selected === total && total > 0){
                 toCheckSquare(checkAllButton);

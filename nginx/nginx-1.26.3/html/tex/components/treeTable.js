@@ -11,7 +11,7 @@ const unfoldArrowIcon = '<i class="bi bi-caret-down-fill"></i>';
 const folderIcon = '<i class="bi bi-folder"></i>';
 const openFolderIcon = '<i class="bi bi-folder2-open"></i>';
 //首个api的默认选中状态
-let isInit = false;
+// let isInit = false;
 
 // ========== Tree Node ==========
 class TreeTableNode {
@@ -475,6 +475,7 @@ function createTreeTable(container, options = {}) {
     // --- Render an API row ---
     function renderApiRow(apiData, depth, parentUl) {
         const li = document.createElement('li');
+        li.id=`api-row-${apiData.id}`;
         li.className = 'tree-api-row';
         li.style.paddingLeft = `${depth * 1.5}rem`;
         li.dataset.apiId = apiData.id ?? '';
@@ -519,6 +520,8 @@ function createTreeTable(container, options = {}) {
         // Click to select
         li.addEventListener('click', (e) => {
             closeAllMenus();
+            localStorage.setItem('selectedApiId', apiData.id);
+            console.log('选中接口ID:', apiData.id, '已保存到localStorage');
             // Update active state
             document.querySelectorAll('.tree-api-row.active').forEach(el => el.classList.remove('active'));
             li.classList.add('active');
@@ -527,10 +530,13 @@ function createTreeTable(container, options = {}) {
 
         parentUl.appendChild(li);
         //首次渲染默认选中第一个api
-        if(isInit === false){
-            li.click();
-            isInit = true;
-        }
+        // if(isInit!==true){
+        //     console.log('初始化默认选中api:', li.dataset.apiId);
+        //     parentUl.querySelector('.tree-api-row')?.classList.add('active');
+        //     isInit = true;
+        //     li.click();
+        // }
+
     }
 
     // --- Recursively render tree ---
@@ -614,7 +620,14 @@ function createTreeTable(container, options = {}) {
         container.appendChild(rootUl);
 
         renderTree(treeRoot, 0, rootUl);
-
+        const selectedApiId = `api-row-${localStorage.getItem('selectedApiId')}`;
+        rootUl.querySelectorAll('.tree-api-row').forEach(row => {
+            if (row.id === selectedApiId) {
+                console.log('首次渲染默认选中api:', row.dataset.apiId);
+                row.classList.add('active');
+                row.click();
+            }
+        });
         if (!outsideCloseBound) {
             document.addEventListener('click', closeAllMenus);
             document.addEventListener('keydown', (e) => {
