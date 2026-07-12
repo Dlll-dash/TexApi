@@ -960,11 +960,18 @@ function renderform(container,config){
     // 使用 config 来生成表头列，保持顺序一致
     config.forEach(item => {
         const span = document.createElement('span');
-        span.className = 'param-label';
+        span.className = `param-label param-label-${item.key}`;
         span.textContent = item.label || '';
-        if(item.marginLeft) span.style.marginLeft = item.marginLeft;
         headerLi.appendChild(span);
     });
+
+    // 追加与数据行等宽的隐藏占位元素，保证表头列与输入框对齐
+    const removeSpacer = document.createElement('span');
+    removeSpacer.style.visibility = 'hidden';
+    removeSpacer.style.padding = '0.3rem 0.5rem';
+    removeSpacer.style.border = '1px solid transparent';
+    removeSpacer.innerHTML = '<i class="bi bi-dash-lg"></i>';
+    headerLi.appendChild(removeSpacer);
 
     ul.appendChild(headerLi);
 

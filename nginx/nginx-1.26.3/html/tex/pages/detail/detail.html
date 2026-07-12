@@ -1185,10 +1185,8 @@
         }
 
         #formDataList input{
-            border: 1px solid transparent;
             border-radius: 6px;
             background-color: transparent;
-            padding: 0.45rem 0.5rem;
             color: #2d3748;
             transition: border-color 0.2s ease, background-color 0.2s ease;
         }
@@ -1205,6 +1203,50 @@
             text-align: left;
             font-size: 0.9rem;
             font-weight: 550;
+        }
+
+        /* 每列输入框 + 表头共用完全相同的样式，保证对齐 */
+        .param-name-input,
+        #formDataList .param-label-name {
+            flex: 10 1 0%;
+            min-width: 0;
+            padding: 0.45rem 0.5rem;
+            border: 1px solid transparent;
+            border-radius: 6px;
+        }
+
+        .param-value-input,
+        #formDataList .param-label-value {
+            flex: 12 1 0%;
+            min-width: 0;
+            padding: 0.45rem 0.5rem;
+            border: 1px solid transparent;
+            border-radius: 6px;
+        }
+
+        .type-input,
+        #formDataList .param-label-type {
+            flex: 3 1 0%;
+            min-width: 0;
+            padding: 0.45rem 0.5rem;
+            border: 1px solid transparent;
+            border-radius: 6px;
+            text-align: center;
+        }
+
+        .explain-input,
+        #formDataList .param-label-explanation {
+            flex: 15 1 0%;
+            min-width: 0;
+            padding: 0.45rem 0.5rem;
+            border: 1px solid transparent;
+            border-radius: 6px;
+        }
+
+        #formDataList .param-label-isNecessary {
+            flex: 0 0 auto;
+            padding: 0.45rem 0.5rem;
+            border: 1px solid transparent;
         }
 
         #formDataList .param-data-row .remove-btn {
@@ -1254,22 +1296,9 @@
             background-color: transparent;
             transition: border-color 0.2s ease, background-color 0.2s ease;
         }
-        .param-name-input {
-            flex: 160 1 0;
-            min-width: 160px;
-        }
-
-        .param-value-input {
-            flex: 192 1 0;
-            min-width: 192px;
-        }
-
         .type-input {
             cursor: pointer;
             position: relative;
-            flex: 48 1 0;
-            min-width: 48px;
-            text-align: center;
         }
 
         .type-list-div{
@@ -1339,10 +1368,6 @@
 
         }
 
-        .explain-input {
-            flex: 240 1 0;
-            min-width: 240px;
-        }
 
 
         .param-label, .header-label, .type-label, .explain-label {
