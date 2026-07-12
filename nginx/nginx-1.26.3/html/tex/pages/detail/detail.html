@@ -1789,6 +1789,96 @@
             border-color: #fee2e2;
         }
 
+        /* BodyNodeForm 折叠箭头 */
+        .node-arrow {
+            flex-shrink: 0;
+            width: 1.2rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: #718096;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: transform 0.2s ease, color 0.2s ease;
+            user-select: none;
+        }
+
+        .node-arrow:hover {
+            color: #4299e1;
+        }
+
+        /* BodyNodeForm 嵌套子UL容器（wrapper li 保证有效HTML嵌套） */
+        #BodyNodeForm .node-children-wrapper {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: block;
+            border: none;
+            border-radius: 0;
+            background: transparent;
+        }
+
+        #BodyNodeForm .node-children-wrapper:hover {
+            background: transparent;
+            transform: none;
+        }
+
+        /* BodyNodeForm 嵌套子UL（可折叠） */
+        .node-children-ul {
+            list-style: none;
+            padding: 0;
+            padding-left: 1.8rem;
+            margin: 0;
+            max-height: 5000px;
+            overflow: visible;
+            transition: max-height 0.3s ease, opacity 0.25s ease;
+            opacity: 1;
+        }
+
+        .node-children-ul.collapsed {
+            max-height: 0;
+            opacity: 0;
+            overflow: hidden;
+            transition: max-height 0.25s ease, opacity 0.2s ease;
+        }
+
+        /* Object类型节点的添加按钮下拉菜单 */
+        .node-add-wrapper {
+            display: inline-flex;
+        }
+
+        .node-add-dropdown {
+            display: none;
+            position: fixed;
+            background: #fff;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            list-style: none;
+            padding: 0.25rem 0;
+            margin: 0;
+            white-space: nowrap;
+            min-width: 110px;
+            z-index: 99999;
+        }
+
+        .node-add-dropdown.open {
+            display: block;
+        }
+
+        .node-add-option {
+            padding: 0.4rem 0.8rem;
+            cursor: pointer;
+            font-size: 0.8rem;
+            color: #4a5568;
+            transition: background 0.15s ease, color 0.15s ease;
+        }
+
+        .node-add-option:hover {
+            background: #edf2f7;
+            color: #4299e1;
+        }
+
         .url-status-div {
             display: flex;
             align-items: center;

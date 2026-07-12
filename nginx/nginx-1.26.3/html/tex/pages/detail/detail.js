@@ -1632,6 +1632,16 @@ function renderBodyNodeForm(container){
 
     document.addEventListener('click', closeActiveTypeDropdown); // 点击表格时关闭其他类型下拉列表
 
+    // 全局点击关闭node-add下拉菜单（只绑定一次）
+    if(!renderBodyNodeForm._dropdownCloseBound){
+        renderBodyNodeForm._dropdownCloseBound = true;
+        document.addEventListener('click', function(e){
+            if(!e.target.closest('.node-add-dropdown') && !e.target.closest('.node-add-wrapper .add-btn')){
+                document.querySelectorAll('.node-add-dropdown.open').forEach(d => d.classList.remove('open'));
+            }
+        });
+    }
+
     container.style.opacity = '0';
     container.style.transition = 'opacity 0.2s ease';
 
@@ -1641,7 +1651,9 @@ function renderBodyNodeForm(container){
 
 
     //添加节点项
-    function addFormDataItem(Data){
+    function addFormDataItem(Data, targetUl){
+        targetUl = targetUl || ul;
+
         //如果是根节点初始化（Data.parentId为null）
         //修改keyInput的value为"根节点",禁用该输入框
         //修改类型为Object
@@ -1651,6 +1663,7 @@ function renderBodyNodeForm(container){
         //没有父节点就是根节点
         const is_root=(!Data.parentId);
         const apiId=container.dataset.apiId;
+        const isObjectType = (Data.type === typeList.object) || is_root;
 
         const formDataLi=document.createElement('li');
         const keyInput=document.createElement('input');
@@ -1717,8 +1730,73 @@ function renderBodyNodeForm(container){
         formDataLi.appendChild(isNecessaryButton);
         formDataLi.appendChild(valueInput);
         formDataLi.appendChild(explainInput);
-        formDataLi.appendChild(addButton);
+
+        // Object类型（非根节点）：包裹添加按钮以下拉选项
+        if(isObjectType && !is_root){
+            const addWrapper = document.createElement('span');
+            addWrapper.className = 'node-add-wrapper';
+            addWrapper.appendChild(addButton);
+
+            const dropdown = document.createElement('ul');
+            dropdown.className = 'node-add-dropdown';
+
+            const childOption = document.createElement('li');
+            childOption.className = 'node-add-option';
+            childOption.textContent = '添加子节点';
+
+            const siblingOption = document.createElement('li');
+            siblingOption.className = 'node-add-option';
+            siblingOption.textContent = '添加相邻节点';
+
+            dropdown.appendChild(childOption);
+            dropdown.appendChild(siblingOption);
+            // 追加到 body，避免父 li hover transform 导致频闪
+            document.body.appendChild(dropdown);
+
+            addButton._childOption = childOption;
+            addButton._siblingOption = siblingOption;
+            addButton._dropdown = dropdown;
+
+            formDataLi.appendChild(addWrapper);
+        }else{
+            formDataLi.appendChild(addButton);
+        }
+
         formDataLi.appendChild(removeButton);
+
+        // 折叠箭头（Object类型节点或根节点）
+        if(isObjectType){
+            const arrowSpan = document.createElement('span');
+            arrowSpan.className = 'node-arrow';
+            const isCollapsed = Data.collapsed === true;
+            arrowSpan.innerHTML = isCollapsed
+                ? '<i class="bi bi-caret-right-fill"></i>'
+                : '<i class="bi bi-caret-down-fill"></i>';
+            formDataLi.insertBefore(arrowSpan, formDataLi.firstChild);
+
+            // 箭头点击：折叠/展开
+            arrowSpan.addEventListener('click', function(e){
+                e.stopPropagation();
+                const node = nodeMap.get(formDataLi.id);
+                if(!node) return;
+                node.collapsed = !node.collapsed;
+
+                // 查找兄弟wrapper li，取其内部child UL
+                const wrapperLi = formDataLi.nextElementSibling;
+                const childUl = wrapperLi && wrapperLi.classList.contains('node-children-wrapper')
+                    ? wrapperLi.querySelector('.node-children-ul') : null;
+                if(childUl){
+                    if(node.collapsed){
+                        childUl.classList.add('collapsed');
+                        arrowSpan.innerHTML = '<i class="bi bi-caret-right-fill"></i>';
+                    }else{
+                        childUl.classList.remove('collapsed');
+                        arrowSpan.innerHTML = '<i class="bi bi-caret-down-fill"></i>';
+                    }
+                }
+            });
+        }
+
         if(!is_root){
             //下拉列表的类型选项
             const typeArray=Object.values(typeList);
@@ -1740,19 +1818,6 @@ function renderBodyNodeForm(container){
             isNecessaryButton.classList.toggle('active', Data.isNecessary);
             isNecessaryButton.querySelector('.is-necessary-tip').textContent = Data.isNecessary ? '必需' : '是否必须';
 
-            
-            //获取父节点，在父节点的左内边距上再加一段边距，绑定父节点（绑定父节点id，因为父节点只会有一个，子节点可能有无数个）
-            const parent=document.getElementById(Data.parentId);
-            
-            const input=parent?.firstElementChild;
-            
-            //console.log("父节点,id,is_root",parent,Data.parentId);
-            
-            let margin=input?.style.marginLeft || 0;
-            //添加左内边距
-            margin=`${parseFloat(margin)+2}rem`;
-
-            keyInput.style.marginLeft=margin;
             formDataLi.dataset.parentId=Data.parentId;
 
         }
@@ -1815,6 +1880,7 @@ function renderBodyNodeForm(container){
                 const node=nodeMap.get(formDataLi.id);
                 
                 if(node) {
+                    const wasObject = (node.type === typeList.object);
                     node.set({
                         key: keyInput.value.trim(),
                         value: valueInput.value.trim(),
@@ -1822,6 +1888,54 @@ function renderBodyNodeForm(container){
                         explanation: explainInput.value.trim(),
                         isNecessary: isNecessaryButton.classList.contains('active') ? true : false
                     });
+                    const isNowObject = (node.type === typeList.object);
+                    
+                    // DOM: 类型切换处理
+                    if(!wasObject && isNowObject){
+                        // 非Object→Object：添加箭头、创建空child UL（wrapper li 包裹）
+                        if(!formDataLi.querySelector('.node-arrow')){
+                            const arrowSpan = document.createElement('span');
+                            arrowSpan.className = 'node-arrow';
+                            arrowSpan.innerHTML = '<i class="bi bi-caret-down-fill"></i>';
+                            formDataLi.insertBefore(arrowSpan, formDataLi.firstChild);
+                            arrowSpan.addEventListener('click', function(e){
+                                e.stopPropagation();
+                                const n = nodeMap.get(formDataLi.id);
+                                if(!n) return;
+                                n.collapsed = !n.collapsed;
+                                const wLi = formDataLi.nextElementSibling;
+                                const cUl = wLi && wLi.classList.contains('node-children-wrapper')
+                                    ? wLi.querySelector('.node-children-ul') : null;
+                                if(cUl){
+                                    if(n.collapsed){
+                                        cUl.classList.add('collapsed');
+                                        arrowSpan.innerHTML = '<i class="bi bi-caret-right-fill"></i>';
+                                    }else{
+                                        cUl.classList.remove('collapsed');
+                                        arrowSpan.innerHTML = '<i class="bi bi-caret-down-fill"></i>';
+                                    }
+                                }
+                            });
+                        }
+                        const existingWrapper = formDataLi.nextElementSibling;
+                        if(!existingWrapper || !existingWrapper.classList.contains('node-children-wrapper')){
+                            const wrapperLi = document.createElement('li');
+                            wrapperLi.className = 'node-children-wrapper';
+                            const childUl = document.createElement('ul');
+                            childUl.className = 'node-children-ul';
+                            wrapperLi.appendChild(childUl);
+                            formDataLi.parentNode.insertBefore(wrapperLi, formDataLi.nextSibling);
+                        }
+                    }else if(wasObject && !isNowObject && !is_root){
+                        // Object→非Object：移除箭头和wrapper li
+                        const arrow = formDataLi.querySelector('.node-arrow');
+                        if(arrow) arrow.remove();
+                        const wrapperLi = formDataLi.nextElementSibling;
+                        if(wrapperLi && wrapperLi.classList.contains('node-children-wrapper')){
+                            wrapperLi.parentNode.removeChild(wrapperLi);
+                        }
+                    }
+                    
                     console.log('更新节点数据：', node);
                 }else{
                     console.error('节点未找到，无法更新数据');
@@ -1843,14 +1957,14 @@ function renderBodyNodeForm(container){
         if(Data.neigborId){
             //如果有邻居节点id，说明新节点添加为兄弟节点，插入到邻居节点后面
             const neighbor=document.getElementById(Data.neigborId);
-            if(neighbor && neighbor.parentNode === ul) {
-                ul.insertBefore(formDataLi, neighbor.nextSibling);
+            if(neighbor && neighbor.parentNode === targetUl) {
+                targetUl.insertBefore(formDataLi, neighbor.nextSibling);
             }else{
-                ul.appendChild(formDataLi);
+                targetUl.appendChild(formDataLi);
             }
         }else{
             //如果没有邻居节点id，说明新节点添加为子节点，直接添加到父节点下面
-            ul.appendChild(formDataLi);
+            targetUl.appendChild(formDataLi);
         }
 
         //updateRemoveButtons(); // 添加新项后更新删除按钮显示
@@ -1883,8 +1997,12 @@ function renderBodyNodeForm(container){
                 //发送修改请求，修改树结构为删除当前节点后的结构
                 updateResponseBody();
                  
-
-                 ul.removeChild(formDataLi);
+                // 同时删除兄弟wrapper li（如果有）
+                const siblingWrapper = formDataLi.nextElementSibling;
+                if(siblingWrapper && siblingWrapper.classList.contains('node-children-wrapper')){
+                    siblingWrapper.parentNode.removeChild(siblingWrapper);
+                }
+                formDataLi.parentNode.removeChild(formDataLi);
             }else{
                 //第一次点击，进入确认状态
                 removeButton.classList.add('active');
@@ -1904,23 +2022,12 @@ function renderBodyNodeForm(container){
             }, 200);
         });
 
-        //添加按钮点击事件
-        addButton.onclick = function(e){
-            e.stopPropagation();
-
+        // 通用添加节点逻辑
+        function doAddNode(targetParentId){
             const data={
-                parentId: formDataLi.id,
-                neigborId: formDataLi.id, //暂时不需要邻居节点id，因为新节点默认添加为最后一个子节点
-            }
-            //检查类型
-            if(typeInput.value==typeList.object){
-                //如果是Object就添加子节点，自己作为其父节点
-            }else{
-                //如果不是，就添加相邻节点，自己的父节点作为其父节点
-                data.parentId=formDataLi.dataset.parentId;
-            }
+                parentId: targetParentId,
+            };
 
-            //在树结构中找到父节点，添加当前节点为父节点的子节点
             const parentNode=nodeMap.get(data.parentId);
             if(parentNode) {
                 const newNode = new TreeNode({
@@ -1930,15 +2037,82 @@ function renderBodyNodeForm(container){
                     explanation: ''
                 });
                 parentNode.addChild(newNode);
-
-                data.id=newNode.id; // 将生成的节点id赋值给data，方便后续操作
+                data.id=newNode.id;
             } else {
-                console.error('父节点未找到，无法添加子节点，父节点id：', Data.parentId);
+                console.error('父节点未找到，无法添加子节点，父节点id：', data.parentId);
+                return;
             }
 
-            addFormDataItem(data); // 添加新节点表单项
-            updateResponseBody(); // 添加节点后更新树结构到后端
+            const parentLi = document.getElementById(data.parentId);
+            let childUl = null;
+            if(parentLi){
+                let wrapperLi = parentLi.nextElementSibling;
+                if(wrapperLi && wrapperLi.classList.contains('node-children-wrapper')){
+                    childUl = wrapperLi.querySelector('.node-children-ul');
+                }else{
+                    wrapperLi = document.createElement('li');
+                    wrapperLi.className = 'node-children-wrapper';
+                    childUl = document.createElement('ul');
+                    childUl.className = 'node-children-ul';
+                    wrapperLi.appendChild(childUl);
+                    parentLi.parentNode.insertBefore(wrapperLi, parentLi.nextSibling);
+                }
+            }
 
+            if(parentNode && parentNode.collapsed){
+                parentNode.collapsed = false;
+                if(childUl) childUl.classList.remove('collapsed');
+                const parentArrow = parentLi && parentLi.querySelector('.node-arrow');
+                if(parentArrow){
+                    parentArrow.innerHTML = '<i class="bi bi-caret-down-fill"></i>';
+                }
+            }
+
+            addFormDataItem(data, childUl || ul);
+            updateResponseBody();
+        }
+
+        // Object类型节点：点击按钮切换下拉菜单（position:fixed + body挂载，避免 overflow 裁剪和父 li hover 频闪）
+        if(isObjectType && !is_root && addButton._childOption && addButton._siblingOption){
+            const dropdownEl = addButton._dropdown;
+
+            addButton.addEventListener('click', function(e){
+                e.stopPropagation();
+                const isOpen = dropdownEl.classList.contains('open');
+                // 关闭所有其他下拉
+                document.querySelectorAll('.node-add-dropdown.open').forEach(d => d.classList.remove('open'));
+                if(isOpen){
+                    dropdownEl.classList.remove('open');
+                }else{
+                    const btnRect = addButton.getBoundingClientRect();
+                    dropdownEl.style.top = (btnRect.bottom + 2) + 'px';
+                    dropdownEl.style.left = btnRect.left + 'px';
+                    dropdownEl.classList.add('open');
+                }
+            });
+
+            addButton._childOption.addEventListener('click', function(e){
+                e.stopPropagation();
+                dropdownEl.classList.remove('open');
+                doAddNode(formDataLi.id);
+            });
+            addButton._siblingOption.addEventListener('click', function(e){
+                e.stopPropagation();
+                dropdownEl.classList.remove('open');
+                doAddNode(formDataLi.dataset.parentId);
+            });
+        }else{
+            // 非Object节点或根节点：点击直接添加
+            addButton.onclick = function(e){
+                e.stopPropagation();
+                let targetParentId;
+                if(typeInput.value==typeList.object || is_root){
+                    targetParentId = formDataLi.id;
+                }else{
+                    targetParentId = formDataLi.dataset.parentId;
+                }
+                doAddNode(targetParentId);
+            };
         }
 
     }
@@ -1963,7 +2137,7 @@ function renderBodyNodeForm(container){
             const root=TreeNode.convertFromJson(JSON.parse(jsonStr));
             container.dataset.rootId=root.id;
             //递归函数
-            function buildForm(parent,root){
+            function buildForm(parent,root,targetUl){
                 if(!root) return;
                 const data=root.toPlainObject();
                 //console.log('buildForm data:', data);
@@ -1973,13 +2147,31 @@ function renderBodyNodeForm(container){
                     data.parentId=parent.id;
                 }
 
-                addFormDataItem(data);
-                root.children.forEach(child=>{
-                    buildForm(root,child);
-                })
+                addFormDataItem(data,targetUl);
+                
+                if(root.children.length > 0){
+                    const wrapperLi = document.createElement('li');
+                    wrapperLi.className = 'node-children-wrapper';
+
+                    const childUl = document.createElement('ul');
+                    childUl.className = 'node-children-ul';
+                    if(root.collapsed) childUl.classList.add('collapsed');
+                    wrapperLi.appendChild(childUl);
+                    
+                    const li = document.getElementById(root.id);
+                    if(li && li.parentNode === targetUl){
+                        targetUl.insertBefore(wrapperLi, li.nextSibling);
+                    }else{
+                        targetUl.appendChild(wrapperLi);
+                    }
+                    
+                    root.children.forEach(child=>{
+                        buildForm(root,child,childUl);
+                    });
+                }
 
             }
-            buildForm(null,root);
+            buildForm(null,root,ul);
         })
     }catch(err){
 

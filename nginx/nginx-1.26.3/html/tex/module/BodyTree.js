@@ -15,6 +15,8 @@ class TreeNode {
     this.value = value;
     this.explanation = explanation;
     this.isNecessary = isNecessary;
+    // 折叠状态
+    this.collapsed = false;
     // 子节点列表
     this.children = [];
 
@@ -70,12 +72,13 @@ class TreeNode {
   }
 
   //更新节点值
-  set({key,type,value,explanation,isNecessary}){
+  set({key,type,value,explanation,isNecessary,collapsed}){
     this.key=key;
     this.type=type;
     this.value=value;
     this.explanation=explanation;
     this.isNecessary=isNecessary;
+    if(collapsed !== undefined) this.collapsed = collapsed;
 
     if(this.type!==typeList.object&&this.hasChild()){
       //如果非object就删除所有子节点。
@@ -92,7 +95,8 @@ class TreeNode {
       type: this.type,
       value: this.value,
       explanation: this.explanation,
-      isNecessary: this.isNecessary
+      isNecessary: this.isNecessary,
+      collapsed: this.collapsed
     };
   }
 
@@ -204,6 +208,7 @@ class TreeNode {
           explanation: item.explanation || "",
           isNecessary: item.isNecessary || false
         });
+        if (item.collapsed !== undefined) node.collapsed = item.collapsed;
         nodeMap.set(node.id,node); //存入Map映射
         parent.addChild(node);
 
