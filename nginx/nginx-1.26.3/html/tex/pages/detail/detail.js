@@ -18,6 +18,7 @@ import {getIsNecessaryButton} from "../../components/isNecessaryButton.js";
 import {getCheckButton,toCheckSquare,toDashSquare,toSquare,dashSquareIcon,squareIcon,checkSquareIcon} from "../../components/checkButton.js";
 import { createTreeTable } from "../../components/treeTable.js";
 import { createPromptModal } from "../../components/modal.js";
+import { renderTopBar } from "../../components/topBar.js";
 
 const nodeMap=NodeMapManager.getInstance();
 let treeTableRef = null;
@@ -1644,7 +1645,7 @@ function renderDesign(apiData,config){
                 value: null,
                 explanation: null
             });
-            console.log('初始化根节点：', root);
+            //console.log('初始化根节点：', root);
 
             //如果是根节点，初始化发送创建请求
             
@@ -1653,7 +1654,7 @@ function renderDesign(apiData,config){
             const responseNameInput = responseName;
 
             const jsonStr=treeToJsonString(root);
-            console.log('转换为JSON字符串：', jsonStr);
+            //console.log('转换为JSON字符串：', jsonStr);
 
             //构建请求体
             const requestBodyData = {
@@ -1667,7 +1668,7 @@ function renderDesign(apiData,config){
             //发送新建请求
             responseApi.add(requestBodyData)
             .then(res => {
-                console.log('根节点创建成功：', res,'responseId:', res.data.data.id);
+                //console.log('根节点创建成功：', res,'responseId:', res.data.data.id);
                 //将返回的responseId存储在容器dataset中，方便后续更新
                 container.dataset.responseId = res.data.data.id;
                 responseBodyContainer.dataset.responseId=res.data.data.id; 
@@ -1696,7 +1697,7 @@ function renderDesign(apiData,config){
 function renderBodyNodeForm(container){
 
     
-    console.log('渲染节点树表格...');
+    //console.log('渲染节点树表格...');
     const apiId=container.dataset.apiId;
     const responseId=container.dataset.responseId;
     const rootId=container.dataset.rootId;
@@ -1709,7 +1710,7 @@ function renderBodyNodeForm(container){
     container.dataset.apiId=apiId; // 确保接口id在dataset中，后续发送请求时可以用到
     container.dataset.responseId=responseId; // 确保响应id在dataset中，后续发送请求时可以用到
     container.dataset.rootId=rootId; // 确保根节点id在dataset中，后续发送请求时可以用到
-    console.log('apiId:', container.dataset.apiId, 'responseId:', container.dataset.responseId,'rootId:', container.dataset.rootId);
+    //console.log('apiId:', container.dataset.apiId, 'responseId:', container.dataset.responseId,'rootId:', container.dataset.rootId);
 
     document.addEventListener('click', closeActiveTypeDropdown); // 点击表格时关闭其他类型下拉列表
 
@@ -2610,6 +2611,7 @@ function renderPreview(apiData){
     
 }
 window.onload = async function () {
+    renderTopBar();
     const params=getUrlParams();
     //console.log("创建标题：",params.name);
     document.title='项目空间：'+(params.name || '未命名项目');

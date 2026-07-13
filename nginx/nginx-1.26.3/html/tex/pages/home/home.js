@@ -1,7 +1,9 @@
 
-// 替换为更稳定的DOMContentLoaded事件
-document.addEventListener('DOMContentLoaded', async function () {
-    function createMenuButton(label, svgPath, className = '') {
+import { renderTopBar } from '../../components/topBar.js';
+
+renderTopBar();
+
+function createMenuButton(label, svgPath, className = '') {
         const button = document.createElement('button');
         button.type = 'button';
         if (className) {
@@ -41,6 +43,7 @@ document.addEventListener('DOMContentLoaded', async function () {
     }
     // ========== 图标配置结束 ==========
 
+(async function main() {
     // 获取并校验ID
     const id = localStorage.getItem('id');
     if (!id) {
@@ -421,4 +424,4 @@ document.addEventListener('DOMContentLoaded', async function () {
 
     // 首次拉取并渲染
     await fetchList();
-});
+})();

@@ -148,6 +148,7 @@ document.addEventListener('DOMContentLoaded', () => {
             console.log('Response:', data);
             localStorage.setItem('token', data.token);
             localStorage.setItem('id', data.id);
+            localStorage.setItem('userName', data.name);
             window.location.href = '/pages/home/home.html';
         } catch (err) {
             console.error('登录失败详情：', err);
