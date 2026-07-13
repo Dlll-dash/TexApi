@@ -8,14 +8,19 @@
                                 (#{name},#{value},#{type},#{explanation},#{apiId},#{formatType},#{isNecessary},#{isChecked});
     </insert>
     <update id="updateParam">
-        update request_params set
+        update request_params
+            <set>
                 <!--因为请求参数的可以为空，所以修改成什么值就改成什么值就行，不判null-->
                 name = #{name},
                 value = #{value},
                 type = #{type},
                 explanation = #{explanation},
                 is_necessary=#{isNecessary},
-                is_checked=#{isChecked}
+                <if test="isChecked!=null">
+                    is_checked=#{isChecked},
+                </if>
+
+            </set>
         where id = #{id}
     </update>
 
