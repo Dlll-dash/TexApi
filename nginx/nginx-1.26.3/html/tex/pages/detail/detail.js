@@ -1,6 +1,6 @@
 import { request,getUrlParams } from "../../config/AxiosConfig/AxiosConfig.js";
 import { methodlist,methodColors,methodBackroundColors } from "../../config/MethodConfig.js";
-import { requestDataType,typeList,httpMimeTypes,queryTypeList} from "../../config/TypeConfig.js";
+import { requestDataType,typeList,httpMimeTypes,queryTypeList,responseContentType as responseContentTypeMap, responseContentType} from "../../config/TypeConfig.js";
 import { debugFormConfig,designFormConfig } from "../../config/FormConfig.js";
 import { statusText,statusColors } from "../../config/StatusConfig.js";
 import { TreeNode } from "../../module/BodyTree.js";
@@ -1098,11 +1098,16 @@ function renderform(container,config){
                     addFormDataItem(null);
                 }
                 isNecessaryButton.style.visibility = 'visible'; // 新增行后显示是否必须按钮
-                checkButton.style.visibility = 'visible'; // 新增行后显示是否选中按钮
-                updateCheckAllButtonState(); // 新增行后显示全选按钮
+                let isChecked = null;
+                if(config===debugFormConfig){
+                    checkButton.style.visibility = 'visible'; // 新增行后显示是否选中按钮
+                    updateCheckAllButtonState(); // 新增行后显示全选按钮
+                    isChecked = checkButton.classList.contains('active') ? true : false;
+                }
+                
                 const apiId = document.getElementById('requestArea').dataset.apiId;
                 const isNecessary = isNecessaryButton.classList.contains('active') ? true : false;
-                const isChecked = checkButton.classList.contains('active') ? true : false;
+                
                 //console.log('isNecessary:', isNecessary);
                 const param = [keyInput.value.trim(), valueInput.value.trim(), typeInput.value.trim(), explainInput.value.trim(), apiId, isNecessary, isChecked];
                 const dataType = container.dataset.type;
@@ -1442,19 +1447,96 @@ function renderDesign(apiData,config){
     //内容格式
     const responseContentTypeSpan=document.createElement('span');
     const responseContentTypeLabel=document.createElement('span');
-    const responseContentType=document.createElement('input');
+    const responseContentType=document.createElement('span'); // 可点击下拉触发区（仿输入框）
+    const responseContentTypeText=document.createElement('span'); // 触发区内文本
+    const responseContentTypeIcon=document.createElement('i'); // 下拉箭头图标
+    const responseContentTypeMimeSpan=document.createElement('span'); // MIME类型展示
 
     responseContentTypeSpan.className='response-content-type-span';
     responseContentTypeLabel.className='response-content-type-label';
-    responseContentType.className='response-content-type-input';
-
+    responseContentType.className='content-type-trigger';
+    responseContentTypeText.className='content-type-trigger-text';
+    responseContentTypeIcon.className='bi bi-chevron-down content-type-chevron';
+    responseContentTypeMimeSpan.className='content-type-mime';
     responseContentTypeLabel.textContent='内容格式: ';
-    //TODO: 增加下拉选择框，支持多种内容格式选择
-    responseContentType.value='JSON';
-    responseContentType.disabled=true; // 禁用输入框，用户无法修改内容格式
+    responseContentTypeText.textContent='JSON';
+    responseContentTypeMimeSpan.textContent=responseContentTypeMap['JSON'] || '';
+    responseContentType.appendChild(responseContentTypeText);
+    responseContentType.appendChild(responseContentTypeIcon);
+
+    // 下拉选项列表
+    const contentTypeDropdown = document.createElement('ul');
+    contentTypeDropdown.className = 'content-type-dropdown';
+    Object.keys(responseContentTypeMap).forEach(key => {
+        const option = document.createElement('li');
+        option.className = 'content-type-option';
+        option.textContent = key;
+        option.addEventListener('click', function(e){
+            e.stopPropagation();
+            responseContentTypeText.textContent = key;
+            responseContentTypeMimeSpan.textContent = responseContentTypeMap[key] || '';
+            contentTypeDropdown.style.display = 'none';
+            if(container.dataset.responseId) {
+                responseApi.updateInfo({
+                    "id": container.dataset.responseId,
+                    "apiId": apiData.id,
+                    "responseCode": responseCode.value.trim(),
+                    "name": responseName.value.trim(),
+                    "contentType": key,
+                });
+            }
+            updateBodyContainerVisibility(key); // 根据选择的内容格式更新响应Body容器的显示状态
+
+        });
+        contentTypeDropdown.appendChild(option);
+    });
+    function updateBodyContainerVisibility(type) {
+        const responseBodyContainerEl = document.querySelector('.response-body-container');
+        const bodyArea = responseBodyContainerEl?.parentElement;
+        const bodyTitle = bodyArea?.querySelector('.response-body-title');
+        let bodyEmptyTip = bodyArea?.querySelector('.content-type-empty-tip');
+
+        const isTreeType = (type === 'JSON' || type === 'XML');
+
+        if (isTreeType) {
+            // JSON/XML: show tree, hide empty tip
+            if (responseBodyContainerEl) responseBodyContainerEl.style.display = '';
+            if (bodyTitle) bodyTitle.style.display = '';
+            if (bodyEmptyTip) bodyEmptyTip.style.display = 'none';
+        } else {
+            // HTML/Raw/No-Content: hide tree, show message
+            if (responseBodyContainerEl) responseBodyContainerEl.style.display = 'none';
+            if (bodyTitle) bodyTitle.style.display = type === 'No-Content' ? '' : 'none';
+            if (!bodyEmptyTip && bodyArea) {
+                bodyEmptyTip = document.createElement('div');
+                bodyEmptyTip.className = 'content-type-empty-tip empty-tip';
+                bodyArea.appendChild(bodyEmptyTip);
+            }
+            if (bodyEmptyTip) {
+                bodyEmptyTip.style.display = 'block';
+                bodyEmptyTip.textContent = type === 'No-Content'
+                    ? '该响应无响应体'
+                    : `响应体为 ${type} 格式，不支持树形预览`;
+            }
+        }
+    }
+
+
+    // 点击触发区切换下拉框
+    responseContentType.addEventListener('click', function(e){
+        e.stopPropagation();
+        contentTypeDropdown.style.display = contentTypeDropdown.style.display === 'block' ? 'none' : 'block';
+    });
+
+    // 点击外部关闭
+    document.addEventListener('click', function(){
+        contentTypeDropdown.style.display = 'none';
+    });
 
     responseContentTypeSpan.appendChild(responseContentTypeLabel);
     responseContentTypeSpan.appendChild(responseContentType);
+    responseContentTypeSpan.appendChild(contentTypeDropdown);
+    responseContentTypeSpan.appendChild(responseContentTypeMimeSpan);
     responseInfoSpan.appendChild(responseContentTypeSpan);
 
     responseDesign.appendChild(responseInfoSpan);
@@ -1489,13 +1571,8 @@ function renderDesign(apiData,config){
             responseName.style.borderColor = '#e53e3e';
         }
 
-        const responseContentTypeValue = responseContentType.value.trim();
-        if(responseContentTypeValue) {
-            responseContentType.style.borderColor = '';
-        }else{
-            responseContentType.style.borderColor = '#e53e3e';
-        }
-
+        const responseContentTypeValue = responseContentTypeText.textContent.trim();
+        
         const requestBodyData = {
                 "id": container.dataset.responseId,
                 "apiId": apiData.id,
@@ -1525,7 +1602,7 @@ function renderDesign(apiData,config){
     responseBodyContainer.dataset.apiId=apiData.id;
     //console.log('Respons容器接口id：', responseBodyContainer.dataset.apiId);
     responseBodyContainer.className='response-body-container';
-
+    
     
 
      //发送GET请求，获取到响应数据
@@ -1550,10 +1627,14 @@ function renderDesign(apiData,config){
                 if(nameLabel) nameLabel.textContent = responseData.name || '';
                 if(responseCode) responseCode.value = responseData.responseCode || '';
                 if(responseName) responseName.value = responseData.name || '';
-                if(responseContentType) responseContentType.value = responseData.contentType || '';
+                if(responseContentTypeText) {
+                    responseContentTypeText.textContent = responseData.contentType || 'JSON';
+                    responseContentTypeMimeSpan.textContent = responseContentTypeMap[responseData.contentType] || '';
+                }
 
                 //在异步内执行，避免还没拿到数据就渲染表格
                 renderBodyNodeForm(responseBodyContainer);
+                updateBodyContainerVisibility(responseData.contentType);
             }
         }else{
             //如果没有创建过根节点，就初始化
@@ -1570,7 +1651,6 @@ function renderDesign(apiData,config){
             //获取表格转Json数据
             const responseCodeInput = responseCode;
             const responseNameInput = responseName;
-            const responseContentTypeInput = responseContentType;
 
             const jsonStr=treeToJsonString(root);
             console.log('转换为JSON字符串：', jsonStr);
@@ -1580,7 +1660,7 @@ function renderDesign(apiData,config){
                 apiId: apiData.id,
                 responseCode: responseCodeInput ? responseCodeInput.value.trim() : '',
                 name: responseNameInput ? responseNameInput.value.trim() : '',
-                contentType: responseContentTypeInput ? responseContentTypeInput.value.trim() : '',
+                contentType: responseContentTypeText ? responseContentTypeText.textContent.trim() : '',
                 body: JSON.stringify(jsonStr)
             };
 
@@ -1594,6 +1674,7 @@ function renderDesign(apiData,config){
                 responseBodyContainer.dataset.rootId=root.id;
                 //在异步内执行，避免还没拿到数据就渲染表格
                 renderBodyNodeForm(responseBodyContainer);
+                updateBodyContainerVisibility(responseData.contentType);
             })
         }
 
@@ -2462,7 +2543,6 @@ function renderPreview(apiData){
     statusCodeSpan.className = 'preview-type-label';
 
     const contentTypeSpan = document.createElement('span');
-    contentTypeSpan.textContent = `${httpMimeTypes['json']}`;
     contentTypeSpan.className = 'preview-type-without-bg';
 
     responseInfoSpan.appendChild(statusCodeSpan);
@@ -2488,7 +2568,7 @@ function renderPreview(apiData){
         if(response.data && response.data.data && response.data.data.length > 0) {
             //默认第一个响应数据作为预览展示
             const responseData = response.data.data[0];
-            
+            //console.log('!!!获取响应信息成功：', responseData);
             const responseLabel=document.createElement('span');
             responseLabel.className='response-label';
             const codeLabel=document.createElement('span');
@@ -2500,7 +2580,7 @@ function renderPreview(apiData){
             codeLabel.textContent = responseData.responseCode || '';
             codeLabel.style.color = getCodeColor(responseData.responseCode);
             nameLabel.textContent = responseData.name || '';
-
+            contentTypeSpan.textContent = `${responseContentType[responseData.contentType] || ''}`;
             responseLabel.appendChild(codeLabel);
             responseLabel.appendChild(nameLabel);
 
@@ -2515,7 +2595,12 @@ function renderPreview(apiData){
             .then(res => {
                 const data = res.data.data || {};
                 //异步返回替换原节点
+                console.log('!!获取响应信息成功：', data);
+                if(responseData.contentType==='HTML'||responseData.contentType==='Raw'||responseData.contentType==='No-Content') {
+                    data.responseBody=null;
+                }
                 createResponsePreviewDiv(data.responseBody, responsePreviewDiv);
+
                 createResponseJsonExampleDiv(data.responseBody, responseJsonExampleDiv);
                 
             })

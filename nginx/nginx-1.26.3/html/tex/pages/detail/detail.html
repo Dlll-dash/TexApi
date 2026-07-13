@@ -1634,13 +1634,21 @@
         }
 
         .response-code-span,
-        .response-name-span,
+        .response-name-span {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            color: #718096;
+            font-size: 0.95rem;
+        }
+
         .response-content-type-span {
             display: inline-flex;
             align-items: center;
             gap: 0.35rem;
             color: #718096;
             font-size: 0.95rem;
+            position: relative;
         }
 
         .response-code-label,
@@ -1650,10 +1658,10 @@
         }
 
         .response-code-input,
-        .response-name-input,
-        .response-content-type-input {
-            min-width: 6rem;
+        .response-name-input{
+            width: 4rem;
             border: 1px solid transparent;
+            font-size: 0.85rem;
             border-radius: 6px;
             background-color: transparent;
             color: #2d3748;
@@ -1663,13 +1671,80 @@
 
         .response-code-input:hover,
         .response-name-input:hover,
-        .response-content-type-input:hover,
         .response-code-input:focus,
-        .response-name-input:focus,
-        .response-content-type-input:focus {
+        .response-name-input:focus{
             border-color: #d7dce2;
             background-color: #ffffff;
             outline: none;
+        }
+
+        /* 内容格式下拉触发器（仿输入框） */
+        .content-type-trigger {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            min-width: 3.5rem;
+            border: 1px solid transparent;
+            border-radius: 6px;
+            background-color: transparent;
+            color: #2d3748;
+            padding: 0.3rem 0.5rem;
+            cursor: pointer;
+            user-select: none;
+            transition: border-color 0.2s ease, background-color 0.2s ease;
+        }
+
+        .content-type-trigger:hover {
+            border-color: #d7dce2;
+            background-color: #ffffff;
+        }
+
+        .content-type-trigger-text {
+            color: #2d3748;
+            font-size: 0.85rem;
+        }
+
+        .content-type-chevron {
+            font-size: 0.7rem;
+            color: #a0aec0;
+        }
+
+        /* 内容格式下拉列表 */
+        .content-type-dropdown {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            margin-top: 4px;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            z-index: 50;
+            list-style: none;
+            padding: 0.25rem 0;
+            min-width: 110px;
+        }
+
+        .content-type-option {
+            padding: 0.4rem 0.75rem;
+            cursor: pointer;
+            color: #2d3748;
+            font-size: 0.9rem;
+            transition: background-color 0.15s ease;
+        }
+
+        .content-type-option:hover {
+            background-color: #edf2f7;
+            color: #1a202c;
+        }
+
+        /* MIME类型展示 */
+        .content-type-mime {
+            color: #a0aec0;
+            font-size: 0.85rem;
+            margin-left: 0.35rem;
+            white-space: nowrap;
         }
 
         .response-body-area {

@@ -15,6 +15,14 @@ const httpMimeTypes = {
     'urlencoded': 'application/x-www-form-urlencoded'
 };
 
+const responseContentType = {
+    'JSON': 'application/json',
+    'XML': 'application/xml',
+    'HTML': 'text/html',
+    'Raw': 'text/plain',
+    'No-Content': ''
+};
+
 //参数值类型
 const typeList = {
     'object' :'Object',
@@ -37,4 +45,4 @@ const typeExampleValue = {
 const queryTypeList = ['string','integer','boolean','array'];
 
 
-export {typeList,typeExampleValue,requestDataType,httpMimeTypes,queryTypeList};
+export {typeList,typeExampleValue,requestDataType,httpMimeTypes,queryTypeList,responseContentType};
