@@ -774,7 +774,7 @@ function renderBody(container,config){
            
             if(jsonString) {
                 const param=[
-                    'jsonBody',
+                    'Json',
                     jsonString,
                     requestDataType.Json,
                     '',
@@ -2404,6 +2404,18 @@ function renderPreview(apiData){
 
     container.appendChild(apiInfoDiv);
 
+    const explanationTitle=document.createElement('h3');
+    explanationTitle.textContent = "接口说明";
+    explanationTitle.className = "preview-explanation-title";
+    container.appendChild(explanationTitle);
+    const explanationDiv=document.createElement('div');
+    explanationDiv.className = "preview-explanation-div";
+    explanationDiv.textContent = apiData.explanation;
+    if(!apiData.explanation) {
+        explanationTitle.style.display = 'none';
+        explanationDiv.style.display = 'none';
+    }
+    container.appendChild(explanationDiv);
     
 
     const paramsTitle=document.createElement('h3');
@@ -2470,6 +2482,9 @@ function renderPreview(apiData){
 
 
 
+    const bodyFormat = localStorage.getItem(getContentTypeKey(apiData.id)) || requestDataType.None;
+    const isBodyJsonOrXml = (bodyFormat === requestDataType.Json || bodyFormat === requestDataType.Xml);
+
     const bodyParamsDiv=document.createElement('div');
     bodyParamsDiv.className = "preview-params-div";
 
@@ -2482,32 +2497,84 @@ function renderPreview(apiData){
     bodyTitle.className = "body-title";
 
     const bodyType=document.createElement('span');
-    bodyType.textContent = `${httpMimeTypes[localStorage.getItem(getContentTypeKey(apiData.id))] || '未设置'}`;
+    bodyType.textContent = `${httpMimeTypes[bodyFormat] || '未设置'}`;
     bodyType.className = "preview-type-label";
 
     bodyInfoSpan.appendChild(bodyTitle);
     bodyInfoSpan.appendChild(bodyType);
 
-    bodyParamsDiv.appendChild(bodyInfoSpan);
-    container.appendChild(bodyParamsDiv);
-    
-    //console.log('当前请求参数类型：', localStorage.getItem(getContentTypeKey(apiData.id)),typeof localStorage.getItem(getContentTypeKey(apiData.id)));
-    if(localStorage.getItem(getContentTypeKey(apiData.id))!=requestDataType.None) {
-        request.get(`/request/param/list/${apiData.id}`,{
-            params: {
-                formatType:localStorage.getItem(getContentTypeKey(apiData.id)) || ''
-            }
-        }).then(res => {
-            const data = res.data.data || [];
-            if(data.length > 0) {
-                const paramsList = createParamList(data);
-                bodyParamsDiv.appendChild(paramsList);
-                bodyParamsDiv.style.display = 'block'; // 显示Body参数区域
-            }
-        })
+    // JSON/XML 格式：去掉外层 bodyParamsDiv，直接用 flex 容器（避免双层边框）
+    if (isBodyJsonOrXml) {
+        const bodyFlex = document.createElement('div');
+        bodyFlex.className = 'preview-response-container';
+        bodyFlex.style.marginTop = '0';
+        bodyFlex.style.borderTop = '1px solid #e8e8e8';
+        bodyFlex.style.borderRadius = '6px';
+
+        const bodyLeft = document.createElement('div');
+        bodyLeft.className = 'response-preview-div';
+        bodyLeft.style.minWidth = 'unset';
+        bodyLeft.style.flex = '1';
+        bodyLeft.appendChild(bodyInfoSpan);
+
+        const bodyExampleDiv = document.createElement('div');
+        bodyExampleDiv.className = 'response-json-example-div';
+        const exampleTitle = document.createElement('span');
+        exampleTitle.className = 'body-title';
+        exampleTitle.textContent = '示例';
+        bodyExampleDiv.appendChild(exampleTitle);
+
+        bodyFlex.appendChild(bodyLeft);
+        bodyFlex.appendChild(bodyExampleDiv);
+        container.appendChild(bodyFlex);
+
+        if (bodyFormat !== requestDataType.None) {
+            request.get(`/request/param/list/${apiData.id}`,{
+                params: {
+                    formatType: bodyFormat || ''
+                }
+            }).then(res => {
+                const data = res.data.data || [];
+                if (data.length > 0) {
+                    const paramsList = createParamList(data, true);
+                    bodyLeft.appendChild(paramsList);
+
+                    const rawValue = data[0].value || '';
+                    if (rawValue) {
+                        if (bodyFormat === requestDataType.Xml) {
+                            createResponseXmlExampleDiv(rawValue, bodyExampleDiv);
+                        } else {
+                            createResponseJsonExampleDiv(rawValue, bodyExampleDiv);
+                        }
+                    }
+                }
+            })
+        }
+    } else {
+        bodyParamsDiv.appendChild(bodyInfoSpan);
+        container.appendChild(bodyParamsDiv);
+
+        if (bodyFormat !== requestDataType.None) {
+            request.get(`/request/param/list/${apiData.id}`,{
+                params: {
+                    formatType: bodyFormat || ''
+                }
+            }).then(res => {
+                const data = res.data.data || [];
+                if (data.length > 0) {
+                    const paramsList = createParamList(data);
+                    bodyParamsDiv.appendChild(paramsList);
+                    bodyParamsDiv.style.display = 'block';
+                }
+            })
+        }
     }
-    
-    
+    if(!queryParamsDiv.checkVisibility() && !headersParamsDiv.checkVisibility() && !bodyParamsDiv.checkVisibility()) {
+        const noParamsTip = document.createElement('div');
+        noParamsTip.className = 'no-params-message';
+        noParamsTip.textContent = '暂无请求参数';
+        container.appendChild(noParamsTip);
+    }
     
     
     //把响应信息也展示在预览窗口

@@ -8,10 +8,12 @@ export function createResponsePreviewDiv(response,responsePreviewDiv) {
     let renderedAsTable = false;
 
     // 处理响应体Json数据，展示在预览窗口
-    if(response) {
+    console.log('正在处理响应体数据：', response,JSON.parse(response));
+    const responseBody = typeof response === 'string' ? JSON.parse(response) : response;
+    if(response&&Object.keys(responseBody).length>0){
         //console.log('正在处理响应体数据：', response);
         try {
-            const responseBody = typeof response === 'string' ? JSON.parse(response) : response;
+            
 
             const responseTable = document.createElement('table');
             responseTable.className = 'params-table-display';

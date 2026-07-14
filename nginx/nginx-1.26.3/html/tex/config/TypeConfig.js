@@ -25,21 +25,21 @@ const responseContentType = {
 
 //参数值类型
 const typeList = {
-    'object' :'Object',
-    'string':'String',
-    'integer':'Integer',
-    'boolean':'Boolean',
-    'array':'Array',
-    'null':'Null'
+    'object' :'object',
+    'string':'string',
+    'integer':'integer',
+    'boolean':'boolean',
+    'array':'array',
+    'null':'null'
 }
 
 //类型示例值
 const typeExampleValue = {
-    'String':'string',
-    'Integer':1,
-    'Boolean':false,
-    'Array':[],
-    'Null':null
+    'string':'string',
+    'integer':1,
+    'boolean':false,
+    'array':[],
+    'null':null
 }
 
 const queryTypeList = ['string','integer','boolean','array'];

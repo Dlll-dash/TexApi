@@ -2035,7 +2035,7 @@
         }
 
         /* Preview request-params styles */
-        .preview-params-title{
+        .preview-params-title,.preview-explanation-title {
             font-size: 1rem;
             font-weight: 600;
             color: #2d3748;
@@ -2047,12 +2047,17 @@
             border: 1px solid #e8e8e8;
             border-radius: 8px;
             padding: 0.75rem;
-            /* margin-top: -1rem; */
             background-color: #ffffff;
             display: none; /* 默认隐藏，只有在有参数时才显示 */
         }
 
-        
+        .preview-explanation-div{
+            /* border: 1px solid #e8e8e8; */
+            border-radius: 8px;
+            padding: 0.75rem;
+            color:#333333;
+            background-color: transparent;
+        }
 
         .preview-body-info,.preview-query-info,.preview-headers-info {
             display: flex;
@@ -2452,7 +2457,7 @@
         }
 
         /* Preview request-params styles */
-        .export-container .preview-params-title{
+        .export-container .preview-params-title, .export-container .preview-explanation-title {
             font-size: 1rem;
             font-weight: 600;
             color: #2d3748;
@@ -2469,7 +2474,13 @@
             display: none; /* 默认隐藏，只有在有参数时才显示 */
         }
 
-        
+        .export-container .preview-explanation-div{
+            /* border: 1px solid #e8e8e8; */
+            border-radius: 8px;
+            padding: 0.75rem;
+            color:#333333;
+            background-color: transparent;
+        }
 
         .export-container .preview-body-info,.export-container .preview-query-info,.export-container .preview-headers-info {
             display: flex;
@@ -2712,6 +2723,33 @@
             font-family: Consolas, Monaco, 'Courier New', monospace !important;
             font-size: 1rem;
         }
+
+        /* ===== 批量导出：侧边栏 + 主内容区布局 ===== */
+        *:not(pre):not(pre *){margin:0;padding:0;box-sizing:border-box;font-family:"Microsoft YaHei","PingFang SC",sans-serif;}
+        body{background:#f5f7fa;display:flex;height:100vh;overflow:hidden;}
+
+        #sidebar{width:300px;min-width:260px;background:#fff;border-radius:12px;box-shadow:0 2px 12px rgba(0,0,0,0.08);margin:1rem;padding:1.2rem;display:flex;flex-direction:column;overflow:hidden;}
+        #sidebar h3{color:#2d3748;font-size:1.1rem;font-weight:600;margin-bottom:0.8rem;padding-bottom:0.5rem;border-bottom:1px solid #e8e8e8;text-align:center;display:flex;align-items:center;gap:0.4rem;justify-content:center;}
+        #apiTreeContainer{flex:1;overflow-y:auto;}
+        #apiTreeContainer ul{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:0.1rem;}
+
+        .tree-category-row{display:flex;align-items:center;gap:0.35rem;padding:0.45rem 0.5rem;border-radius:6px;cursor:pointer;transition:background 0.2s;user-select:none;}
+        .tree-category-row:hover{background:#edf0f2;}
+        .tree-arrow{width:1rem;display:inline-flex;align-items:center;justify-content:center;color:#718096;font-size:0.7rem;flex-shrink:0;}
+        .tree-folder{width:1rem;display:inline-flex;align-items:center;justify-content:center;color:#718096;font-size:0.9rem;flex-shrink:0;}
+        .tree-category-name{flex:1;font-weight:500;color:#777;font-size:0.95rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+        .children-ul{margin-left:1.2rem;max-height:3000px;overflow:hidden;transition:max-height 0.25s ease,opacity 0.2s ease;opacity:1;}
+        .children-ul.collapsed{max-height:0;opacity:0;}
+
+        .api-row{display:flex;align-items:center;gap:0.4rem;padding:0.45rem 0.5rem;border-radius:6px;cursor:pointer;transition:background 0.2s;}
+        .api-row:hover{background:#edf0f2;}
+        .api-row.active{background:#e8f0fe;}
+        .api-row .api-method{font-weight:600;font-size:0.82rem;min-width:48px;text-align:center;flex-shrink:0;}
+        .api-row .api-name{flex:1;font-weight:300;color:#718096;font-size:0.9rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+        .api-row .status-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;margin-left:4px;}
+
+        #main{flex:1;background:#fff;border-radius:12px;box-shadow:0 2px 12px rgba(0,0,0,0.08);margin:1rem 1rem 1rem 0;padding:1.5rem;overflow-y:auto;}
+        #main .empty-hint{display:flex;align-items:center;justify-content:center;height:100%;color:#a0aec0;font-size:1.1rem;}
     </style>
 </head>
 <body>

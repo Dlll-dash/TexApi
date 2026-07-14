@@ -1,9 +1,9 @@
 import { request } from "../config/AxiosConfig/AxiosConfig.js";
+import { requestDataType, httpMimeTypes, responseContentType } from "../config/TypeConfig.js";
 import { CategoryApi } from "../api/CategoryApi.js";
 import { methodColors } from "../config/MethodConfig.js";
 import { statusColors } from "../config/StatusConfig.js";
 import { getCodeColor } from "../config/ResponseConfig.js";
-import { responseContentType } from "../config/TypeConfig.js";
 import { urlDisplay } from "../components/urlSpan.js";
 import { createApiStatusSpan } from "../components/apiStatusSpan.js";
 import { createParamList } from "../components/paramList.js";
@@ -41,6 +41,7 @@ export async function exportSingleApi(apiData) {
         const batchData = await fetchBatchData([{ id: apiData.id }]);
         const merged = mergeData([apiData], batchData);
         if (merged.length === 0) { updateToast(toast, '未获取到接口数据', '#e53e3e'); return; }
+        await enrichBodyValues(merged);
         updateToast(toast, '正在生成文档...', '#4299e1');
 
         const container = document.createElement('div');
@@ -73,6 +74,9 @@ export async function exportCategoryBatch(categoryId, categoryName, projectId) {
         updateToast(toast, '正在获取参数和响应数据...', '#4299e1');
         const batchData = await fetchBatchData(apis);
         const merged = mergeData(apis, batchData);
+
+        updateToast(toast, '正在获取 Body 内容...', '#4299e1');
+        await enrichBodyValues(merged);
 
         updateToast(toast, '正在生成文档...', '#4299e1');
         const rendered = merged.map(api => prerenderApiPreview(api));
@@ -132,7 +136,7 @@ async function fetchAllApisInCategory(categoryId, projectId) {
 }
 
 function buildExportPayload(apis) {
-    return apis.map(api => ({ apiId: api.id, formatType: localStorage.getItem(getContentTypeKey(api.id)) || 'null' }));
+    return apis.map(api => ({ apiId: api.id, formatType: localStorage.getItem(getContentTypeKey(api.id)) || requestDataType.None }));
 }
 
 async function fetchBatchData(apis) {
@@ -164,9 +168,30 @@ function normalizeParam(p) {
     return {
         name: p.name || '',
         type: p.type || '',
+        value: p.value || '',
         explanation: p.explanation || '',
         isNecessary: p.necessary === true || p.isNecessary === true
     };
+}
+
+// 补齐 JSON/XML Body 的 value 字段（/api/export 不返回 value，需单独请求）
+async function enrichBodyValues(mergedApis) {
+    const fetches = mergedApis.map(async (api) => {
+        const bodyParams = api.params && api.params.body;
+        if (!bodyParams || bodyParams.length !== 1) return;
+        const p = bodyParams[0];
+        if (p.value) return; // 已有值则跳过
+        const isJsonOrXml = p.type === 'json' || p.type === 'xml' || p.type === requestDataType.Json || p.type === requestDataType.Xml;
+        if (!isJsonOrXml) return;
+        const fmt = localStorage.getItem(getContentTypeKey(api.id)) || requestDataType.None;
+        if (fmt === requestDataType.None) return;
+        try {
+            const res = await request.get(`/request/param/list/${api.id}`, { params: { formatType: fmt } });
+            const data = res.data?.data || [];
+            if (data.length > 0) p.value = data[0].value || '';
+        } catch (e) { /* 静默忽略，value 留空 */ }
+    });
+    await Promise.all(fetches);
 }
 // ========== 构建侧边栏嵌套树 ==========
 function buildSidebarTree(categoryNode, apis) {
@@ -240,18 +265,44 @@ function prerenderApiPreview(api) {
     apiInfoDiv.appendChild(createInfoItem('责任人', api.inChargeUser));
     container.appendChild(apiInfoDiv);
 
+    const explanationTitle=document.createElement('h3');
+    explanationTitle.textContent = "接口说明";
+    explanationTitle.className = "preview-explanation-title";
+    container.appendChild(explanationTitle);
+    const explanationDiv=document.createElement('div');
+    explanationDiv.className = "preview-explanation-div";
+    explanationDiv.textContent = api.explanation;
+    if(!api.explanation) {
+        explanationTitle.style.display = 'none';
+        explanationDiv.style.display = 'none';
+    }
+    container.appendChild(explanationDiv);
+
     const hasQuery = params.query && params.query.length > 0;
     const hasHeader = params.header && params.header.length > 0;
     const hasBody = params.body && params.body.length > 0;
-    if (hasQuery || hasHeader || hasBody) {
-        const paramsTitle = document.createElement('h3');
-        paramsTitle.className = 'preview-params-title';
-        paramsTitle.textContent = '请求参数';
-        container.appendChild(paramsTitle);
+    const paramsTitle = document.createElement('h3');
+    paramsTitle.className = 'preview-params-title';
+    paramsTitle.textContent = '请求参数';
+    container.appendChild(paramsTitle);
+    if (!hasQuery && !hasHeader && !hasBody) {
+        const noParamsTip = document.createElement('div');
+        noParamsTip.className = 'no-params-message';
+        noParamsTip.textContent = '暂无请求参数';
+        container.appendChild(noParamsTip);
     }
     if (hasQuery) container.appendChild(buildParamBlock('preview-query-info', 'query-title', 'Query 参数', params.query));
     if (hasHeader) container.appendChild(buildParamBlock('preview-headers-info', 'headers-title', 'Headers 参数', params.header));
-    if (hasBody) container.appendChild(buildParamBlock('preview-body-info', 'body-title', 'Body 参数', params.body));
+    if (hasBody) {
+        const bodyParams = params.body;
+        const isBodyJson = bodyParams.length === 1 && (bodyParams[0].type === 'json' || bodyParams[0].type === requestDataType.Json);
+        const isBodyXml = bodyParams.length === 1 && (bodyParams[0].type === 'xml' || bodyParams[0].type === requestDataType.Xml);
+        if (isBodyJson || isBodyXml) {
+            container.appendChild(buildBodyExampleBlock(bodyParams, isBodyXml));
+        } else {
+            container.appendChild(buildParamBlock('preview-body-info', 'body-title', 'Body 参数', bodyParams));
+        }
+    }
 
     console.log('resp:', resp);
     if (resp) {
@@ -343,6 +394,57 @@ function buildParamBlock(infoClass, titleClass, titleText, paramList) {
     return div;
 }
 
+function buildBodyExampleBlock(bodyParams, isXml) {
+    const div = document.createElement('div');
+    div.className = 'preview-params-div';
+    div.style.display = 'block';
+
+    const infoSpan = document.createElement('span');
+    infoSpan.className = 'preview-body-info';
+    const title = document.createElement('span');
+    title.className = 'body-title';
+    title.textContent = 'Body 参数';
+    const bodyType = document.createElement('span');
+    bodyType.className = 'preview-type-label';
+    bodyType.textContent = isXml ? (httpMimeTypes.xml || 'application/xml') : (httpMimeTypes.json || 'application/json');
+    infoSpan.appendChild(title);
+    infoSpan.appendChild(bodyType);
+    div.appendChild(infoSpan);
+
+    const flex = document.createElement('div');
+    flex.className = 'preview-response-container';
+    flex.style.border='none';
+    flex.style.marginTop = '0';
+    flex.style.borderRadius = '6px';
+
+    const left = document.createElement('div');
+    left.className = 'response-preview-div';
+    left.style.minWidth = 'unset';
+    left.style.flex = '1';
+    left.appendChild(createParamList(bodyParams, true));
+
+    const exampleDiv = document.createElement('div');
+    exampleDiv.className = 'response-json-example-div';
+    const exampleTitle = document.createElement('span');
+    exampleTitle.className = 'body-title';
+    exampleTitle.textContent = '示例';
+    exampleDiv.appendChild(exampleTitle);
+
+    const rawValue = bodyParams[0].value || '';
+    if (rawValue) {
+        if (isXml) {
+            createResponseXmlExampleDiv(rawValue, exampleDiv);
+        } else {
+            createResponseJsonExampleDiv(rawValue, exampleDiv);
+        }
+    }
+
+    flex.appendChild(left);
+    flex.appendChild(exampleDiv);
+    div.appendChild(flex);
+    return div;
+}
+
 function createInfoItem(label, value) {
     const item = document.createElement('span');
     item.className = 'api-info-item';
@@ -359,6 +461,7 @@ function buildExportHtml(categoryName, renderedHtmls, tree) {
     const previewBlocks = renderedHtmls.map((html, i) =>
         `<div class="api-preview" id="preview-${i}" style="display:none">${html}</div>`
     ).join('\n');
+    const css = document.getElementById('export-style')?.innerHTML || '';
 
     return `<!DOCTYPE html>
 <html lang="zh-CN">
@@ -368,93 +471,7 @@ function buildExportHtml(categoryName, renderedHtmls, tree) {
 <title>${esc(categoryName || '接口文档')} - 批量导出</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
 <style>
-*:not(pre):not(pre *){margin:0;padding:0;box-sizing:border-box;font-family:"Microsoft YaHei","PingFang SC",sans-serif;}
-body{background:#f5f7fa;display:flex;height:100vh;overflow:hidden;}
-
-#sidebar{width:300px;min-width:260px;background:#fff;border-radius:12px;box-shadow:0 2px 12px rgba(0,0,0,0.08);margin:1rem;padding:1.2rem;display:flex;flex-direction:column;overflow:hidden;}
-#sidebar h3{color:#2d3748;font-size:1.1rem;font-weight:600;margin-bottom:0.8rem;padding-bottom:0.5rem;border-bottom:1px solid #e8e8e8;text-align:center;display:flex;align-items:center;gap:0.4rem;justify-content:center;}
-#apiTreeContainer{flex:1;overflow-y:auto;}
-#apiTreeContainer ul{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:0.1rem;}
-
-.tree-category-row{display:flex;align-items:center;gap:0.35rem;padding:0.45rem 0.5rem;border-radius:6px;cursor:pointer;transition:background 0.2s;user-select:none;}
-.tree-category-row:hover{background:#edf0f2;}
-.tree-arrow{width:1rem;display:inline-flex;align-items:center;justify-content:center;color:#718096;font-size:0.7rem;flex-shrink:0;}
-.tree-folder{width:1rem;display:inline-flex;align-items:center;justify-content:center;color:#718096;font-size:0.9rem;flex-shrink:0;}
-.tree-category-name{flex:1;font-weight:500;color:#777;font-size:0.95rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.children-ul{margin-left:1.2rem;max-height:3000px;overflow:hidden;transition:max-height 0.25s ease,opacity 0.2s ease;opacity:1;}
-.children-ul.collapsed{max-height:0;opacity:0;}
-
-.api-row{display:flex;align-items:center;gap:0.4rem;padding:0.45rem 0.5rem;border-radius:6px;cursor:pointer;transition:background 0.2s;}
-.api-row:hover{background:#edf0f2;}
-.api-row.active{background:#e8f0fe;}
-.api-row .api-method{font-weight:600;font-size:0.82rem;min-width:48px;text-align:center;flex-shrink:0;}
-.api-row .api-name{flex:1;font-weight:300;color:#718096;font-size:0.9rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.api-row .status-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;margin-left:4px;}
-
-#main{flex:1;background:#fff;border-radius:12px;box-shadow:0 2px 12px rgba(0,0,0,0.08);margin:1rem 1rem 1rem 0;padding:1.5rem;overflow-y:auto;}
-#main .empty-hint{display:flex;align-items:center;justify-content:center;height:100%;color:#a0aec0;font-size:1.1rem;}
-
-/* ===== 复用 detail.html 预览区样式 ===== */
-.preview-container{display:flex;flex-direction:column;gap:1.5rem;}
-.preview-title{color:#2d3748;padding-bottom:0.5rem;text-align:left;border-bottom:transparent;margin:0.5rem 0;font-size:1.4rem;font-weight:600;}
-
-.url-status-div{display:flex;align-items:center;flex-wrap:wrap;padding:1rem 0;gap:0.5rem;margin-top:-3rem;}
-.url-span-display{display:inline-block;max-width:100%;padding:0.3rem 0.45rem;border-radius:12px;border:1px solid transparent;background:#f5f7fa!important;width:fit-content;overflow:hidden;}
-.method-span-display{display:inline-block;padding:0.3rem 0.45rem;border-radius:6px;border:1px solid transparent;color:#fff;font-weight:600;}
-.url-text-display{display:inline-block;max-width:100%;padding:0.3rem 0.45rem;border-radius:6px;border:1px solid transparent;background:transparent;color:#2d3748;}
-
-.status-span{position:relative;display:inline-flex;align-items:center;gap:0.35rem;font-size:0.95rem;padding:0.3rem 0.45rem;border:1px solid transparent;border-radius:6px;background:transparent;}
-.status-dot{width:6px;height:6px;border-radius:50%;}
-.status-option-list{display:none!important;}
-
-.api-info-div{display:flex;flex-wrap:wrap;align-items:center;gap:0.6rem 1.5rem;border:none;margin-bottom:1rem;}
-.api-info-item{display:inline-flex;align-items:center;gap:0.35rem;white-space:nowrap;}
-.api-info-label{color:#8f96a3;}
-.api-info-value{color:#000;}
-
-.preview-params-title{font-size:1rem;font-weight:600;color:#2d3748;margin-bottom:-0.5rem;margin-top:1.5rem;}
-.preview-params-div{border:1px solid #e8e8e8;border-radius:8px;padding:0.75rem;background:#fff;display:block;margin-bottom:0.5rem;}
-.preview-query-info,.preview-headers-info,.preview-body-info{display:flex;align-items:center;gap:0.5rem;margin-bottom:0.5rem;border-bottom:1px solid #e8e8e8;padding-bottom:0.5rem;}
-.query-title,.headers-title,.body-title{font-size:0.9rem;font-weight:600;color:#2d3748;}
-
-.params-list-display{list-style:none;padding:0.25rem 0;margin:0;}
-.params-list-display li{position:relative;display:flex;gap:0.75rem;align-items:center;padding:0.35rem 0;border:none;}
-.params-table-display{width:100%;border-collapse:collapse;margin-top:0.25rem;}
-.params-table-display tr{position:relative;display:flex;gap:0.75rem;align-items:center;padding:0.35rem 0;border:none;}
-.connector-cell{width:auto;color:#cbd5e0;white-space:pre;}
-
-.param-name-display{color:#62a3e9;background:rgba(66,153,225,0.08);padding:0.25rem 0.5rem;border-radius:6px;font-weight:550;font-size:0.8rem;width:fit-content;white-space:nowrap;display:inline-flex;align-items:center;justify-content:center;text-align:center;}
-.param-type-display,.param-explanation{color:#9aa3ad;font-size:0.9rem;}
-.param-is-necessary-display{position:absolute;color:#e57b3e;font-size:0.9rem;right:16rem;}
-.param-is-not-necessary-display{position:absolute;color:#9aa3ad;font-size:0.9rem;right:16rem;}
-.response-is-necessary-display{position:absolute;color:#e57b3e;font-size:0.9rem;right:1rem;}
-.response-is-not-necessary-display{position:absolute;color:#9aa3ad;font-size:0.9rem;right:1rem;}
-
-.response-label-container{display:flex;font-weight:600;}
-.response-label{display:flex;flex-direction:row;align-items:center;padding:0.5rem 0.7rem;border-top-left-radius:6px;border-top-right-radius:6px;border:1px solid #e8e8e8;border-bottom:transparent;color:#4a5568;font-size:0.92rem;}
-.response-fill-label{display:flex;border-bottom:1px solid #e8e8e8;flex:1;}
-.code-label,.name-label{padding:0.1rem;border:transparent;color:#4a5568;font-size:0.92rem;}
-
-.preview-response-container{display:flex;flex-direction:row;border:1px solid #e8e8e8;border-radius:0 6px 6px 6px;padding:0rem 0.75rem;margin-top:-1.5rem;background:#fff;border-top:transparent;}
-.response-preview-div{min-width:30rem;margin-top:0.75rem;margin-bottom:0.5rem;}
-.preview-response-info-label{margin-bottom:1rem;display:block;}
-.preview-type-label{display:inline-flex;align-items:center;justify-content:center;padding:0.25rem 0.6rem;border-radius:999px;background:#edf0f2;color:#4a5568;font-size:0.7rem;font-weight:550;white-space:nowrap;}
-.preview-type-without-bg{display:inline-flex;align-items:center;justify-content:center;padding:0.25rem 0.6rem;border-radius:999px;background:transparent;color:#9aa3ad;font-size:0.7rem;white-space:nowrap;}
-.response-json-example-div{flex:1;border-left:1px solid #e8e8e8;padding:0.75rem;background:#fff;}
-.response-json-pre{margin-top:0.75rem;font-family:Consolas,Monaco,'Courier New',monospace!important;font-size:1rem;}
-.response-no-label{color:#9aa3ad;font-size:0.9rem;}
-.response-error-label{color:#e53e3e;font-size:0.9rem;}
-
-/* JSON/XML 语法高亮 */
-.json-punct{color:#d4d4d4;}.json-key{color:#569cd6;}.json-string{color:#9cdcfe;}.json-number,.json-boolean,.json-null{color:#9cdcfe;}
-.xml-decl{color:#9cdcfe;}.xml-tag{color:#4ec96f;}.xml-punct{color:#d4d4d4;}.xml-text{color:#6a9955;}
-.response-xml-pre{margin-top:0.75rem;font-family:Consolas,Monaco,'Courier New',monospace!important;font-size:1rem;}
-
-::-webkit-scrollbar{width:6px;}
-::-webkit-scrollbar-thumb{background:#cbd5e0;border-radius:3px;}
-::-webkit-scrollbar-thumb:hover{background:#a0aec0;}
-
-@media(max-width:768px){body{flex-direction:column;}#sidebar{width:100%;min-width:unset;max-height:40vh;}#main{margin:0 1rem 1rem;}}
+${css}
 </style>
 </head>
 <body>
@@ -464,7 +481,7 @@ body{background:#f5f7fa;display:flex;height:100vh;overflow:hidden;}
     <div id="apiTreeContainer"></div>
 </div>
 
-<div id="main">
+<div id="main" class="export-container">
     <div class="empty-hint" id="emptyHint">← 点击左侧接口查看文档</div>
 ${previewBlocks}
 </div>

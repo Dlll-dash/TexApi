@@ -13,6 +13,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Set;
 
 @RestController
 @RequestMapping("/tex/response")
@@ -73,8 +74,9 @@ public class ResponseController {
     public Result updateBody(@RequestBody Response response){
         log.info("更新响应参数：{}",response);
         responseService.update(response);
-        String key="response_"+response.getId();
-        redisTemplate.opsForValue().set(key,response);
+//        String key="response_"+response.getId();
+//        redisTemplate.opsForValue().set(key,response);
+        clearCache("response_*");
         return Result.success();
     }
 
@@ -85,5 +87,12 @@ public class ResponseController {
         String key="response_list_"+response.getApiId();
         redisTemplate.delete(key);
         return Result.success();
+    }
+
+    private void clearCache(String pattern){
+        Set keys = redisTemplate.keys(pattern);
+        if(keys!=null&&keys.size()>0) {
+            redisTemplate.delete(keys);
+        }
     }
 }

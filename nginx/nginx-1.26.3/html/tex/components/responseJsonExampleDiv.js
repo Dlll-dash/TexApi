@@ -86,7 +86,7 @@ export function createResponseJsonExampleDiv(response,rightDiv) {
                                 obj[key]=replaceValues(obj[key].value);
                             } 
                         }else {
-                                obj[key]=typeExampleValue[obj[key].type]!==undefined?typeExampleValue[obj[key].type]:null;
+                                obj[key]=typeExampleValue[obj[key].type]!==undefined?typeExampleValue[obj[key].type]:obj[key];
 
                                 //obj[key]=obj[key].type
                         }
