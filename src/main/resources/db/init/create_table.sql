@@ -1,6 +1,3 @@
-create database if not exists tex_api DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-use tex_api;
-
 create table api
 (
     id             bigint auto_increment comment '接口ID'
@@ -66,8 +63,8 @@ create table request_params
     explanation  varchar(50)  null comment '说明',
     api_id       bigint       not null comment '所属接口id',
     format_type  varchar(20)  not null comment '格式类型(query，formData，urlencoded，json，header)',
-    is_necessary tinyint(1)   not null comment '是否必须',
-    is_checked   tinyint(1)   not null comment '是否被选中'
+    is_necessary tinyint(1)   null comment '是否必须',
+    is_checked   tinyint(1)   null comment '是否被选中'
 )
     comment 'Query请求参数表';
 

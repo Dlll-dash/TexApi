@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>接口</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+<style>
+ 
+
+     .export-container *:not(pre):not(pre *){
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
+        }
+
+        /* 页面背景（和主页一致） */
+        .export-container body {
+            background-color: #f5f7fa;
+            padding: 2rem 1rem;
+            display: flex;
+            gap: 1.5rem; /* 左侧列表和右侧区域的间距 */
+            min-height: 100vh; /* 铺满视口高度 */
+        }
+        /* 标题样式（和主页一致） */
+        .export-container h2 {
+            color: #2d3748;
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.2rem;
+            padding-bottom: 0.6rem;
+            border-bottom: 1px solid #e8e8e8;
+            text-align: center; 
+        }
+
+         .export-container h3 {
+            color: #2d3748;
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        .export-container h4 {
+            color: #4a5568;
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin: 1rem 0 0.5rem;
+        }
+        /* 文档预览窗口样式 */
+        
+        .export-container {
+            /* flex: 1; */
+            background-color: #ffffff;
+            border: 1px solid #e8e8e8;
+            border-radius: 8px;
+            padding: 1.5rem;
+            overflow-y: auto; /* 内容过多时显示滚动条 */
+            width: 75%;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+            margin: 0 auto; /* 居中 */
+        }
+
+        .export-container .preview-container {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+         .export-container .api-info-div {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 0.6rem 1.5rem;
+            /* margin-top: 0.5rem; */
+            border: none;
+        }
+
+         .export-container .api-info-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            white-space: nowrap;
+        }
+
+        .export-container .api-info-label {
+            color: #8f96a3;
+        }
+
+        .export-container .api-info-value {
+            color: #000000;
+        }
+
+        .export-container .preview-title {
+            color: #2d3748;
+            padding-bottom: 0.5rem;
+            text-align: left;
+            border-bottom: transparent; 
+            margin-top: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+         .export-container .url-status-div {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            padding-top: 1rem;
+            padding-bottom: 1rem;
+            gap: 0.5rem;
+            margin-top: -3rem; 
+        }
+
+        .export-container .url-span-display {
+            display: inline-block;
+            max-width: 100%;
+            padding: 0.3rem 0.45rem;
+            border-radius: 12px;
+            border: 1px solid transparent;
+            background-color: #f5f7fa !important;
+            width: fit-content;
+            overflow: hidden;
+            
+        }
+        
+        .export-container .method-span-display {
+            display: inline-block;
+            padding: 0.3rem 0.45rem;
+            border-radius: 6px;
+            border: 1px solid transparent;
+            color: #ffffff;
+            font-weight: 600;
+        }
+
+        .export-container .url-text-display {
+            display: inline-block;
+            max-width: 100%;
+            padding: 0.3rem 0.45rem;
+            border-radius: 6px;
+            border: 1px solid transparent;
+            background-color: transparent;
+            color: #2d3748;
+        }
+
+        /* Preview request-params styles */
+        .export-container .preview-params-title, .export-container .preview-explanation-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: -0.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .export-container .preview-params-div {
+            border: 1px solid #e8e8e8;
+            border-radius: 8px;
+            padding: 0.75rem;
+            /* margin-top: -1rem; */
+            background-color: #ffffff;
+            display: none; /* 默认隐藏，只有在有参数时才显示 */
+        }
+
+        .export-container .preview-explanation-div{
+            /* border: 1px solid #e8e8e8; */
+            border-radius: 8px;
+            padding: 0.75rem;
+            color:#333333;
+            background-color: transparent;
+        }
+
+        .export-container .preview-body-info,.export-container .preview-query-info,.export-container .preview-headers-info {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+            border-bottom: 1px solid #e8e8e8;
+            padding-bottom: 0.5rem;
+        }
+
+        .export-container .body-title,.export-container .query-title,.export-container .headers-title {
+            display: block;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #2d3748;
+            /* padding-bottom: 0.5rem; */
+            
+            /* margin-bottom: 0.5rem; */
+        }
+        
+        .export-container .response-label-container {
+            display: flex;
+            font-weight: 600;
+            /* align-items: center; */
+            /* border-bottom: 1px solid #edf0f2; */
+            padding-bottom: 0.5rem;
+            /* margin-bottom: 0.2rem; */
+        }
+
+        .export-container .response-label {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            padding: 0.5rem 0.7rem;
+            border-top-left-radius: 6px;
+            border-top-right-radius: 6px;
+            border: 1px solid #e8e8e8;
+            border-bottom: transparent;
+            color: #4a5568;
+            background-color: #ffffff;
+            font-size: 0.92rem;
+        }
+
+        .export-container .code-label,
+        .export-container .name-label {
+            padding: 0.1rem;
+            border: transparent;
+            color: #4a5568;
+            font-size: 0.92rem;
+        }
+
+        .export-container .export-btn{
+            display: none;
+        }
+        .export-container .response-fill-label {
+           
+            display: flex;
+            border-bottom: 1px solid #e8e8e8;
+            flex: 1;
+            
+        }
+
+         .export-container .preview-type-label {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.25rem 0.6rem;
+            border-radius: 999px;
+            background-color: #edf0f2;
+            color: #4a5568;
+            font-size: 0.7rem;
+            font-weight: 550;
+            white-space: nowrap;
+        }
+        .export-container .preview-type-without-bg{
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.25rem 0.6rem;
+            border-radius: 999px;
+            background-color: transparent;
+            color: #9aa3ad;
+            font-size: 0.7rem;
+            /* font-weight: 550; */
+            white-space: nowrap;
+        }
+
+        .export-container .params-list-display {
+            list-style: none;
+            padding: 0.25rem 0;
+            margin: 0;
+        }
+
+        .export-container .params-list-display li {
+            position: relative;
+            display: flex;
+            gap: 0.75rem;
+            align-items: center;
+            padding: 0.35rem 0;
+            border: none; /* no inner borders between items */
+        }
+        .export-container .params-table-display {
+            width: 100%;
+            padding: 0.25rem 0;
+            border-collapse: collapse;
+            margin-top: 0.25rem;
+        }
+
+        /* .params-table-display td {
+            padding: 0.35rem 0.5rem;
+            vertical-align: middle;
+            border: none; 
+        } */
+
+        .export-container .connector-cell {
+            width: auto;
+            color: #cbd5e0;
+            white-space: pre;
+             /* 保持空格格式 */
+            /* text-align: center; */
+        }
+
+        .export-container .params-table-display tr {
+            position: relative;
+            display: flex;
+            gap: 0.75rem;
+            align-items: center;
+            padding: 0.35rem 0;
+            border: none; /* no inner borders between items */
+        }
+
+         .export-container .param-name-display {
+            color: #62a3e9; /* blue */
+            background-color: rgba(66,153,225,0.08); /* translucent blue */
+            padding: 0.25rem 0.5rem;
+            border-radius: 6px;
+            font-weight: 550;
+            font-size: 0.8rem;
+            width: fit-content;
+            min-width: unset;
+            white-space: nowrap;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+
+        .export-container .param-type-display,
+        .export-container .param-explanation {
+            color: #9aa3ad; /* light gray */
+            font-size: 0.9rem;
+        }
+        .export-container .param-is-necessary-display{
+            position: absolute;
+            color: #e57b3e; /* red */
+            font-size: 0.9rem;
+            right: 16rem;
+        }
+        .export-container .param-is-not-necessary-display{
+            position: absolute;
+            color: #9aa3ad; /* light gray */
+            font-size: 0.9rem;
+            right: 16rem;
+        }
+        .export-container .no-params-message {
+            font-size: 0.9rem;
+            color: #718096;
+            padding: 0.25rem 0;
+            display: inline-block;
+        }
+
+        .export-container .preview-response-container {
+            display: flex;
+            flex-direction: row;
+            border: 1px solid #e8e8e8;
+            border-bottom-left-radius: 6px;
+            border-top-right-radius: 6px;
+            border-bottom-right-radius: 6px;
+            border-top: transparent;
+            padding-left: 0.75rem;  
+            margin-top: -2rem;
+            background-color: #ffffff;
+        }
+
+        .export-container .response-preview-div{
+            min-width: 30rem;
+            margin-top: 0.75rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .export-container .response-is-necessary-display{
+            position: absolute;
+            color: #e57b3e; /* red */
+            font-size: 0.9rem;
+            right: 1rem;
+        }
+        .export-container .response-no-label{
+            
+            color: #9aa3ad; /* light gray */
+            font-size: 0.9rem;
+  
+        }
+
+        .export-container .response-is-not-necessary-display{
+            position: absolute;
+            color: #9aa3ad; /* light gray */
+            font-size: 0.9rem;
+            right: 1rem;
+        }
+
+        .export-container .preview-response-info-label{
+            margin-bottom: 1rem;
+        }
+
+        .export-container .response-json-example-div {
+            flex: 1;
+            width: 20rem;
+            border-left: 1px solid #e8e8e8;
+            border-top-right-radius: 6px;
+            border-bottom-right-radius: 6px;
+            padding: 0.75rem;
+            background-color: #ffffff;
+        }
+        .export-container .response-json-pre {
+            margin-top: 0.75rem; 
+            font-family: Consolas, Monaco, 'Courier New', monospace !important;
+            font-size: 1rem;
+        }
+        .export-container .json-punct { color: #d4d4d4; }
+        .export-container .json-key { color: #569cd6;  }
+        .export-container .json-string { color: #9cdcfe; }
+        .export-container .json-number, .export-container .json-boolean, .export-container .json-null { color: #9cdcfe; }
+    
+        .export-container .xml-decl { color: #9cdcfe; }
+        .export-container .xml-tag { color: #4ec96f; }
+        .export-container .xml-punct { color: #d4d4d4; }
+        .export-container .xml-text { color: #6a9955; }
+        .export-container .response-xml-pre {
+            margin-top: 0.75rem;
+            font-family: Consolas, Monaco, 'Courier New', monospace !important;
+            font-size: 1rem;
+        }
+
+        /* ===== 批量导出：侧边栏 + 主内容区布局 ===== */
+        *:not(pre):not(pre *){margin:0;padding:0;box-sizing:border-box;font-family:"Microsoft YaHei","PingFang SC",sans-serif;}
+        body{background:#f5f7fa;display:flex;height:100vh;overflow:hidden;}
+
+        #sidebar{width:300px;min-width:260px;background:#fff;border-radius:12px;box-shadow:0 2px 12px rgba(0,0,0,0.08);margin:1rem;padding:1.2rem;display:flex;flex-direction:column;overflow:hidden;}
+        #sidebar h3{color:#2d3748;font-size:1.1rem;font-weight:600;margin-bottom:0.8rem;padding-bottom:0.5rem;border-bottom:1px solid #e8e8e8;text-align:center;display:flex;align-items:center;gap:0.4rem;justify-content:center;}
+        #apiTreeContainer{flex:1;overflow-y:auto;}
+        #apiTreeContainer ul{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:0.1rem;}
+
+        .tree-category-row{display:flex;align-items:center;gap:0.35rem;padding:0.45rem 0.5rem;border-radius:6px;cursor:pointer;transition:background 0.2s;user-select:none;}
+        .tree-category-row:hover{background:#edf0f2;}
+        .tree-arrow{width:1rem;display:inline-flex;align-items:center;justify-content:center;color:#718096;font-size:0.7rem;flex-shrink:0;}
+        .tree-folder{width:1rem;display:inline-flex;align-items:center;justify-content:center;color:#718096;font-size:0.9rem;flex-shrink:0;}
+        .tree-category-name{flex:1;font-weight:500;color:#777;font-size:0.95rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+        .children-ul{margin-left:1.2rem;max-height:3000px;overflow:hidden;transition:max-height 0.25s ease,opacity 0.2s ease;opacity:1;}
+        .children-ul.collapsed{max-height:0;opacity:0;}
+
+        .api-row{display:flex;align-items:center;gap:0.4rem;padding:0.45rem 0.5rem;border-radius:6px;cursor:pointer;transition:background 0.2s;}
+        .api-row:hover{background:#edf0f2;}
+        .api-row.active{background:#e8f0fe;}
+        .api-row .api-method{font-weight:600;font-size:0.82rem;min-width:48px;text-align:center;flex-shrink:0;}
+        .api-row .api-name{flex:1;font-weight:300;color:#718096;font-size:0.9rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+        .api-row .status-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;margin-left:4px;}
+
+        #main{flex:1;background:#fff;border-radius:12px;box-shadow:0 2px 12px rgba(0,0,0,0.08);margin:1rem 1rem 1rem 0;padding:1.5rem;overflow-y:auto;}
+        #main .empty-hint{display:flex;align-items:center;justify-content:center;height:100%;color:#a0aec0;font-size:1.1rem;}
+    
+</style>
+</head>
+<body>
+
+<div id="sidebar">
+    <h3><i class="bi bi-folder2-open"></i> 接口</h3>
+    <div id="apiTreeContainer"></div>
+</div>
+
+<div id="main" class="export-container">
+    <div class="empty-hint" id="emptyHint">← 点击左侧接口查看文档</div>
+<div class="api-preview" id="preview-0" style="display:none"><div class="preview-container"><h2 class="preview-title">修改接口</h2><div class="url-status-div"><span class="url-span-display"><span class="method-span-display" style="background-color: rgba(23, 150, 200, 0.796);">PUT</span><span class="url-text-display">http://localhost/tex/api/updateInfo</span></span><span class="status-span" data-status="1"><ul class="status-option-list" style="display: none;"><li class="status-option-item" data-status-value="0"><span style="color: rgb(229, 62, 62);">●  </span><span>维护中</span></li><li class="status-option-item" data-status-value="1"><span style="color: rgb(62, 154, 229);">●  </span><span>开发中</span></li><li class="status-option-item" data-status-value="2"><span style="color: rgb(72, 187, 120);">●  </span><span>已发布</span></li></ul><span style="color: rgb(62, 154, 229);">●  </span><span>开发中</span></span></div><div class="api-info-div"><span class="api-info-item"><span class="api-info-label">创建时间</span><span class="api-info-value">2026年5月9日</span></span><span class="api-info-item"><span class="api-info-label">修改时间</span><span class="api-info-value">2026年7月14日</span></span><span class="api-info-item"><span class="api-info-label">修改者</span><span class="api-info-value">Kason</span></span><span class="api-info-item"><span class="api-info-label">创建者</span><span class="api-info-value">Kason</span></span><span class="api-info-item"><span class="api-info-label">责任人</span><span class="api-info-value">Kason</span></span></div><h3 class="preview-explanation-title">接口说明</h3><div class="preview-explanation-div">修改接口信息</div><h3 class="preview-params-title">请求参数</h3><div class="preview-params-div" style="display: block;"><span class="preview-headers-info"><span class="headers-title">Headers 参数</span></span><ul class="params-list-display"><li><span class="param-name-display">token</span><span class="param-type-display">string</span><span class="param-explanation"> </span><span class="param-is-not-necessary-display">可选</span></li></ul></div><div class="preview-params-div" style="display: block;"><span class="preview-body-info"><span class="body-title">Body 参数</span><span class="preview-type-label">application/json</span></span><div class="preview-response-container" style="border-width: medium; border-style: none; border-color: currentcolor; border-image: none; margin-top: 0px; border-radius: 6px;"><div class="response-preview-div" style="min-width: unset; flex: 1 1 0%;"><ul class="params-list-display"><li><span class="param-name-display">Json</span><span class="param-type-display">json</span><span class="param-explanation"> </span></li></ul></div><div class="response-json-example-div"><span class="body-title">示例</span><pre class="response-json-pre"><span class="json-punct">{</span>
+  <span class="json-key">"id"</span><span class="json-punct">: </span> <span class="json-number">11</span><span class="json-punct">,</span>
+  <span class="json-key">"apiName"</span><span class="json-punct">: </span> <span class="json-string">"修改接口"</span><span class="json-punct">,</span>
+  <span class="json-key">"explanation"</span><span class="json-punct">: </span> <span class="json-string">"无"</span><span class="json-punct">,</span>
+  <span class="json-key">"status"</span><span class="json-punct">: </span> <span class="json-number">1</span><span class="json-punct">,</span>
+  <span class="json-key">"inChargeUser"</span><span class="json-punct">: </span> <span class="json-string">"无"</span>
+<span class="json-punct">}</span></pre></div></div></div><h3 class="preview-params-title">返回响应</h3><div class="response-label-container"><span class="response-label"><span class="code-label" style="color: rgb(113, 234, 170);">200</span><span class="name-label">成功</span></span><span class="response-fill-label"></span></div><div class="preview-response-container"><div class="response-preview-div"><span class="preview-response-info-label"><span class="preview-type-label">HTTP 状态码: 200</span><span class="preview-type-without-bg">application/json</span></span><ul class="params-list-display"><li class="response-no-label">该接口没有响应体</li></ul></div><div class="response-json-example-div"><span class="body-title">示例</span><pre class="response-json-pre"><span class="json-punct">{</span><span class="json-punct">}</span></pre></div></div></div></div>
+<div class="api-preview" id="preview-1" style="display:none"><div class="preview-container"><h2 class="preview-title">获取接口</h2><div class="url-status-div"><span class="url-span-display"><span class="method-span-display" style="background-color: rgba(49, 231, 43, 0.72);">GET</span><span class="url-text-display">http://localhost/tex/api/list/1</span></span><span class="status-span" data-status="1"><ul class="status-option-list" style="display: none;"><li class="status-option-item" data-status-value="0"><span style="color: rgb(229, 62, 62);">●  </span><span>维护中</span></li><li class="status-option-item" data-status-value="1"><span style="color: rgb(62, 154, 229);">●  </span><span>开发中</span></li><li class="status-option-item" data-status-value="2"><span style="color: rgb(72, 187, 120);">●  </span><span>已发布</span></li></ul><span style="color: rgb(62, 154, 229);">●  </span><span>开发中</span></span></div><div class="api-info-div"><span class="api-info-item"><span class="api-info-label">创建时间</span><span class="api-info-value">2026年5月9日</span></span><span class="api-info-item"><span class="api-info-label">修改时间</span><span class="api-info-value">2026年7月14日</span></span><span class="api-info-item"><span class="api-info-label">修改者</span><span class="api-info-value">Kason</span></span><span class="api-info-item"><span class="api-info-label">创建者</span><span class="api-info-value">Kason</span></span><span class="api-info-item"><span class="api-info-label">责任人</span><span class="api-info-value">未设置</span></span></div><h3 class="preview-explanation-title">接口说明</h3><div class="preview-explanation-div">获取项目id为1的接口列表</div><h3 class="preview-params-title">请求参数</h3><div class="preview-params-div" style="display: block;"><span class="preview-headers-info"><span class="headers-title">Headers 参数</span></span><ul class="params-list-display"><li><span class="param-name-display">token</span><span class="param-type-display">string</span><span class="param-explanation"> </span><span class="param-is-not-necessary-display">可选</span></li></ul></div><h3 class="preview-params-title">返回响应</h3><div class="response-label-container"><span class="response-label"><span class="code-label" style="color: rgb(113, 234, 170);">200</span><span class="name-label">成功</span></span><span class="response-fill-label"></span></div><div class="preview-response-container"><div class="response-preview-div"><span class="preview-response-info-label"><span class="preview-type-label">HTTP 状态码: 200</span><span class="preview-type-without-bg">application/json</span></span><ul class="params-list-display"><li class="response-no-label">该接口没有响应体</li></ul></div><div class="response-json-example-div"><span class="body-title">示例</span><pre class="response-json-pre"><span class="json-punct">{</span><span class="json-punct">}</span></pre></div></div></div></div>
+<div class="api-preview" id="preview-2" style="display:none"><div class="preview-container"><h2 class="preview-title">新增接口</h2><div class="url-status-div"><span class="url-span-display"><span class="method-span-display" style="background-color: rgba(232, 125, 12, 0.894);">POST</span><span class="url-text-display">http://localhost/tex/api/add</span></span><span class="status-span" data-status="1"><ul class="status-option-list" style="display: none;"><li class="status-option-item" data-status-value="0"><span style="color: rgb(229, 62, 62);">●  </span><span>维护中</span></li><li class="status-option-item" data-status-value="1"><span style="color: rgb(62, 154, 229);">●  </span><span>开发中</span></li><li class="status-option-item" data-status-value="2"><span style="color: rgb(72, 187, 120);">●  </span><span>已发布</span></li></ul><span style="color: rgb(62, 154, 229);">●  </span><span>开发中</span></span></div><div class="api-info-div"><span class="api-info-item"><span class="api-info-label">创建时间</span><span class="api-info-value">2026年6月30日</span></span><span class="api-info-item"><span class="api-info-label">修改时间</span><span class="api-info-value">2026年7月14日</span></span><span class="api-info-item"><span class="api-info-label">修改者</span><span class="api-info-value">Kason</span></span><span class="api-info-item"><span class="api-info-label">创建者</span><span class="api-info-value">Kason</span></span><span class="api-info-item"><span class="api-info-label">责任人</span><span class="api-info-value">未设置</span></span></div><h3 class="preview-explanation-title">接口说明</h3><div class="preview-explanation-div">新增一个接口</div><h3 class="preview-params-title">请求参数</h3><div class="preview-params-div" style="display: block;"><span class="preview-headers-info"><span class="headers-title">Headers 参数</span></span><ul class="params-list-display"><li><span class="param-name-display">token</span><span class="param-type-display">string</span><span class="param-explanation"> </span><span class="param-is-necessary-display">必需</span></li></ul></div><div class="preview-params-div" style="display: block;"><span class="preview-body-info"><span class="body-title">Body 参数</span><span class="preview-type-label">application/json</span></span><div class="preview-response-container" style="border-width: medium; border-style: none; border-color: currentcolor; border-image: none; margin-top: 0px; border-radius: 6px;"><div class="response-preview-div" style="min-width: unset; flex: 1 1 0%;"><ul class="params-list-display"><li><span class="param-name-display">Json</span><span class="param-type-display">json</span><span class="param-explanation"> </span></li></ul></div><div class="response-json-example-div"><span class="body-title">示例</span><pre class="response-json-pre"><span class="json-punct">{</span>
+  <span class="json-key">"projectId"</span><span class="json-punct">: </span> <span class="json-number">1</span><span class="json-punct">,</span>
+  <span class="json-key">"apiName"</span><span class="json-punct">: </span> <span class="json-string">"未命名接口"</span><span class="json-punct">,</span>
+  <span class="json-key">"requestMethod"</span><span class="json-punct">: </span> <span class="json-string">"GET"</span><span class="json-punct">,</span>
+  <span class="json-key">"status"</span><span class="json-punct">: </span> <span class="json-number">0</span>
+<span class="json-punct">}</span></pre></div></div></div><h3 class="preview-params-title">返回响应</h3><div class="response-label-container"><span class="response-label"><span class="code-label" style="color: rgb(113, 234, 170);">200</span><span class="name-label">成功</span></span><span class="response-fill-label"></span></div><div class="preview-response-container"><div class="response-preview-div"><span class="preview-response-info-label"><span class="preview-type-label">HTTP 状态码: 200</span><span class="preview-type-without-bg">application/json</span></span><table class="params-table-display" style="width: 100%; border-collapse: collapse;"><tbody><tr><td class="param-name-display">id</td><td class="param-type-display">Integer</td><td class="param-explanation">主键id</td><td class="response-is-necessary-display">必需</td></tr><tr><td class="param-name-display">projectId</td><td class="param-type-display">Integer</td><td class="param-explanation">项目id</td><td class="response-is-necessary-display">必需</td></tr><tr><td class="param-name-display">apiName</td><td class="param-type-display">String</td><td class="param-explanation">接口名</td><td class="response-is-not-necessary-display">可选</td></tr></tbody></table></div><div class="response-json-example-div"><span class="body-title">示例</span><pre class="response-json-pre"><span class="json-punct">{</span>
+  <span class="json-key">"id"</span><span class="json-punct">: </span> <span class="json-punct">{</span>
+    <span class="json-key">"type"</span><span class="json-punct">: </span> <span class="json-string">"Integer"</span><span class="json-punct">,</span>
+    <span class="json-key">"explanation"</span><span class="json-punct">: </span> <span class="json-string">"主键id"</span><span class="json-punct">,</span>
+    <span class="json-key">"isNecessary"</span><span class="json-punct">: </span> <span class="json-boolean">true</span><span class="json-punct">,</span>
+    <span class="json-key">"value"</span><span class="json-punct">: </span> <span class="json-string">"1"</span>
+  <span class="json-punct">}</span><span class="json-punct">,</span>
+  <span class="json-key">"projectId"</span><span class="json-punct">: </span> <span class="json-punct">{</span>
+    <span class="json-key">"type"</span><span class="json-punct">: </span> <span class="json-string">"Integer"</span><span class="json-punct">,</span>
+    <span class="json-key">"explanation"</span><span class="json-punct">: </span> <span class="json-string">"项目id"</span><span class="json-punct">,</span>
+    <span class="json-key">"isNecessary"</span><span class="json-punct">: </span> <span class="json-boolean">true</span><span class="json-punct">,</span>
+    <span class="json-key">"value"</span><span class="json-punct">: </span> <span class="json-string">"1"</span>
+  <span class="json-punct">}</span><span class="json-punct">,</span>
+  <span class="json-key">"apiName"</span><span class="json-punct">: </span> <span class="json-punct">{</span>
+    <span class="json-key">"type"</span><span class="json-punct">: </span> <span class="json-string">"String"</span><span class="json-punct">,</span>
+    <span class="json-key">"explanation"</span><span class="json-punct">: </span> <span class="json-string">"接口名"</span><span class="json-punct">,</span>
+    <span class="json-key">"isNecessary"</span><span class="json-punct">: </span> <span class="json-boolean">false</span><span class="json-punct">,</span>
+    <span class="json-key">"value"</span><span class="json-punct">: </span> <span class="json-string">"新增接口"</span>
+  <span class="json-punct">}</span>
+<span class="json-punct">}</span></pre></div></div></div></div>
+<div class="api-preview" id="preview-3" style="display:none"><div class="preview-container"><h2 class="preview-title">删除接口</h2><div class="url-status-div"><span class="url-span-display"><span class="method-span-display" style="background-color: rgba(219, 10, 10, 0.867);">DELETE</span><span class="url-text-display">http://localhost/tex/api/delete/30</span></span><span class="status-span" data-status="0"><ul class="status-option-list" style="display: none;"><li class="status-option-item" data-status-value="0"><span style="color: rgb(229, 62, 62);">●  </span><span>维护中</span></li><li class="status-option-item" data-status-value="1"><span style="color: rgb(62, 154, 229);">●  </span><span>开发中</span></li><li class="status-option-item" data-status-value="2"><span style="color: rgb(72, 187, 120);">●  </span><span>已发布</span></li></ul><span style="color: rgb(229, 62, 62);">●  </span><span>维护中</span></span></div><div class="api-info-div"><span class="api-info-item"><span class="api-info-label">创建时间</span><span class="api-info-value">2026年5月9日</span></span><span class="api-info-item"><span class="api-info-label">修改时间</span><span class="api-info-value">2026年7月14日</span></span><span class="api-info-item"><span class="api-info-label">修改者</span><span class="api-info-value">Kason</span></span><span class="api-info-item"><span class="api-info-label">创建者</span><span class="api-info-value">Kason</span></span><span class="api-info-item"><span class="api-info-label">责任人</span><span class="api-info-value">未设置</span></span></div><h3 class="preview-explanation-title">接口说明</h3><div class="preview-explanation-div">删除id为30的接口</div><h3 class="preview-params-title">请求参数</h3><div class="preview-params-div" style="display: block;"><span class="preview-headers-info"><span class="headers-title">Headers 参数</span></span><ul class="params-list-display"><li><span class="param-name-display">token</span><span class="param-type-display">string</span><span class="param-explanation"> </span><span class="param-is-necessary-display">必需</span></li></ul></div><h3 class="preview-params-title">返回响应</h3><div class="response-label-container"><span class="response-label"><span class="code-label" style="color: rgb(113, 234, 170);">200</span><span class="name-label">成功</span></span><span class="response-fill-label"></span></div><div class="preview-response-container"><div class="response-preview-div"><span class="preview-response-info-label"><span class="preview-type-label">HTTP 状态码: 200</span><span class="preview-type-without-bg">application/json</span></span><ul class="params-list-display"><li class="response-no-label">该接口没有响应体</li></ul></div><div class="response-json-example-div"><span class="body-title">示例</span><pre class="response-json-pre"><span class="json-punct">{</span><span class="json-punct">}</span></pre></div></div></div></div>
+<div class="api-preview" id="preview-4" style="display:none"><div class="preview-container"><h2 class="preview-title">用户登录</h2><div class="url-status-div"><span class="url-span-display"><span class="method-span-display" style="background-color: rgba(49, 231, 43, 0.72);">GET</span><span class="url-text-display">http://localhost/tex/login</span></span><span class="status-span" data-status="1"><ul class="status-option-list" style="display: none;"><li class="status-option-item" data-status-value="0"><span style="color: rgb(229, 62, 62);">●  </span><span>维护中</span></li><li class="status-option-item" data-status-value="1"><span style="color: rgb(62, 154, 229);">●  </span><span>开发中</span></li><li class="status-option-item" data-status-value="2"><span style="color: rgb(72, 187, 120);">●  </span><span>已发布</span></li></ul><span style="color: rgb(62, 154, 229);">●  </span><span>开发中</span></span></div><div class="api-info-div"><span class="api-info-item"><span class="api-info-label">创建时间</span><span class="api-info-value">2026年7月14日</span></span><span class="api-info-item"><span class="api-info-label">修改时间</span><span class="api-info-value">2026年7月14日</span></span><span class="api-info-item"><span class="api-info-label">修改者</span><span class="api-info-value">Kason</span></span><span class="api-info-item"><span class="api-info-label">创建者</span><span class="api-info-value">Kason</span></span><span class="api-info-item"><span class="api-info-label">责任人</span><span class="api-info-value">未设置</span></span></div><h3 class="preview-explanation-title">接口说明</h3><div class="preview-explanation-div">用户登录接口</div><h3 class="preview-params-title">请求参数</h3><div class="preview-params-div" style="display: block;"><span class="preview-body-info"><span class="body-title">Body 参数</span><span class="preview-type-label">application/json</span></span><div class="preview-response-container" style="border-width: medium; border-style: none; border-color: currentcolor; border-image: none; margin-top: 0px; border-radius: 6px;"><div class="response-preview-div" style="min-width: unset; flex: 1 1 0%;"><ul class="params-list-display"><li><span class="param-name-display">Json</span><span class="param-type-display">json</span><span class="param-explanation"> </span></li></ul></div><div class="response-json-example-div"><span class="body-title">示例</span><pre class="response-json-pre"><span class="json-punct">{</span>
+  <span class="json-key">"userName"</span><span class="json-punct">: </span> <span class="json-string">"kason"</span><span class="json-punct">,</span>
+  <span class="json-key">"password"</span><span class="json-punct">: </span> <span class="json-string">"123456"</span>
+<span class="json-punct">}</span></pre></div></div></div><h3 class="preview-params-title">返回响应</h3><div class="response-label-container"><span class="response-label"><span class="code-label" style="color: rgb(113, 234, 170);">200</span><span class="name-label">成功</span></span><span class="response-fill-label"></span></div><div class="preview-response-container"><div class="response-preview-div"><span class="preview-response-info-label"><span class="preview-type-label">HTTP 状态码: 200</span><span class="preview-type-without-bg">application/json</span></span><table class="params-table-display" style="width: 100%; border-collapse: collapse;"><tbody><tr><td class="param-name-display">UserLoginVO</td><td class="param-type-display">object</td><td class="param-explanation"></td><td class="response-is-necessary-display">必需</td></tr><tr><td class="connector-cell">├─</td><td class="param-name-display">id</td><td class="param-type-display">integer</td><td class="param-explanation">用户id</td><td class="response-is-necessary-display">必需</td></tr><tr><td class="connector-cell">├─</td><td class="param-name-display">userName</td><td class="param-type-display">string</td><td class="param-explanation">用户名</td><td class="response-is-necessary-display">必需</td></tr><tr><td class="connector-cell">├─</td><td class="param-name-display">name</td><td class="param-type-display">string</td><td class="param-explanation">用户昵称</td><td class="response-is-necessary-display">必需</td></tr><tr><td class="connector-cell">└─</td><td class="param-name-display">token</td><td class="param-type-display">string</td><td class="param-explanation">JWT令牌</td><td class="response-is-necessary-display">必需</td></tr></tbody></table></div><div class="response-json-example-div"><span class="body-title">示例</span><pre class="response-json-pre"><span class="json-punct">{</span>
+  <span class="json-key">"UserLoginVO"</span><span class="json-punct">: </span> <span class="json-punct">{</span>
+    <span class="json-key">"id"</span><span class="json-punct">: </span> <span class="json-number">1</span><span class="json-punct">,</span>
+    <span class="json-key">"userName"</span><span class="json-punct">: </span> <span class="json-string">"string"</span><span class="json-punct">,</span>
+    <span class="json-key">"name"</span><span class="json-punct">: </span> <span class="json-string">"string"</span><span class="json-punct">,</span>
+    <span class="json-key">"token"</span><span class="json-punct">: </span> <span class="json-string">"string"</span>
+  <span class="json-punct">}</span>
+<span class="json-punct">}</span></pre></div></div></div></div>
+<div class="api-preview" id="preview-5" style="display:none"><div class="preview-container"><h2 class="preview-title">测试接口</h2><div class="url-status-div"><span class="url-span-display"><span class="method-span-display" style="background-color: rgba(49, 231, 43, 0.72);">GET</span><span class="url-text-display">https://httpbin.org/get</span></span><span class="status-span" data-status="1"><ul class="status-option-list" style="display: none;"><li class="status-option-item" data-status-value="0"><span style="color: rgb(229, 62, 62);">●  </span><span>维护中</span></li><li class="status-option-item" data-status-value="1"><span style="color: rgb(62, 154, 229);">●  </span><span>开发中</span></li><li class="status-option-item" data-status-value="2"><span style="color: rgb(72, 187, 120);">●  </span><span>已发布</span></li></ul><span style="color: rgb(62, 154, 229);">●  </span><span>开发中</span></span></div><div class="api-info-div"><span class="api-info-item"><span class="api-info-label">创建时间</span><span class="api-info-value">2026年3月13日</span></span><span class="api-info-item"><span class="api-info-label">修改时间</span><span class="api-info-value">2026年7月14日</span></span><span class="api-info-item"><span class="api-info-label">修改者</span><span class="api-info-value">Kason</span></span><span class="api-info-item"><span class="api-info-label">创建者</span><span class="api-info-value">Kason</span></span><span class="api-info-item"><span class="api-info-label">责任人</span><span class="api-info-value">Kason</span></span></div><h3 class="preview-explanation-title">接口说明</h3><div class="preview-explanation-div">这是一个测试接口</div><h3 class="preview-params-title">请求参数</h3><div class="preview-params-div" style="display: block;"><span class="preview-query-info"><span class="query-title">Query 参数</span></span><ul class="params-list-display"><li><span class="param-name-display">id</span><span class="param-type-display">integer</span><span class="param-explanation"> 主键</span><span class="param-is-necessary-display">必需</span></li><li><span class="param-name-display">name</span><span class="param-type-display">string</span><span class="param-explanation"> 姓名</span><span class="param-is-not-necessary-display">可选</span></li><li><span class="param-name-display">gender</span><span class="param-type-display">string</span><span class="param-explanation"> </span><span class="param-is-not-necessary-display">可选</span></li></ul></div><div class="preview-params-div" style="display: block;"><span class="preview-headers-info"><span class="headers-title">Headers 参数</span></span><ul class="params-list-display"><li><span class="param-name-display">token</span><span class="param-type-display">string</span><span class="param-explanation"> 身份令牌</span><span class="param-is-necessary-display">必需</span></li></ul></div><h3 class="preview-params-title">返回响应</h3><div class="response-label-container"><span class="response-label"><span class="code-label" style="color: rgb(113, 234, 170);">200</span><span class="name-label">成功</span></span><span class="response-fill-label"></span></div><div class="preview-response-container"><div class="response-preview-div"><span class="preview-response-info-label"><span class="preview-type-label">HTTP 状态码: 200</span><span class="preview-type-without-bg">application/json</span></span><table class="params-table-display" style="width: 100%; border-collapse: collapse;"><tbody><tr><td class="param-name-display">args</td><td class="param-type-display">object</td><td class="param-explanation">父节点</td><td class="response-is-not-necessary-display">可选</td></tr><tr><td class="connector-cell">├─</td><td class="param-name-display">gender</td><td class="param-type-display">string</td><td class="param-explanation"></td><td class="response-is-necessary-display">必需</td></tr><tr><td class="connector-cell">├─</td><td class="param-name-display">id</td><td class="param-type-display">string</td><td class="param-explanation"></td><td class="response-is-necessary-display">必需</td></tr><tr><td class="connector-cell">└─</td><td class="param-name-display">name</td><td class="param-type-display">string</td><td class="param-explanation"></td><td class="response-is-necessary-display">必需</td></tr><tr><td class="param-name-display">neighbor</td><td class="param-type-display">object</td><td class="param-explanation"></td><td class="response-is-necessary-display">必需</td></tr></tbody></table></div><div class="response-json-example-div"><span class="body-title">示例</span><pre class="response-json-pre"><span class="json-punct">{</span>
+  <span class="json-key">"args"</span><span class="json-punct">: </span> <span class="json-punct">{</span>
+    <span class="json-key">"gender"</span><span class="json-punct">: </span> <span class="json-string">"string"</span><span class="json-punct">,</span>
+    <span class="json-key">"id"</span><span class="json-punct">: </span> <span class="json-string">"string"</span><span class="json-punct">,</span>
+    <span class="json-key">"name"</span><span class="json-punct">: </span> <span class="json-string">"string"</span>
+  <span class="json-punct">}</span><span class="json-punct">,</span>
+  <span class="json-key">"neighbor"</span><span class="json-punct">: </span> <span class="json-punct">{</span><span class="json-punct">}</span>
+<span class="json-punct">}</span></pre></div></div></div></div>
+<div class="api-preview" id="preview-6" style="display:none"><div class="preview-container"><h2 class="preview-title">测试接口2</h2><div class="url-status-div"><span class="url-span-display"><span class="method-span-display" style="background-color: rgba(49, 231, 43, 0.72);">GET</span><span class="url-text-display">https://www.postman-echo.com/get</span></span><span class="status-span" data-status="1"><ul class="status-option-list" style="display: none;"><li class="status-option-item" data-status-value="0"><span style="color: rgb(229, 62, 62);">●  </span><span>维护中</span></li><li class="status-option-item" data-status-value="1"><span style="color: rgb(62, 154, 229);">●  </span><span>开发中</span></li><li class="status-option-item" data-status-value="2"><span style="color: rgb(72, 187, 120);">●  </span><span>已发布</span></li></ul><span style="color: rgb(62, 154, 229);">●  </span><span>开发中</span></span></div><div class="api-info-div"><span class="api-info-item"><span class="api-info-label">创建时间</span><span class="api-info-value">2026年7月2日</span></span><span class="api-info-item"><span class="api-info-label">修改时间</span><span class="api-info-value">2026年7月14日</span></span><span class="api-info-item"><span class="api-info-label">修改者</span><span class="api-info-value">Kason</span></span><span class="api-info-item"><span class="api-info-label">创建者</span><span class="api-info-value">Kason</span></span><span class="api-info-item"><span class="api-info-label">责任人</span><span class="api-info-value">未设置</span></span></div><h3 class="preview-explanation-title">接口说明</h3><div class="preview-explanation-div">向postman的公开测试接口发送请求</div><h3 class="preview-params-title">请求参数</h3><div class="preview-params-div" style="display: block;"><span class="preview-query-info"><span class="query-title">Query 参数</span></span><ul class="params-list-display"><li><span class="param-name-display">param1</span><span class="param-type-display">string</span><span class="param-explanation"> </span><span class="param-is-not-necessary-display">可选</span></li><li><span class="param-name-display">param2</span><span class="param-type-display">string</span><span class="param-explanation"> </span><span class="param-is-not-necessary-display">可选</span></li></ul></div><div class="preview-params-div" style="display: block;"><span class="preview-headers-info"><span class="headers-title">Headers 参数</span></span><ul class="params-list-display"><li><span class="param-name-display">token</span><span class="param-type-display">string</span><span class="param-explanation"> </span><span class="param-is-necessary-display">必需</span></li></ul></div><div class="preview-params-div" style="display: block;"><span class="preview-body-info"><span class="body-title">Body 参数</span></span><ul class="params-list-display"><li><span class="param-name-display">form-data-1</span><span class="param-type-display">string</span><span class="param-explanation"> </span><span class="param-is-not-necessary-display">可选</span></li><li><span class="param-name-display">form-data-2</span><span class="param-type-display">string</span><span class="param-explanation"> </span><span class="param-is-not-necessary-display">可选</span></li></ul></div><h3 class="preview-params-title">返回响应</h3><div class="response-label-container"><span class="response-label"><span class="code-label" style="color: rgb(113, 234, 170);">200</span><span class="name-label">成功</span></span><span class="response-fill-label"></span></div><div class="preview-response-container"><div class="response-preview-div"><span class="preview-response-info-label"><span class="preview-type-label">HTTP 状态码: 200</span><span class="preview-type-without-bg">application/json</span></span><table class="params-table-display" style="width: 100%; border-collapse: collapse;"><tbody><tr><td class="param-name-display">args</td><td class="param-type-display">object</td><td class="param-explanation"></td><td class="response-is-necessary-display">必需</td></tr><tr><td class="connector-cell">├─</td><td class="param-name-display">param1</td><td class="param-type-display">string</td><td class="param-explanation"></td><td class="response-is-necessary-display">必需</td></tr><tr><td class="connector-cell">└─</td><td class="param-name-display">param2</td><td class="param-type-display">string</td><td class="param-explanation"></td><td class="response-is-necessary-display">必需</td></tr><tr><td class="param-name-display">headers</td><td class="param-type-display">object</td><td class="param-explanation"></td><td class="response-is-necessary-display">必需</td></tr><tr><td class="param-name-display">url</td><td class="param-type-display">string</td><td class="param-explanation"></td><td class="response-is-necessary-display">必需</td></tr></tbody></table></div><div class="response-json-example-div"><span class="body-title">示例</span><pre class="response-json-pre"><span class="json-punct">{</span>
+  <span class="json-key">"args"</span><span class="json-punct">: </span> <span class="json-punct">{</span>
+    <span class="json-key">"param1"</span><span class="json-punct">: </span> <span class="json-string">"string"</span><span class="json-punct">,</span>
+    <span class="json-key">"param2"</span><span class="json-punct">: </span> <span class="json-string">"string"</span>
+  <span class="json-punct">}</span><span class="json-punct">,</span>
+  <span class="json-key">"headers"</span><span class="json-punct">: </span> <span class="json-punct">{</span><span class="json-punct">}</span><span class="json-punct">,</span>
+  <span class="json-key">"url"</span><span class="json-punct">: </span> <span class="json-string">"string"</span>
+<span class="json-punct">}</span></pre></div></div></div></div>
+</div>
+
+<script>
+var TREE = [{"type":"api","id":11,"name":"修改接口","method":"PUT","status":1,"index":0},{"type":"api","id":12,"name":"获取接口","method":"GET","status":1,"index":1},{"type":"api","id":19,"name":"新增接口","method":"POST","status":1,"index":2},{"type":"api","id":10,"name":"删除接口","method":"DELETE","status":0,"index":3},{"type":"category","id":2,"name":"用户接口","children":[{"type":"api","id":40,"name":"用户登录","method":"GET","status":1,"index":4}]},{"type":"category","id":9,"name":"测试接口","children":[{"type":"api","id":1,"name":"测试接口","method":"GET","status":1,"index":5},{"type":"api","id":24,"name":"测试接口2","method":"GET","status":1,"index":6}]}];
+var METHOD_COLORS = {"GET":"#46dd41","POST":"#f37b13","PUT":"#0ab9fe","DELETE":"#ff0101","DEFAULT":"#666"};
+var STATUS_COLORS = {"0":"#e53e3e","1":"#3e9ae5","2":"#48bb78"};
+var firstApiIndex = -1;
+
+function renderTree(items, parentUl, depth) {
+    depth = depth || 0;
+    items.forEach(function(item) {
+        if (item.type === 'category') {
+            var catLi = document.createElement('li');
+            catLi.className = 'tree-category-row';
+            catLi.style.paddingLeft = (depth * 1.2) + 'rem';
+
+            var arrow = document.createElement('span');
+            arrow.className = 'tree-arrow';
+            arrow.innerHTML = '<i class="bi bi-caret-down-fill"></i>';
+
+            var folder = document.createElement('span');
+            folder.className = 'tree-folder';
+            folder.innerHTML = '<i class="bi bi-folder2-open"></i>';
+
+            var nameSpan = document.createElement('span');
+            nameSpan.className = 'tree-category-name';
+            nameSpan.textContent = item.name;
+
+            catLi.appendChild(arrow); catLi.appendChild(folder); catLi.appendChild(nameSpan);
+            parentUl.appendChild(catLi);
+
+            var childrenUl = document.createElement('ul');
+            childrenUl.className = 'children-ul';
+            parentUl.appendChild(childrenUl);
+            renderTree(item.children, childrenUl, depth + 1);
+
+            arrow.addEventListener('click', function(e) {
+                e.stopPropagation();
+                var c = childrenUl.classList.toggle('collapsed');
+                folder.innerHTML = c ? '<i class="bi bi-folder"></i>' : '<i class="bi bi-folder2-open"></i>';
+                arrow.innerHTML = c ? '<i class="bi bi-caret-right-fill"></i>' : '<i class="bi bi-caret-down-fill"></i>';
+            });
+        } else {
+            var apiLi = document.createElement('li');
+            apiLi.className = 'api-row';
+            apiLi.style.paddingLeft = (depth * 1.2 + 1.5) + 'rem';
+            apiLi.onclick = (function(idx) { return function() { selectApi(idx); }; })(item.index);
+            if (firstApiIndex === -1) firstApiIndex = item.index;
+
+            var m = document.createElement('span');
+            m.className = 'api-method';
+            m.textContent = item.method;
+            m.style.color = METHOD_COLORS[item.method] || '#718096';
+
+            var n = document.createElement('span');
+            n.className = 'api-name';
+            n.textContent = item.name; n.title = item.name;
+
+            var d = document.createElement('span');
+            d.className = 'status-dot';
+            d.style.backgroundColor = STATUS_COLORS[item.status] || '#a0aec0';
+
+            apiLi.appendChild(m); apiLi.appendChild(n); apiLi.appendChild(d);
+            parentUl.appendChild(apiLi);
+        }
+    });
+}
+
+function selectApi(i) {
+    document.querySelectorAll('.api-row').forEach(function(r,j) {j===i?r.classList.add('active') : r.classList.remove('active'); });
+    document.querySelectorAll('.api-preview').forEach(function(p, j) { p.style.display = j === i ? '' : 'none'; });
+    var hint = document.getElementById('emptyHint');
+    if (hint) hint.style.display = 'none';
+}
+
+renderTree(TREE, document.getElementById('apiTreeContainer'));
+if (firstApiIndex >= 0) selectApi(firstApiIndex);
+</script>
+</body>
+</html>
