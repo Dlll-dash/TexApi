@@ -13,16 +13,23 @@ import { createParamList } from "../../components/paramList.js";
 import { createResponseApi } from "../../api/ResponseApi.js";
 import { createResponsePreviewDiv } from "../../components/responsePreviewDiv.js";
 import { createResponseJsonExampleDiv } from "../../components/responseJsonExampleDiv.js";
+import { createResponseXmlExampleDiv } from "../../components/responseXmlExampleDiv.js";
 import {createTypeDropdown,closeActiveTypeDropdown,setupTypeDropdownClose} from "../../components/typeDropdown.js";
 import {getIsNecessaryButton} from "../../components/isNecessaryButton.js";
 import {getCheckButton,toCheckSquare,toDashSquare,toSquare,dashSquareIcon,squareIcon,checkSquareIcon} from "../../components/checkButton.js";
 import { createTreeTable } from "../../components/treeTable.js";
 import { createPromptModal } from "../../components/modal.js";
 import { renderTopBar } from "../../components/topBar.js";
+import { exportCategoryBatch, exportSingleApi } from "../../module/Export.js";
 
 const nodeMap=NodeMapManager.getInstance();
 let treeTableRef = null;
 let detailMenuOutsideCloseBound = false;
+
+/** 生成每个接口独立的 contentType 存储 key */
+function getContentTypeKey(apiId) {
+    return 'contentType_' + (apiId || 'default');
+}
 
 function createDetailMenuButton(label, svgPath, className = '') {
     const button = document.createElement('button');
@@ -110,6 +117,15 @@ function initTreeTable() {
                 id: apiData.id,
                 categoryId: targetCategoryId
             });
+        },
+
+        onApiExport: (apiData) => {
+            exportSingleApi(apiData);
+        },
+
+        onCategoryExport: (categoryId, categoryName) => {
+            const params = getUrlParams();
+            exportCategoryBatch(categoryId, categoryName, params.id);
         }
     });
 }
@@ -224,7 +240,8 @@ function renderTestWindow(apiData){
     tabContainer.appendChild(debugSpan);
     tabContainer.appendChild(designSpan);
     tabContainer.appendChild(previewSpan);
-    //默认打开debug区
+    //默认打开debug区，先点一下design保证初始化
+    designSpan.click();
     debugSpan.click();
 
 }
@@ -457,7 +474,7 @@ function renderDebug(apiData,config){
         request.post(`http://localhost/tex/api/send`,{
             
             apiId: apiData.id,
-            contentType: localStorage.getItem('contentType') || requestDataType.None // 发送当前选择的请求体格式，后端根据这个参数来区分请求体数据结构
+            contentType: localStorage.getItem(getContentTypeKey(apiData.id)) || requestDataType.None // 发送当前选择的请求体格式，后端根据这个参数来区分请求体数据结构
         
         }).then(res => {
             finishWithDelay(() => {
@@ -683,6 +700,7 @@ function renderParams(container,config){
 //渲染Body参数列表
 function renderBody(container,config){
     container.innerHTML = ""; // 清空
+    const apiId = document.getElementById('requestArea')?.dataset?.apiId; // 获取当前接口id
     // //创建Body块
     // const bodyTitle = document.createElement('span');
     // bodyTitle.textContent = "请求体格式";
@@ -716,14 +734,14 @@ function renderBody(container,config){
     noneSpan.onclick = function(){
         formatContainer.querySelectorAll('.body-format-tab').forEach(tab => tab.classList.remove('active'));
         noneSpan.classList.add('active');
-        localStorage.setItem('contentType',requestDataType.None ); // 存储当前选择的请求体格式，后续发送请求时可以用到
+        localStorage.setItem(getContentTypeKey(apiId),requestDataType.None ); // 存储当前选择的请求体格式，后续发送请求时可以用到
         contentDiv.innerHTML = "<div class='empty-tip'>该请求没有Body</div>";
     };
 
     formDataSpan.onclick = function(){
         formatContainer.querySelectorAll('.body-format-tab').forEach(tab => tab.classList.remove('active'));
         formDataSpan.classList.add('active');
-        localStorage.setItem('contentType',requestDataType.FormData ); // 存储当前选择的请求体格式，后续发送请求时可以用到
+        localStorage.setItem(getContentTypeKey(apiId),requestDataType.FormData ); // 存储当前选择的请求体格式，后续发送请求时可以用到
 
         contentDiv.dataset.type = requestDataType.FormData; // 标记数据类型，方便发送请求时区分
         renderform(contentDiv,config);
@@ -732,10 +750,9 @@ function renderBody(container,config){
     jsonSpan.onclick = function(){
         formatContainer.querySelectorAll('.body-format-tab').forEach(tab => tab.classList.remove('active'));
         jsonSpan.classList.add('active');
-        localStorage.setItem('contentType',requestDataType.Json ); // 存储当前选择的请求体格式，后续发送请求时可以用到
+        localStorage.setItem(getContentTypeKey(apiId),requestDataType.Json ); // 存储当前选择的请求体格式，后续发送请求时可以用到
         contentDiv.dataset.type = requestDataType.Json; // 标记数据类型，方便发送请求时区分
         contentDiv.innerHTML = "<textarea placeholder='输入JSON格式的请求体' class='json-input'></textarea>";
-         const apiId= document.getElementById('requestArea').dataset.apiId; // 获取当前接口id
 
         //获取已有的Json数据并预填充
         sendRequest(null, apiId, requestDataType.Json, 'GET')
@@ -785,7 +802,7 @@ function renderBody(container,config){
     urlencodedSpan.onclick = function(){
         formatContainer.querySelectorAll('.body-format-tab').forEach(tab => tab.classList.remove('active'));
         urlencodedSpan.classList.add('active');
-        localStorage.setItem('contentType',requestDataType.Urlencoded ); // 存储当前选择的请求体格式，后续发送请求时可以用到
+        localStorage.setItem(getContentTypeKey(apiId),requestDataType.Urlencoded ); // 存储当前选择的请求体格式，后续发送请求时可以用到
         contentDiv.dataset.type = requestDataType.Urlencoded; // 标记数据类型，方便发送请求时区分
         renderform(contentDiv,config);
     };
@@ -801,7 +818,7 @@ function renderBody(container,config){
     // 内容区域
     const contentDiv = document.createElement('div');
     contentDiv.className = 'body-content';
-    const contentType=localStorage.getItem('contentType') || requestDataType.None; // 从本地存储获取之前选择的请求体格式，默认为none
+    const contentType=localStorage.getItem(getContentTypeKey(apiId)) || requestDataType.None; // 从本地存储获取之前选择的请求体格式，默认为none
     console.log("当前请求体格式：", contentType);
 
     // 根据之前选择的请求体格式，默认展示对应的内容
@@ -2351,34 +2368,7 @@ function renderPreview(apiData){
     });
 
     exportButton.addEventListener('click', function() {
-        statusUl.style.display = 'none'; // 隐藏状态下拉框，避免导出时被包含
-        const exportContainer = document.createElement('div');
-        exportContainer.className = 'export-container';
-        exportContainer.appendChild(container.cloneNode(true)); // 克隆当前预览内容
-        const fragment = exportContainer.outerHTML;
-        const css=document.getElementById('export-style').innerHTML;
-        const htmlContent=`
-        <!DOCTYPE html>
-        <html lang="zh-CN">
-            <head>
-                <meta charset="UTF-8">
-                <title>${apiData.apiName || '未命名接口'}</title>
-                <style>
-                    ${css}
-                </style>
-            </head>
-            <body>
-                ${fragment}
-            </body>
-        </html>
-        `;
-        const blob=new Blob([htmlContent],{type:'text/html'});
-        const url=URL.createObjectURL(blob);
-        const a=document.createElement('a');
-        a.href=url;
-        a.download=`${apiData.apiName || '未命名接口'}.html`;
-        a.click();
-        URL.revokeObjectURL(url);
+        exportSingleApi(apiData);
     });
 
     url_statusDiv.appendChild(exportButton);
@@ -2492,7 +2482,7 @@ function renderPreview(apiData){
     bodyTitle.className = "body-title";
 
     const bodyType=document.createElement('span');
-    bodyType.textContent = `${httpMimeTypes[localStorage.getItem('contentType')] || '未设置'}`;
+    bodyType.textContent = `${httpMimeTypes[localStorage.getItem(getContentTypeKey(apiData.id))] || '未设置'}`;
     bodyType.className = "preview-type-label";
 
     bodyInfoSpan.appendChild(bodyTitle);
@@ -2501,11 +2491,11 @@ function renderPreview(apiData){
     bodyParamsDiv.appendChild(bodyInfoSpan);
     container.appendChild(bodyParamsDiv);
     
-    //console.log('当前请求参数类型：', localStorage.getItem('contentType'),typeof localStorage.getItem('contentType'));
-    if(localStorage.getItem('contentType')!=requestDataType.None) {
+    //console.log('当前请求参数类型：', localStorage.getItem(getContentTypeKey(apiData.id)),typeof localStorage.getItem(getContentTypeKey(apiData.id)));
+    if(localStorage.getItem(getContentTypeKey(apiData.id))!=requestDataType.None) {
         request.get(`/request/param/list/${apiData.id}`,{
             params: {
-                formatType:localStorage.getItem('contentType') || ''
+                formatType:localStorage.getItem(getContentTypeKey(apiData.id)) || ''
             }
         }).then(res => {
             const data = res.data.data || [];
@@ -2602,7 +2592,11 @@ function renderPreview(apiData){
                 }
                 createResponsePreviewDiv(data.responseBody, responsePreviewDiv);
 
-                createResponseJsonExampleDiv(data.responseBody, responseJsonExampleDiv);
+                if (responseData.contentType === 'XML') {
+                    createResponseXmlExampleDiv(data.responseBody, responseJsonExampleDiv);
+                } else {
+                    createResponseJsonExampleDiv(data.responseBody, responseJsonExampleDiv);
+                }
                 
             })
         }

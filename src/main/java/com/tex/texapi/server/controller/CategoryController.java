@@ -3,12 +3,16 @@ package com.tex.texapi.server.controller;
 import com.tex.texapi.common.result.Result;
 import com.tex.texapi.pojo.dto.AddCategoryDTO;
 import com.tex.texapi.pojo.dto.UpdateCategoryDTO;
+import com.tex.texapi.pojo.entity.Api;
 import com.tex.texapi.pojo.vo.AddCategoryVO;
+import com.tex.texapi.pojo.vo.ApiVO;
 import com.tex.texapi.pojo.vo.CategoryVO;
 import com.tex.texapi.server.service.CategoryService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/tex/categories")
@@ -46,6 +50,10 @@ public class CategoryController {
         return Result.success();
     }
 
-
+    @GetMapping("/{categoryId}/apis")
+    public Result<List<ApiVO>> getCategoryApi(@PathVariable Long categoryId){
+        log.info("获取分类下的接口：{}",categoryId);
+        return Result.success(categoryService.getApiByCategoryId(categoryId));
+    }
 
 }

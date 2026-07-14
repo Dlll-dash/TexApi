@@ -60,7 +60,7 @@ public class RequestParamsController {
 
     /**
      * 更新参数
-     * @param paramDTO
+     * @param updateParamDTO
      * @param id
      * @return
      */

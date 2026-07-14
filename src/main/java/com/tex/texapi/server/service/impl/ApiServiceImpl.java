@@ -4,15 +4,11 @@ import com.tex.texapi.common.constant.MessageConstant;
 import com.tex.texapi.common.context.BaseContext;
 import com.tex.texapi.common.exception.RequestException;
 import com.tex.texapi.common.utils.HttpClientUtil;
-import com.tex.texapi.pojo.dto.AddApiDTO;
-import com.tex.texapi.pojo.dto.RequestDTO;
-import com.tex.texapi.pojo.dto.UpdateApiDTO;
-import com.tex.texapi.pojo.dto.UpdateApiInfoDTO;
+import com.tex.texapi.pojo.dto.*;
 import com.tex.texapi.pojo.entity.Api;
 import com.tex.texapi.pojo.entity.Params;
 import com.tex.texapi.pojo.entity.Request;
-import com.tex.texapi.pojo.vo.AddApiVO;
-import com.tex.texapi.pojo.vo.RequestVO;
+import com.tex.texapi.pojo.vo.*;
 import com.tex.texapi.server.mapper.ApiMapper;
 import com.tex.texapi.server.mapper.RequestParamsMapper;
 import com.tex.texapi.server.mapper.ResponseMapper;
@@ -25,6 +21,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -258,5 +255,42 @@ public class ApiServiceImpl implements ApiService {
         requestParamsMapper.deleteByApiId(id);
         //删除接口相关的响应参数
         responseMapper.deleteByApiId(id);
+    }
+
+    @Override
+    public List<ExportBatchVO> exportBatch(List<ExportBatchDTO> list) {
+
+        List<ExportBatchVO> exportBatchVOs = new ArrayList<>();
+        //遍历apiId
+        for (ExportBatchDTO dto : list) {
+            //获取请求参数（query、body、headers）
+            Long apiId = dto.getApiId();
+            String contentType = dto.getFormatType();
+            List<ExportParamVO> queryParams = requestParamsMapper.getExportParams(apiId, Request.Query);
+            List<ExportParamVO> bodyParams = requestParamsMapper.getExportParams(apiId, contentType);
+            List<ExportParamVO> headerParams = requestParamsMapper.getExportParams(apiId, Request.Header);
+
+            ExportParamsVO exportParamsVO = ExportParamsVO.builder()
+                    .query(queryParams)
+                    .body(bodyParams)
+                    .headers(headerParams)
+                    .build();
+            //获取响应体参数
+            ExportResponseVO exportResponseVO = new ExportResponseVO();
+            //目前还是每个api只有一个响应体，后面可以改为list
+            ResponseVO responseVO = responseMapper.getByApiId(apiId);
+            if(responseVO!=null) {
+                BeanUtils.copyProperties(responseVO, exportResponseVO);
+            }
+            //拼接ExportBatchVO，加入返回列表
+            ExportBatchVO exportBatchVO = ExportBatchVO.builder()
+                    .apiId(apiId)
+                    .params(exportParamsVO)
+                    .response(exportResponseVO)
+                    .build();
+            exportBatchVOs.add(exportBatchVO);
+        }
+        //返回
+        return exportBatchVOs;
     }
 }

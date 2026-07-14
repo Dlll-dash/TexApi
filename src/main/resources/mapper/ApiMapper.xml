@@ -84,4 +84,22 @@
                where project_id=#{id}
         order by status desc
     </select>
+    <select id="getByCategoryId" resultType="com.tex.texapi.pojo.vo.ApiVO">
+        select a.id,
+               project_id,
+               api_name,
+               request_url,
+               request_method,
+               create_time,
+               update_time,
+               status,
+               explanation,
+               in_charge_user,
+               category_id,
+               u1.name as create_user,
+               u2.name as update_user
+        from api a left join user u1 on a.create_user = u1.id left join user u2 on a.update_user=u2.id
+        where category_id=#{categoryId}
+        order by status desc
+    </select>
 </mapper>

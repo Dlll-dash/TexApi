@@ -1,6 +1,7 @@
 package com.tex.texapi.server.mapper;
 
 import com.tex.texapi.pojo.entity.Params;
+import com.tex.texapi.pojo.vo.ExportParamVO;
 import org.apache.ibatis.annotations.Delete;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Select;
@@ -46,4 +47,7 @@ public interface RequestParamsMapper {
      */
     @Delete("delete from request_params where api_id = #{apiId}")
     void deleteByApiId(Long apiId);
+
+    @Select("select * from request_params where api_id=#{apiId} and format_type=#{formatType}")
+    List<ExportParamVO> getExportParams(Long apiId,String formatType);
 }

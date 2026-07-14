@@ -17,6 +17,10 @@ const CategoryApi={
     //删除分类节点及其子节点和其下的接口
     delete(categoryId){
         return request.delete(`${baseUrl}/${categoryId}`)
+    },
+    //根据分类id获取接口列表
+    getApisByCategoryId(categoryId){
+        return request.get(`${baseUrl}/${categoryId}/apis`)
     }
 }
 

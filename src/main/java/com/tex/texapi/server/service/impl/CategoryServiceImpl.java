@@ -3,8 +3,10 @@ package com.tex.texapi.server.service.impl;
 
 import com.tex.texapi.pojo.dto.AddCategoryDTO;
 import com.tex.texapi.pojo.dto.UpdateCategoryDTO;
+import com.tex.texapi.pojo.entity.Api;
 import com.tex.texapi.pojo.entity.Category;
 import com.tex.texapi.pojo.vo.AddCategoryVO;
+import com.tex.texapi.pojo.vo.ApiVO;
 import com.tex.texapi.pojo.vo.CategoryVO;
 import com.tex.texapi.server.mapper.ApiMapper;
 import com.tex.texapi.server.mapper.CategoryMapper;
@@ -104,6 +106,11 @@ public class CategoryServiceImpl implements CategoryService {
         categoryMapper.deleteBatchIds(ids);
     }
 
+    /**
+     * 获取所有子分类id
+     * @param id
+     * @param ids
+     */
     private void getAllChildrenId(Long id,List<Long>ids){
         ids.add(id);
         List<Category> list=categoryMapper.getByParentId(id);
@@ -113,4 +120,8 @@ public class CategoryServiceImpl implements CategoryService {
         }
     }
 
+    @Override
+    public List<ApiVO> getApiByCategoryId(Long categoryId) {
+        return apiMapper.getByCategoryId(categoryId);
+    }
 }

@@ -1,11 +1,9 @@
 package com.tex.texapi.server.service;
 
-import com.tex.texapi.pojo.dto.AddApiDTO;
-import com.tex.texapi.pojo.dto.RequestDTO;
-import com.tex.texapi.pojo.dto.UpdateApiDTO;
-import com.tex.texapi.pojo.dto.UpdateApiInfoDTO;
+import com.tex.texapi.pojo.dto.*;
 import com.tex.texapi.pojo.entity.Api;
 import com.tex.texapi.pojo.vo.AddApiVO;
+import com.tex.texapi.pojo.vo.ExportBatchVO;
 import com.tex.texapi.pojo.vo.RequestVO;
 
 import java.util.List;
@@ -52,5 +50,10 @@ public interface ApiService {
      */
     void delete(Long id);
 
-
+    /**
+     * 批量导出接口
+     * @param list
+     * @return
+     */
+    List<ExportBatchVO> exportBatch(List<ExportBatchDTO> list);
 }

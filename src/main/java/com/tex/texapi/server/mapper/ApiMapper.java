@@ -6,10 +6,12 @@ import com.tex.texapi.pojo.dto.AddApiDTO;
 import com.tex.texapi.pojo.dto.UpdateApiDTO;
 import com.tex.texapi.pojo.dto.UpdateApiInfoDTO;
 import com.tex.texapi.pojo.entity.Api;
+import com.tex.texapi.pojo.vo.ApiVO;
 import com.tex.texapi.server.annotation.AutoFill;
 import org.apache.ibatis.annotations.Delete;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Select;
+import org.springframework.web.bind.annotation.GetMapping;
 
 import java.util.List;
 
@@ -66,4 +68,11 @@ public interface ApiMapper {
      * @param categoryIds
      */
     void deleteBatchByCategoryId(List<Long> categoryIds);
+
+    /**
+     * 根据分类id获取接口列表
+     * @param categoryId
+     * @return
+     */
+    List<ApiVO> getByCategoryId(Long categoryId);
 }
