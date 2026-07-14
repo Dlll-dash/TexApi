@@ -2416,13 +2416,17 @@ function renderPreview(apiData){
         explanationDiv.style.display = 'none';
     }
     container.appendChild(explanationDiv);
-    
 
     const paramsTitle=document.createElement('h3');
     paramsTitle.textContent = "请求参数";
     paramsTitle.className = "preview-params-title";
     // paramsTitle.style.marginTop = "1.5rem";
     container.appendChild(paramsTitle);
+
+    const noParamsTip = document.createElement('div');
+    noParamsTip.className = 'no-params-message';
+    noParamsTip.textContent = '暂无请求参数';
+    container.appendChild(noParamsTip);
 
     const queryParamsDiv=document.createElement('div');
     queryParamsDiv.className = "preview-params-div";
@@ -2448,6 +2452,7 @@ function renderPreview(apiData){
                 const paramsList = createParamList(data);
                 queryParamsDiv.appendChild(paramsList);
                 queryParamsDiv.style.display = 'block'; // 显示Query参数区域
+                noParamsTip.style.display = 'none'; // 隐藏暂无参数提示
             }
         })
     container.appendChild(queryParamsDiv);
@@ -2475,6 +2480,7 @@ function renderPreview(apiData){
                 const paramsList = createParamList(data);
                 headersParamsDiv.appendChild(paramsList);
                 headersParamsDiv.style.display = 'block'; // 显示Headers参数区域
+                noParamsTip.style.display = 'none'; // 隐藏暂无参数提示
             }
         })
 
@@ -2547,6 +2553,7 @@ function renderPreview(apiData){
                             createResponseJsonExampleDiv(rawValue, bodyExampleDiv);
                         }
                     }
+                    noParamsTip.style.display = 'none'; // 隐藏暂无参数提示
                 }
             })
         }
@@ -2565,17 +2572,11 @@ function renderPreview(apiData){
                     const paramsList = createParamList(data);
                     bodyParamsDiv.appendChild(paramsList);
                     bodyParamsDiv.style.display = 'block';
+                    noParamsTip.style.display = 'none'; // 隐藏暂无参数提示
                 }
             })
         }
     }
-    if(!queryParamsDiv.checkVisibility() && !headersParamsDiv.checkVisibility() && !bodyParamsDiv.checkVisibility()) {
-        const noParamsTip = document.createElement('div');
-        noParamsTip.className = 'no-params-message';
-        noParamsTip.textContent = '暂无请求参数';
-        container.appendChild(noParamsTip);
-    }
-    
     
     //把响应信息也展示在预览窗口
     const responseTitle=document.createElement('h3');
