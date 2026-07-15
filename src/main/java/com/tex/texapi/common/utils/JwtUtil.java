@@ -54,7 +54,7 @@ public class JwtUtil {
     public static Claims parseJWT(String secretKey, String token) {
         Key key = Keys.hmacShaKeyFor(secretKey.getBytes(StandardCharsets.UTF_8));
 
-        // 2. 使用新版API解析JWT
+        // 使用新版API解析JWT
         Claims claims = Jwts.parser()
                 // 设置签名密钥（新版要求传入Key对象，而非字节数组）
                 .verifyWith((SecretKey) key)
