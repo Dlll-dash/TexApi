@@ -1,4 +1,4 @@
-# TexApi — 接口在线管理平台
+# TexApi — 轻量级接口文档在线管理调试平台
 
 > 前后端分离的轻量级 API 管理工具，支持接口录入、在线调试、文档导出，让团队协作更高效。
 
@@ -16,7 +16,7 @@ TexApi 是一套**前后端分离**的接口在线管理平台，专为后端开
 | 📁 项目管理 | 创建项目、管理成员，按项目维度组织接口                            |
 | 📂 分类管理 | 接口按分类层级组织，支持增删改查                               |
 | 🔌 接口管理 | 录入接口（请求方式、URL、参数、响应体），支持 GET/POST/PUT/DELETE 等 |
-| 🧪 在线调试 | 浏览器端直接发送请求、查看响应，无需 Postman                     |
+| 🧪 在线调试 | 浏览器端直接发送请求、查看响应                   |
 | 📄 文档导出 | 一键导出 HTML 离线文档，方便分享与归档                         |
 | 📊 响应模板 | 预设 JSON 响应模板，快速复用                              |
 
@@ -100,7 +100,44 @@ TexApi/
 
 ## 🚀 快速开始
 
-### 环境要求
+### 方式一：Docker 部署（推荐）
+
+> 无需安装 JDK、Maven、MySQL、Redis，只需 Docker。
+
+```bash
+# 1. 克隆项目
+git clone https://gitee.com/kason-tang/tex-api.git
+cd TexApi
+
+# 2. 配置密码
+cp .env.example .env
+# 编辑 .env，设置 DB_PASSWORD 和 REDIS_PASSWORD
+
+# 3. 一键启动
+docker compose up -d
+```
+
+访问 `http://localhost` 即可使用。
+
+<details>
+<summary>📋 Docker 架构说明</summary>
+
+| 服务 | 镜像 | 说明 |
+|------|------|------|
+| server | 本地构建（Dockerfile） | Spring Boot 后端，内置 Maven 编译 |
+| db | mysql:8.0 | MySQL 数据库，自动建库建表 |
+| redis | redis:7-alpine | Redis 缓存 |
+| proxy | nginx:1.26-alpine | 静态资源 + 反向代理 |
+
+首次启动会自动完成：拉取基础镜像 → Maven 编译打包 → 初始化数据库表结构，稍等几分钟即可。
+
+</details>
+
+---
+
+### 方式二：本地开发部署
+
+#### 环境要求
 
 - **JDK** 17+
 - **Maven** 3.6+
@@ -108,14 +145,14 @@ TexApi/
 - **Redis** 6.0+
 - **Nginx**（可选，用于前端静态资源）
 
-### 1. 克隆项目
+#### 1. 克隆项目
 
 ```bash
 git clone https://gitee.com/kason-tang/tex-api.git
 cd TexApi
 ```
 
-### 2. 初始化数据库
+#### 2. 初始化数据库
 
 执行 `src/main/resources/db/init/create_table.sql` 脚本即可完成建库建表：
 
@@ -125,7 +162,7 @@ mysql -u root -p < src/main/resources/db/init/create_table.sql
 
 该脚本会自动创建 `tex_api` 数据库及所有表结构（`user`、`project`、`project_user`、`category`、`api`、`request_params`、`response`）。
 
-### 3. 配置环境
+#### 3. 配置环境
 
 编辑 `src/main/resources/application-dev.yml`，修改为你的本地环境：
 
@@ -145,7 +182,7 @@ tex:
     database: 9
 ```
 
-### 4. 启动后端
+#### 4. 启动后端
 
 ```bash
 mvn clean package -DskipTests
@@ -154,7 +191,7 @@ mvn spring-boot:run
 
 后端服务默认运行在 `http://localhost:8080`。
 
-### 5. 启动前端（Nginx）
+#### 5. 启动前端（Nginx）
 
 将 `nginx/html/tex/` 配置为 Nginx 静态资源目录，并启动 Nginx：
 
