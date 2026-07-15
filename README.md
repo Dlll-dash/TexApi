@@ -93,7 +93,6 @@ TexApi/
 │       ├── config/              # 前端配置
 │       ├── module/              # 功能模块
 │       └── utils/               # 工具函数
-└── redis/                       # Redis 配置
 ```
 
 ---
