@@ -141,7 +141,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         try {
-            const res = await axios.post('http://localhost/tex/user/login', loginData, {
+            const res = await axios.post('tex/user/login', loginData, {
                 withCredentials: true
             });
             const data = res.data.data;

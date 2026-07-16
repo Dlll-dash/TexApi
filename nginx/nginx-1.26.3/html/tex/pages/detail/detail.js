@@ -86,7 +86,7 @@ function initTreeTable() {
         onApiRename: async (apiData) => {
             const newName = await apiRenameModal.open(apiData.apiName, '重命名接口');
             if (newName) {
-                await request.put('http://localhost/tex/api/updateInfo', {
+                await request.put('api/updateInfo', {
                     id: apiData.id,
                     apiName: newName
                 });
@@ -95,7 +95,7 @@ function initTreeTable() {
         },
 
         onApiDelete: async (apiData) => {
-            await request.delete(`http://localhost/tex/api/delete/${apiData.id}`);
+            await request.delete(`api/delete/${apiData.id}`);
             if (treeTableRef) treeTableRef.refresh();
         },
 
@@ -107,13 +107,13 @@ function initTreeTable() {
                 status: 1
             };
             if (categoryId) payload.categoryId = categoryId;
-            const res = await request.post('http://localhost/tex/api/add', payload);
+            const res = await request.post('api/add', payload);
             localStorage.setItem('selectedApiId', res?.data?.data?.id || '');
             return res?.data?.data || null;
         },
 
         onApiMove: async (apiData, targetCategoryId) => {
-            await request.put(`http://localhost/tex/api/update`, {
+            await request.put(`api/update`, {
                 id: apiData.id,
                 categoryId: targetCategoryId
             });
@@ -263,7 +263,7 @@ async function sendApiRequest(apiData,method){
             status: apiData.status
         }
     }
-    let url = `http://localhost/tex/api`;
+    let url = `api`;
     if(method ==='POST'){
         url += `/add`;
     }else if(method === 'PUT') {
@@ -471,7 +471,7 @@ function renderDebug(apiData,config){
         console.log(`接口${apiData.id}发送${apiData.requestMethod}请求到：${urlInput.value}`);
 
         //发送请求，告诉后端apiId为xxx的接口要发送请求了，在后端向指定接口发送请求
-        request.post(`http://localhost/tex/api/send`,{
+        request.post(`api/send`,{
             
             apiId: apiData.id,
             contentType: localStorage.getItem(getContentTypeKey(apiData.id)) || requestDataType.None // 发送当前选择的请求体格式，后端根据这个参数来区分请求体数据结构
@@ -870,7 +870,7 @@ async function sendRequest(param, id, dataType, method) {
                 formatType: dataType
             };
         }
-        let url = `http://localhost/tex/request/param`;
+        let url = `request/param`;
         if(method==='GET'){
             url += `/list`;
         }
@@ -1257,7 +1257,7 @@ function renderform(container,config){
 
 //更新接口信息的请求函数
 function updateApiInfoArea(requestBodyData={id,apiName, explanation, status, inChargeUser}) {
-        request.put(`http://localhost/tex/api/updateInfo`, requestBodyData)
+        request.put(`api/updateInfo`, requestBodyData)
         // fetchApiListAndRender();
     }
 

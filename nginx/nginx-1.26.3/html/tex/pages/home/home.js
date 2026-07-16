@@ -1,6 +1,7 @@
 
 import { renderTopBar } from '../../components/topBar.js';
 import { exportProjectBatch } from '../../module/Export.js';
+import { request } from '../../config/AxiosConfig/AxiosConfig.js';
 
 renderTopBar();
 
@@ -114,7 +115,7 @@ function createMenuButton(label, svgPath, className = '') {
     async function submitDelete() {
         if (!deleteState.projectId) return;
         try {
-            await axios.delete(`http://localhost/tex/project/delete/${deleteState.projectId}`, {
+            await request.delete(`project/delete/${deleteState.projectId}`, {
                 headers: { 'token': localStorage.getItem('token') }
             });
             closeDeleteModal();
@@ -134,7 +135,7 @@ function createMenuButton(label, svgPath, className = '') {
             return;
         }
         try {
-            await axios.put('http://localhost/tex/project/update', {
+            await request.put('project/update', {
                 id: modalState.projectId,
                 name: nextName
             }, {
@@ -402,7 +403,7 @@ function createMenuButton(label, svgPath, className = '') {
             return;
         }
         try {
-            await axios.post('http://localhost/tex/project/create', { name }, {
+            await request.post('project/create', { name }, {
                 headers: { 'token': localStorage.getItem('token') }
             });
             closeAddModal();
@@ -427,7 +428,7 @@ function createMenuButton(label, svgPath, className = '') {
     // 获取并渲染列表的复用函数
     async function fetchList() {
         try {
-            const res = await axios.get(`http://localhost/tex/project/list/${id}`, {
+            const res = await request.get(`project/list/${id}`, {
                 headers: { 'token': localStorage.getItem('token') }
             });
             renderHtmlWithCreateElement(res.data.data);

@@ -1,6 +1,6 @@
 // 请求拦截器
 const request=axios.create({
-  baseURL: 'http://localhost/tex',
+  baseURL: '/tex',
   timeout: 500000,
 })
 
