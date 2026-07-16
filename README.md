@@ -18,7 +18,7 @@ TexApi 是一套**前后端分离**的接口在线管理平台，专为后端开
 | 🔌 接口管理 | 录入接口（请求方式、URL、参数、响应体），支持 GET/POST/PUT/DELETE 等 |
 | 🧪 在线调试 | 浏览器端直接发送请求、查看响应                   |
 | 📄 文档导出 | 一键导出 HTML 离线文档，方便分享与归档                         |
-| 📊 响应模板 | 预设 JSON 响应模板，快速复用                              |
+| 📊 响应模板 | 预设 JSON、XML 响应模板，快速复用                              |
 
 ---
 
@@ -163,7 +163,7 @@ mysql -u root -p < src/main/resources/db/init/create_table.sql
 
 #### 3. 配置环境
 
-编辑 `src/main/resources/application-dev.yml`，修改为你的本地环境：
+创建并编辑 `src/main/resources/application-dev.yml`，修改为你的本地环境：
 
 ```yaml
 tex:

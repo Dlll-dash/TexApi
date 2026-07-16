@@ -32,16 +32,18 @@ build/
 ### VS Code ###
 .vscode/
 
-nginx/nginx-1.26.3/contrib
-nginx/nginx-1.26.3/docs
-nginx/nginx-1.26.3/logs
-nginx/nginx-1.26.3/temp
-nginx/nginx-1.26.3/conf
+nginx/contrib
+nginx/docs
+nginx/logs
+nginx/temp
+nginx/conf
+!**/nginx/html/tex
+
 /redis/
 /redis/Redis-8.8.0-Windows-x64-cygwin-with-Service/
 
 src/main/resources/application-dev.yml
-/nginx/nginx-1.26.3/conf/
+
 /log/
 
 # Docker 环境变量（含密码，勿提交）
