@@ -98,8 +98,13 @@ public class CategoryServiceImpl implements CategoryService {
     @Transactional
     public void delete(Long id) {
         //递归删除所有子分类
-        List<Long> ids=new ArrayList<>();
-        getAllChildrenId(id,ids);
+        Category category = categoryMapper.getById(id);
+
+        Long projectId=category.getProjectId();
+        CategoryVO root=getCategories(projectId);
+        List ids=new ArrayList<>();
+
+        getAllChildrenId(root,ids);
         //删除所有接口
         apiMapper.deleteBatchByCategoryId(ids);
         //删除分类
@@ -107,16 +112,17 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     /**
-     * 获取所有子分类id
-     * @param id
+     * 递归获取所有子分类id
+     * @param root
      * @param ids
      */
-    private void getAllChildrenId(Long id,List<Long>ids){
-        ids.add(id);
-        List<Category> list=categoryMapper.getByParentId(id);
-        List<Long> childrenIds=list.stream().filter(category -> category.getParentId()!=null&&category.getParentId().equals(id)).map(Category::getId).collect(Collectors.toList());
-        for(Long childId:childrenIds){
-            getAllChildrenId(childId,ids);
+    private void getAllChildrenId(CategoryVO root,List<Long> ids){
+        if (root == null) {
+            return;
+        }
+        ids.add(root.getId());
+        if (root.getChildren() != null) {
+            root.getChildren().forEach(child -> getAllChildrenId(child, ids));
         }
     }
 

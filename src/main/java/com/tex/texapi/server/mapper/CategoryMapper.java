@@ -51,4 +51,12 @@ public interface CategoryMapper {
      * @param ids
      */
     void deleteBatchIds(List ids);
+
+    /**
+     * 通过id获取分类
+     * @param id
+     * @return
+     */
+    @Select("select * from category where id=#{id}")
+    Category getById(Long id);
 }
