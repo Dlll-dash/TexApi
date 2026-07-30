@@ -16,6 +16,7 @@ services:
       - TEX_DRIVER_CLASS_NAME=com.mysql.cj.jdbc.Driver
       - TEX_DATASOURCE_HOST=db
       - TEX_DATASOURCE_PORT=3306
+      - TEX_DATASOURCE_DATABASE=tex_api
       - TEX_USERNAME=root
       - TEX_PASSWORD=${DB_PASSWORD}
       - TEX_REDIS_HOST=redis
