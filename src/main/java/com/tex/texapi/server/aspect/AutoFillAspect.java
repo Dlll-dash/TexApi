@@ -4,7 +4,6 @@ import com.tex.texapi.common.context.BaseContext;
 import com.tex.texapi.common.enumeration.OperationType;
 import com.tex.texapi.server.annotation.AutoFill;
 import lombok.extern.slf4j.Slf4j;
-import org.aspectj.lang.Signature;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Before;
 import org.aspectj.lang.annotation.Pointcut;
@@ -14,7 +13,6 @@ import org.springframework.stereotype.Component;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Aspect
@@ -31,7 +29,7 @@ public class AutoFillAspect {
 
     //前置通知，在执行数据库操作之前进行自动填充
     @Before("autoFillPointCut()")
-    public void autoFill(JoinPoint joinPoint) throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+    public void autoFill(JoinPoint joinPoint) throws InvocationTargetException, IllegalAccessException {
         log.info("开始进行公共字段自动填充...");
         // 获取拦截的数据库操作类型
         MethodSignature signature = (MethodSignature) joinPoint.getSignature();
@@ -51,26 +49,26 @@ public class AutoFillAspect {
 
         // 根据操作类型进行不同的自动填充逻辑
         if (operationType == OperationType.INSERT) {
-            //获得方法对象
-            Method setCreateTime = entity.getClass().getDeclaredMethod(AutoFillConstant.SET_CREATE_TIME, LocalDateTime.class);
-            Method setCreateUser = entity.getClass().getDeclaredMethod(AutoFillConstant.SET_CREATE_USER, Long.class);
-            Method setUpdateTime = entity.getClass().getDeclaredMethod(AutoFillConstant.SET_UPDATE_TIME, LocalDateTime.class);
-            Method setUpdateUser = entity.getClass().getDeclaredMethod(AutoFillConstant.SET_UPDATE_USER, Long.class);
-
-            //调用方法进行自动填充
-            setCreateTime.invoke(entity, now);
-            setCreateUser.invoke(entity, id);
-            setUpdateTime.invoke(entity, now);
-            setUpdateUser.invoke(entity, id);
+            invokeIfExists(entity, AutoFillConstant.SET_CREATE_TIME, LocalDateTime.class, now);
+            invokeIfExists(entity, AutoFillConstant.SET_CREATE_USER, Long.class, id);
+            invokeIfExists(entity, AutoFillConstant.SET_UPDATE_TIME, LocalDateTime.class, now);
+            invokeIfExists(entity, AutoFillConstant.SET_UPDATE_USER, Long.class, id);
 
         }else if (operationType == OperationType.UPDATE) {
-            Method setUpdateTime = entity.getClass().getDeclaredMethod(AutoFillConstant.SET_UPDATE_TIME, LocalDateTime.class);
-            Method setUpdateUser = entity.getClass().getDeclaredMethod(AutoFillConstant.SET_UPDATE_USER, Long.class);
-
-            setUpdateTime.invoke(entity, now);
-            setUpdateUser.invoke(entity, id);
+            invokeIfExists(entity, AutoFillConstant.SET_UPDATE_TIME, LocalDateTime.class, now);
+            invokeIfExists(entity, AutoFillConstant.SET_UPDATE_USER, Long.class, id);
         }
 
 
+    }
+
+    private void invokeIfExists(Object entity, String methodName, Class<?> parameterType, Object value)
+            throws InvocationTargetException, IllegalAccessException {
+        try {
+            Method method = entity.getClass().getDeclaredMethod(methodName, parameterType);
+            method.invoke(entity, value);
+        } catch (NoSuchMethodException e) {
+            log.debug("跳过自动填充，setter 不存在: {}", methodName);
+        }
     }
 }
