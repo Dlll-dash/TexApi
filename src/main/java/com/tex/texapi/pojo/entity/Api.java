@@ -51,6 +51,12 @@ public class Api {
     //分类
     Long categoryId;
 
+    //草稿的主表id
+    Long baseId;
+
+    //是否是草稿
+    Boolean isDraft;
+
     //接口状态
     public static final int DEVELOPING = 1;
     public static final int MAINTAINING = 0;

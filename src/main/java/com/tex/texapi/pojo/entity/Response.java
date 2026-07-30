@@ -21,4 +21,10 @@ public class Response {
 
     //响应体
     String responseBody;
+
+    //是否是草稿
+    Boolean isDraft;
+
+    //草稿的主表id
+    Long baseId;
 }

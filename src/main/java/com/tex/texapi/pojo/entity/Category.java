@@ -23,4 +23,10 @@ public class Category {
 
     //父分类id
     Long parentId;
+
+    //创建者id
+    Long createUser;
+
+    //乐观锁版本号
+    Long version;
 }
