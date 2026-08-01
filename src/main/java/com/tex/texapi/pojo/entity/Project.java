@@ -22,5 +22,7 @@ public class Project{
     //创建时间
     LocalDateTime createTime;
     //创建用户
-    LocalDateTime createUser;
+    Long createUser;
+    //所属团队id
+    Long teamId;
 }

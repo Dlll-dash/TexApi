@@ -56,17 +56,10 @@ create table project
     name        varchar(100)                           not null comment '项目名称',
     description varchar(500) default ''                null comment '项目描述',
     create_time datetime     default CURRENT_TIMESTAMP null,
-    create_user bigint                                 null comment '创建人id'
+    create_user bigint                                 null comment '创建人id',
+    team_id     bigint                                 null comment '所属团队id'
 )
     charset = utf8mb4;
-
-create table project_user
-(
-    project_id bigint not null comment '项目id',
-    user_id    bigint not null comment '用户id',
-    primary key (user_id, project_id)
-)
-    comment '项目与用户关联表';
 
 create table request_params
 (
@@ -104,6 +97,34 @@ create table response
 
 create index idx_draft_api
     on response (api_id, is_draft);
+
+create table team
+(
+    id          bigint auto_increment
+        primary key,
+    name        varchar(100)                           not null,
+    description varchar(500) default ''                null,
+    create_user bigint                                 not null comment '创建者',
+    create_time datetime     default CURRENT_TIMESTAMP null
+)
+    charset = utf8mb4;
+
+create table team_member
+(
+    id        bigint auto_increment
+        primary key,
+    team_id   bigint                             not null,
+    user_id   bigint                             not null,
+    role      tinyint  default 1                 not null comment '4=owner / 3=admin / 2=editor / 1=viewer',
+    join_time datetime default CURRENT_TIMESTAMP null,
+    user_name varchar(50)                        not null comment '成员名',
+    constraint uk_team_user
+        unique (team_id, user_id)
+)
+    charset = utf8mb4;
+
+create index idx_user
+    on team_member (user_id);
 
 create table user
 (

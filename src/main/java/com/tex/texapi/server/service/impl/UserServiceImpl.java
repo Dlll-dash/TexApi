@@ -7,14 +7,21 @@ import com.tex.texapi.common.properties.JwtProperties;
 import com.tex.texapi.common.utils.JwtUtil;
 import com.tex.texapi.pojo.dto.UserLoginDTO;
 import com.tex.texapi.pojo.dto.UserRegistryDTO;
+import com.tex.texapi.pojo.entity.Team;
+import com.tex.texapi.pojo.entity.TeamMember;
 import com.tex.texapi.pojo.entity.User;
 import com.tex.texapi.pojo.vo.UserLoginVO;
+import com.tex.texapi.server.mapper.TeamMapper;
+import com.tex.texapi.server.mapper.TeamMemberMapper;
 import com.tex.texapi.server.mapper.UserMapper;
 import com.tex.texapi.server.service.UserService;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.DigestUtils;
 
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -24,13 +31,17 @@ public class UserServiceImpl implements UserService {
     private UserMapper userMapper;
     @Autowired
     private JwtProperties jwtProperties;
+    @Autowired
+    private TeamMapper teamMapper;
+    @Autowired
+    private TeamMemberMapper teamMemberMapper;
 
     @Override
     public UserLoginVO login(UserLoginDTO userLoginDTO) {
         String username=userLoginDTO.getUserName();
         String password=userLoginDTO.getPassword();
 
-        User user = userMapper.gerByUserName(username);
+        User user = userMapper.getByUserName(username);
         if(user==null){
             //未查到用户
             throw new LoginException(MessageConstant.ACCOUNT_NOT_FOUND);
@@ -54,9 +65,10 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional
     public void register(UserRegistryDTO userRegistryDTO) {
         userRegistryDTO.setPassword(DigestUtils.md5DigestAsHex(userRegistryDTO.getPassword().getBytes()));
-        User user=userMapper.gerByUserName(userRegistryDTO.getUserName());
+        User user=userMapper.getByUserName(userRegistryDTO.getUserName());
         if(user!=null){
             //用户名已存在
             throw new LoginException(MessageConstant.ACCOUNT_EXIST);
@@ -74,6 +86,26 @@ public class UserServiceImpl implements UserService {
             //邮箱不能为空
             throw new LoginException(MessageConstant.EMAIL_EMPTY);
         }
-        userMapper.register(userRegistryDTO);
+        BeanUtils.copyProperties(userRegistryDTO,user);
+        userMapper.register(user);
+
+        //自动创建个人团队
+        Team team=Team.builder()
+                .name("个人团队")
+                .createTime(LocalDateTime.now())
+                .createUser(user.getId())
+                .build();
+
+        teamMapper.addTeam(team);
+
+        TeamMember member=TeamMember.builder()
+                .teamId(team.getId())
+                .userId(user.getId())
+                .userName(user.getName())
+                .role(TeamMember.OWNER)
+                .joinTime(LocalDateTime.now())
+                .build();
+        teamMemberMapper.addMember(member);
+
     }
 }

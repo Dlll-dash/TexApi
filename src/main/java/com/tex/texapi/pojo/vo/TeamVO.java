@@ -1,0 +1,27 @@
+package com.tex.texapi.pojo.vo;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.io.Serializable;
+import java.time.LocalDateTime;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class TeamVO implements Serializable {
+    //主键
+    Long id;
+
+    //团队名
+    String name;
+
+    //描述
+    String description;
+
+    //创建时间
+    LocalDateTime createTime;
+}

@@ -20,4 +20,6 @@ public class MessageConstant {
     public static final String USERNAME_EMPTY = "用户名不能为空";
     public static final String PASSWORD_EMPTY = "密码不能为空";
     public static final String EMAIL_EMPTY = "邮箱不能为空";
+    public static final String NOT_TEAM_MEMBER = "非团队成员";
+    public static final String PERMISSION_DENIED = "权限不足";
 }

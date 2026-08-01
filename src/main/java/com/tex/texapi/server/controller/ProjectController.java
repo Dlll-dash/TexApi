@@ -1,5 +1,6 @@
 package com.tex.texapi.server.controller;
 
+import com.tex.texapi.common.context.BaseContext;
 import com.tex.texapi.common.result.Result;
 import com.tex.texapi.pojo.entity.Project;
 import com.tex.texapi.server.service.ProjectService;
@@ -19,17 +20,24 @@ public class ProjectController {
     private ProjectService projectService;
 
     /**
-     * 获取项目列表
-     * @param id
+     * 根据团队id获取项目列表
+     * @param teamId 团队id
      * @return
      */
-    @GetMapping("/list/{id}")
-    public Result<List>list(@PathVariable Long id){
-        log.info("获取项目列表,{}",id);
-        List<Project> projectList = projectService.getProjectList(id);
+    @GetMapping("/list/{teamId}")
+    public Result<List>list(@PathVariable Long teamId){
+        log.info("获取项目列表");
+        //每次切换团队时设置团队id
+        BaseContext.setCurrentTeamId(teamId);
+        List<Project> projectList = projectService.getProjectList(teamId);
         return Result.success(projectList);
     }
 
+    /**
+     * 创建项目
+     * @param project
+     * @return
+     */
     @PostMapping("/create")
     public Result createProject(@RequestBody Project project) {
         log.info("创建项目：{}", project);
@@ -37,6 +45,11 @@ public class ProjectController {
         return Result.success();
     }
 
+    /**
+     * 修改项目基本信息
+     * @param project
+     * @return
+     */
     @PutMapping("/update")
     public Result updateProject(@RequestBody Project project) {
         log.info("更新项目：{}", project);
@@ -44,6 +57,11 @@ public class ProjectController {
         return Result.success();
     }
 
+    /**
+     * 删除项目
+     * @param id
+     * @return
+     */
     @DeleteMapping("/delete/{id}")
     public Result deleteProject(@PathVariable Long id) {
         log.info("删除项目：{}", id);

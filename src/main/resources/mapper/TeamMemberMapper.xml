@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.tex.texapi.server.mapper.TeamMemberMapper">
+
+    <insert id="addMember">
+        INSERT INTO team_member (team_id, user_id, user_name, role, join_time)
+        VALUES (#{teamId}, #{userId}, #{userName}, #{role}, #{joinTime})
+    </insert>
+
+    <update id="updateRole">
+        UPDATE team_member SET role = #{role}
+        WHERE team_id = #{teamId} AND user_id = #{userId}
+    </update>
+
+    <delete id="deleteMember">
+        DELETE FROM team_member
+        WHERE team_id = #{teamId} AND user_id = #{userId}
+    </delete>
+
+</mapper>

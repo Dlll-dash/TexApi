@@ -8,8 +8,27 @@ import org.apache.ibatis.annotations.Select;
 @Mapper
 public interface UserMapper {
 
+    /**
+     * 根据账号查询
+     * @param userName
+     * @return
+     */
     @Select("select * from user where user_name=#{userName}")
-    User gerByUserName(String userName);
+    User getByUserName(String userName);
 
-    void register(UserRegistryDTO userRegistryDTO);
+    /**
+     * 注册
+     * @param user
+     */
+    void register(User user);
+
+    /**
+     * 根据id查询用户
+     * @param id
+     * @return
+     */
+    @Select("select * from user where id=#{id}")
+    User getById(Long id);
+
+
 }

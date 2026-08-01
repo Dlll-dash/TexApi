@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.tex.texapi.server.mapper.TeamMapper">
+
+    <insert id="addTeam" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO team (name, create_user, create_time)
+        VALUES (#{name}, #{createUser}, #{createTime})
+    </insert>
+
+    <update id="updateTeam">
+        UPDATE team
+        <set>
+            <if test="name != null and name != ''">name = #{name},</if>
+            <if test="description != null">description = #{description},</if>
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <select id="getByUserId" resultType="com.tex.texapi.pojo.entity.Team">
+        SELECT t.* FROM team t
+        JOIN team_member tm ON t.id = tm.team_id
+        WHERE tm.user_id = #{userId}
+    </select>
+
+</mapper>

@@ -2,8 +2,9 @@ package com.tex.texapi.server.service.impl;
 
 import com.tex.texapi.common.context.BaseContext;
 import com.tex.texapi.pojo.entity.Project;
-import com.tex.texapi.server.mapper.ProjectMapper;
-import com.tex.texapi.server.mapper.ProjectUserMapper;
+import com.tex.texapi.pojo.entity.TeamMember;
+import com.tex.texapi.server.annotation.TeamAuth;
+import com.tex.texapi.server.mapper.*;
 import com.tex.texapi.server.service.ProjectService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -18,15 +19,14 @@ public class ProjectServiceImpl implements ProjectService {
     @Autowired
     private ProjectUserMapper projectUserMapper;
 
-
     /**
-     * 获取项目列表
+     * 根据团队id获取项目列表
      * @param id
      */
     @Override
     public List<Project> getProjectList(Long id) {
-        //根据用户id获取项目列表
-        List<Project>list =projectUserMapper.getProjectList(id);
+        //根据团队id获取项目列表
+        List<Project>list =projectMapper.getProjectList(id);
         return list;
     }
 
@@ -36,11 +36,14 @@ public class ProjectServiceImpl implements ProjectService {
      */
     @Override
     @Transactional
+    @TeamAuth(TeamMember.EDITOR)
     public void createProject(Project project) {
-        projectMapper.createProject(project);
-        //创建项目后，自动添加项目成员关系，暂定项目创建者为管理员
         Long userId = BaseContext.getCurrentId();
-        projectUserMapper.addProjectUser(project.getId(),userId);
+        project.setCreateUser(userId);
+        project.setTeamId(BaseContext.getCurrentTeamId());
+        projectMapper.createProject(project);
+
+        //projectUserMapper.addProjectUser(project.getId(),userId);
     }
 
     /**
@@ -48,23 +51,25 @@ public class ProjectServiceImpl implements ProjectService {
      * @param project
      */
     @Override
+    @TeamAuth(TeamMember.EDITOR)
     public void updateProject(Project project) {
-        //直接修改项目信息，暂不考虑权限问题
         projectMapper.updateProject(project);
 
     }
 
+    /**
+     * 删除项目
+     * @param id
+     */
     @Override
-    @Transactional
+    @TeamAuth(TeamMember.OWNER)
     public void deleteProject(Long id) {
-        //如果是项目管理员，删除项目（暂定项目创建者为管理员）
-        Long userId = BaseContext.getCurrentId();
         //删除项目成员关系
-        projectUserMapper.deleteProjectUser(id,userId);
-        if(projectMapper.isProjectAdmin(userId,id)) {
-            //如果是管理员，删除项目
-            projectMapper.deleteProject(id);
-        }
+        //projectUserMapper.deleteProjectUser(id,userId);
+
+        //如果是管理员，删除项目
+        projectMapper.deleteProject(id);
+
     }
 
 

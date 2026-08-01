@@ -6,7 +6,7 @@ import java.util.List;
 
 public interface ProjectService {
     /**
-     * 获取项目列表
+     * 根据团队id获取项目列表
      * @param id
      */
     List<Project> getProjectList(Long id);

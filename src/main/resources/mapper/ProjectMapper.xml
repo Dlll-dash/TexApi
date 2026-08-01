@@ -3,7 +3,7 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="com.tex.texapi.server.mapper.ProjectMapper">
     <insert id="createProject" keyProperty="id" useGeneratedKeys="true">
-        insert into project (name, description, create_user) values (#{name}, #{description}, #{createUser});
+        insert into project (name, description, create_user,team_id) values (#{name}, #{description}, #{createUser},#{teamId});
     </insert>
 
 
