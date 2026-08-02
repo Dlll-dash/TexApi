@@ -5,8 +5,11 @@ package com.tex.texapi.server.service.impl;
 
 import com.tex.texapi.pojo.dto.AddResponseDTO;
 import com.tex.texapi.pojo.entity.Response;
+import com.tex.texapi.pojo.entity.TeamMember;
 import com.tex.texapi.pojo.vo.AddResponseVO;
 import com.tex.texapi.pojo.vo.ResponseListVO;
+import com.tex.texapi.common.enumeration.CheckType;
+import com.tex.texapi.server.annotation.TeamAuth;
 import com.tex.texapi.server.mapper.ResponseMapper;
 import com.tex.texapi.server.service.ResponseService;
 import org.springframework.beans.BeanUtils;
@@ -25,6 +28,7 @@ public class ResponseServiceImpl implements ResponseService {
         * @param id
         */
     @Override
+    @TeamAuth(level = TeamMember.VIEWER, checkType = CheckType.RESPONSE)
     public Response getResponse(Long id) {
         Response response = responseMapper.getResponseById(id);
         return response;
@@ -35,6 +39,7 @@ public class ResponseServiceImpl implements ResponseService {
      * @param addResponseDTO
      */
     @Override
+    @TeamAuth(level = TeamMember.EDITOR, checkType = CheckType.API)
     public AddResponseVO add(AddResponseDTO addResponseDTO) {
         Response response=new Response();
         BeanUtils.copyProperties(addResponseDTO,response);
@@ -53,6 +58,7 @@ public class ResponseServiceImpl implements ResponseService {
      * @return
      */
     @Override
+    @TeamAuth(level = TeamMember.VIEWER, checkType = CheckType.API)
     public List list(Long apiId) {
 
         List<ResponseListVO> list= responseMapper.getListByApiId(apiId);
@@ -64,6 +70,8 @@ public class ResponseServiceImpl implements ResponseService {
      * 更新响应参数
      * @param response
      */
+    @Override
+    @TeamAuth(level = TeamMember.EDITOR, checkType = CheckType.RESPONSE)
     public void update(Response response) {
         responseMapper.update(response);
     }
@@ -73,6 +81,7 @@ public class ResponseServiceImpl implements ResponseService {
      * @param response
      */
     @Override
+    @TeamAuth(level = TeamMember.EDITOR, checkType = CheckType.RESPONSE)
     public void updateInfo(Response response) {
         responseMapper.updateInfo(response);
     }

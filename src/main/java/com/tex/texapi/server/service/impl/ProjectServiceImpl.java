@@ -1,8 +1,13 @@
 package com.tex.texapi.server.service.impl;
 
+import com.tex.texapi.common.constant.MessageConstant;
 import com.tex.texapi.common.context.BaseContext;
+import com.tex.texapi.common.exception.InputException;
+import com.tex.texapi.common.exception.NoPermissionException;
+import com.tex.texapi.pojo.dto.DeleteProjectDTO;
 import com.tex.texapi.pojo.entity.Project;
 import com.tex.texapi.pojo.entity.TeamMember;
+import com.tex.texapi.common.enumeration.CheckType;
 import com.tex.texapi.server.annotation.TeamAuth;
 import com.tex.texapi.server.mapper.*;
 import com.tex.texapi.server.service.ProjectService;
@@ -16,14 +21,13 @@ import java.util.List;
 public class ProjectServiceImpl implements ProjectService {
     @Autowired
     private ProjectMapper projectMapper;
-    @Autowired
-    private ProjectUserMapper projectUserMapper;
 
     /**
      * 根据团队id获取项目列表
      * @param id
      */
     @Override
+    @TeamAuth(level = TeamMember.VIEWER, checkType = CheckType.TEAM)
     public List<Project> getProjectList(Long id) {
         //根据团队id获取项目列表
         List<Project>list =projectMapper.getProjectList(id);
@@ -36,11 +40,10 @@ public class ProjectServiceImpl implements ProjectService {
      */
     @Override
     @Transactional
-    @TeamAuth(TeamMember.EDITOR)
+    @TeamAuth(level = TeamMember.EDITOR, checkType = CheckType.TEAM)
     public void createProject(Project project) {
         Long userId = BaseContext.getCurrentId();
         project.setCreateUser(userId);
-        project.setTeamId(BaseContext.getCurrentTeamId());
         projectMapper.createProject(project);
 
         //projectUserMapper.addProjectUser(project.getId(),userId);
@@ -51,19 +54,36 @@ public class ProjectServiceImpl implements ProjectService {
      * @param project
      */
     @Override
-    @TeamAuth(TeamMember.EDITOR)
+    @TeamAuth(level = TeamMember.EDITOR, checkType = CheckType.PROJECT)
     public void updateProject(Project project) {
+        //校验项目归属：项目必须属于声明的团队
+        Project existing = projectMapper.getById(project.getId());
+        if (existing == null) {
+            throw new InputException(MessageConstant.NOT_FOUND);
+        }
+        if (!existing.getTeamId().equals(project.getTeamId())) {
+            throw new NoPermissionException(MessageConstant.PERMISSION_DENIED);
+        }
         projectMapper.updateProject(project);
 
     }
 
     /**
      * 删除项目
-     * @param id
+     * @param dto
      */
     @Override
-    @TeamAuth(TeamMember.OWNER)
-    public void deleteProject(Long id) {
+    @TeamAuth(level = TeamMember.OWNER, checkType = CheckType.PROJECT)
+    public void deleteProject(DeleteProjectDTO dto) {
+        Long id = dto.getProjectId();
+        //校验项目归属：项目必须属于声明的团队
+        Project existing = projectMapper.getById(id);
+        if (existing == null) {
+            throw new InputException(MessageConstant.NOT_FOUND);
+        }
+        if (!existing.getTeamId().equals(dto.getTeamId())) {
+            throw new NoPermissionException(MessageConstant.PERMISSION_DENIED);
+        }
         //删除项目成员关系
         //projectUserMapper.deleteProjectUser(id,userId);
 

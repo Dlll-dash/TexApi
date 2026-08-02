@@ -18,4 +18,11 @@ public class UpdateTeamDTO {
 
     //描述
     String description;
+
+    /**
+     * 团队ID（与id相同，供TeamAuthAspect反射调用）
+     */
+    public Long getTeamId() {
+        return id;
+    }
 }

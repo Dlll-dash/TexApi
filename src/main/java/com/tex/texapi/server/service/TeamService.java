@@ -2,6 +2,8 @@ package com.tex.texapi.server.service;
 
 import com.tex.texapi.pojo.dto.AddTeamDTO;
 import com.tex.texapi.pojo.dto.AddTeamMemberDTO;
+import com.tex.texapi.pojo.dto.DeleteTeamDTO;
+import com.tex.texapi.pojo.dto.RemoveMemberDTO;
 import com.tex.texapi.pojo.dto.UpdateTeamDTO;
 import com.tex.texapi.pojo.dto.UpdateTeamMemberDTO;
 import com.tex.texapi.pojo.vo.TeamMemberVO;
@@ -32,9 +34,9 @@ public interface TeamService {
 
     /**
      * 删除团队
-     * @param id
+     * @param dto
      */
-    void deleteTeam(Long id);
+    void deleteTeam(DeleteTeamDTO dto);
 
     /**
      * 邀请成员
@@ -44,10 +46,9 @@ public interface TeamService {
 
     /**
      * 移除成员
-     * @param teamId
-     * @param userId
+     * @param dto
      */
-    void removeMember(Long teamId, Long userId);
+    void removeMember(RemoveMemberDTO dto);
 
     /**
      * 修改成员角色

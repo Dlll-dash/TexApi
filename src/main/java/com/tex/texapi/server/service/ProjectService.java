@@ -1,5 +1,6 @@
 package com.tex.texapi.server.service;
 
+import com.tex.texapi.pojo.dto.DeleteProjectDTO;
 import com.tex.texapi.pojo.entity.Project;
 
 import java.util.List;
@@ -19,9 +20,9 @@ public interface ProjectService {
 
     /**
      * 删除项目
-     * @param id
+     * @param dto
      */
-    void deleteProject(Long id);
+    void deleteProject(DeleteProjectDTO dto);
 
     /**
      * 创建项目

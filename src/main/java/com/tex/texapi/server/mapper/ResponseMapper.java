@@ -5,6 +5,7 @@ import com.tex.texapi.pojo.vo.ResponseListVO;
 import com.tex.texapi.pojo.vo.ResponseVO;
 import org.apache.ibatis.annotations.Delete;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 
 import java.util.List;
@@ -48,4 +49,14 @@ public interface ResponseMapper {
 
     @Select("select * from response where api_id=#{apiId}")
     ResponseVO getByApiId(Long apiId);
+
+    /**
+     * 鉴权查询：一次 JOIN 返回用户在响应所属团队中的角色，无权限返回 null
+     */
+    @Select("SELECT tm.role FROM team_member tm " +
+            "JOIN project p ON tm.team_id = p.team_id " +
+            "JOIN api a ON a.project_id = p.id " +
+            "JOIN response r ON r.api_id = a.id " +
+            "WHERE r.id = #{responseId} AND tm.user_id = #{userId}")
+    Integer getUserRole(@Param("responseId") Long responseId, @Param("userId") Long userId);
 }

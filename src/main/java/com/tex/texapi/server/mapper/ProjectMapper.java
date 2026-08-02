@@ -5,6 +5,7 @@ import com.tex.texapi.pojo.entity.Project;
 import com.tex.texapi.server.annotation.AutoFill;
 import org.apache.ibatis.annotations.Delete;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 
 import java.util.List;
@@ -39,4 +40,20 @@ public interface ProjectMapper {
      */
     @AutoFill(OperationType.INSERT)
     void createProject(Project project);
+
+    /**
+     * 根据id获取项目
+     * @param id
+     * @return
+     */
+    @Select("select * from project where id=#{id}")
+    Project getById(Long id);
+
+    /**
+     * 鉴权查询：一次 JOIN 返回用户在项目所属团队中的角色，无权限返回 null
+     */
+    @Select("SELECT tm.role FROM team_member tm " +
+            "JOIN project p ON tm.team_id = p.team_id " +
+            "WHERE p.id = #{projectId} AND tm.user_id = #{userId}")
+    Integer getUserRole(@Param("projectId") Long projectId, @Param("userId") Long userId);
 }

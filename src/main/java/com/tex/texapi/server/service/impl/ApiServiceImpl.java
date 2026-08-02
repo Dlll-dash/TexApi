@@ -2,13 +2,17 @@ package com.tex.texapi.server.service.impl;
 
 import com.tex.texapi.common.constant.MessageConstant;
 import com.tex.texapi.common.context.BaseContext;
+import com.tex.texapi.common.exception.NoPermissionException;
 import com.tex.texapi.common.exception.RequestException;
 import com.tex.texapi.common.utils.HttpClientUtil;
 import com.tex.texapi.pojo.dto.*;
 import com.tex.texapi.pojo.entity.Api;
 import com.tex.texapi.pojo.entity.Params;
 import com.tex.texapi.pojo.entity.Request;
+import com.tex.texapi.pojo.entity.TeamMember;
 import com.tex.texapi.pojo.vo.*;
+import com.tex.texapi.common.enumeration.CheckType;
+import com.tex.texapi.server.annotation.TeamAuth;
 import com.tex.texapi.server.mapper.ApiMapper;
 import com.tex.texapi.server.mapper.RequestParamsMapper;
 import com.tex.texapi.server.mapper.ResponseMapper;
@@ -44,6 +48,7 @@ public class ApiServiceImpl implements ApiService {
      * @return
      */
     @Override
+    @TeamAuth(level = TeamMember.VIEWER, checkType = CheckType.PROJECT)
     public List<Api> list(Long id) {
         List<Api> list=apiMapper.list(id);
         return list;
@@ -56,6 +61,7 @@ public class ApiServiceImpl implements ApiService {
      * @return
      */
     @Override
+    @TeamAuth(level = TeamMember.EDITOR, checkType = CheckType.PROJECT)
     public AddApiVO addApi(AddApiDTO addApiDTO) {
         apiMapper.addApi(addApiDTO);
         AddApiVO addApiVO=new AddApiVO();
@@ -64,11 +70,13 @@ public class ApiServiceImpl implements ApiService {
     }
 
     @Override
+    @TeamAuth(level = TeamMember.EDITOR, checkType = CheckType.API)
     public void updateApi(UpdateApiDTO updateApiDTO) {
         apiMapper.updateApi(updateApiDTO);
     }
 
     @Override
+    @TeamAuth(level = TeamMember.VIEWER, checkType = CheckType.API)
     public RequestVO send(RequestDTO requestDTO) {
 
 
@@ -240,14 +248,15 @@ public class ApiServiceImpl implements ApiService {
 
     }
 
-    //更新接口信息
     @Override
+    @TeamAuth(level = TeamMember.EDITOR, checkType = CheckType.API)
     public void updateInfo(UpdateApiInfoDTO updateApiInfoDTO) {
         apiMapper.updateInfo(updateApiInfoDTO);
     }
 
     @Override
     @Transactional
+    @TeamAuth(level = TeamMember.ADMIN, checkType = CheckType.API)
     public void delete(Long id) {
         //删除接口
         apiMapper.deleteById(id);
@@ -259,6 +268,12 @@ public class ApiServiceImpl implements ApiService {
 
     @Override
     public List<ExportBatchVO> exportBatch(List<ExportBatchDTO> list) {
+        //批量鉴权：一次SQL查出用户有权访问的API ID
+        List<Long> apiIds = list.stream().map(ExportBatchDTO::getApiId).distinct().toList();
+        List<Long> accessible = apiMapper.filterAccessibleApiIds(apiIds, BaseContext.getCurrentId());
+        if (accessible.size() < apiIds.size()) {
+            throw new NoPermissionException(MessageConstant.PERMISSION_DENIED);
+        }
 
         List<ExportBatchVO> exportBatchVOs = new ArrayList<>();
         //遍历apiId

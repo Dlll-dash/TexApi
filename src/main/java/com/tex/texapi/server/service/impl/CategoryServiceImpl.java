@@ -3,11 +3,13 @@ package com.tex.texapi.server.service.impl;
 
 import com.tex.texapi.pojo.dto.AddCategoryDTO;
 import com.tex.texapi.pojo.dto.UpdateCategoryDTO;
-import com.tex.texapi.pojo.entity.Api;
 import com.tex.texapi.pojo.entity.Category;
+import com.tex.texapi.pojo.entity.TeamMember;
 import com.tex.texapi.pojo.vo.AddCategoryVO;
 import com.tex.texapi.pojo.vo.ApiVO;
 import com.tex.texapi.pojo.vo.CategoryVO;
+import com.tex.texapi.common.enumeration.CheckType;
+import com.tex.texapi.server.annotation.TeamAuth;
 import com.tex.texapi.server.mapper.ApiMapper;
 import com.tex.texapi.server.mapper.CategoryMapper;
 import com.tex.texapi.server.service.CategoryService;
@@ -35,6 +37,7 @@ public class CategoryServiceImpl implements CategoryService {
      * @return
      */
     @Override
+    @TeamAuth(level = TeamMember.VIEWER, checkType = CheckType.PROJECT)
     public CategoryVO getCategories(Long projectId) {
         List<CategoryVO> list=categoryMapper.getVoByProjectId(projectId);
         CategoryVO root;
@@ -65,6 +68,7 @@ public class CategoryServiceImpl implements CategoryService {
      * @return
      */
     @Override
+    @TeamAuth(level = TeamMember.EDITOR, checkType = CheckType.PROJECT)
     public AddCategoryVO add(AddCategoryDTO addCategoryDTO) {
         Category category=new Category();
         BeanUtils.copyProperties(addCategoryDTO,category);
@@ -83,6 +87,7 @@ public class CategoryServiceImpl implements CategoryService {
      * @param updateCategoryDTO
      */
     @Override
+    @TeamAuth(level = TeamMember.EDITOR, checkType = CheckType.CATEGORY)
     public void update(Long id, UpdateCategoryDTO updateCategoryDTO) {
         Category category=new Category();
         BeanUtils.copyProperties(updateCategoryDTO,category);
@@ -96,6 +101,7 @@ public class CategoryServiceImpl implements CategoryService {
      */
     @Override
     @Transactional
+    @TeamAuth(level = TeamMember.ADMIN, checkType = CheckType.CATEGORY)
     public void delete(Long id) {
         //递归删除所有子分类
         Category category = categoryMapper.getById(id);
@@ -127,6 +133,7 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     @Override
+    @TeamAuth(level = TeamMember.VIEWER, checkType = CheckType.CATEGORY)
     public List<ApiVO> getApiByCategoryId(Long categoryId) {
         return apiMapper.getByCategoryId(categoryId);
     }

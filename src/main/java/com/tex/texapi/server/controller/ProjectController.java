@@ -1,7 +1,7 @@
 package com.tex.texapi.server.controller;
 
-import com.tex.texapi.common.context.BaseContext;
 import com.tex.texapi.common.result.Result;
+import com.tex.texapi.pojo.dto.DeleteProjectDTO;
 import com.tex.texapi.pojo.entity.Project;
 import com.tex.texapi.server.service.ProjectService;
 import lombok.extern.slf4j.Slf4j;
@@ -27,8 +27,6 @@ public class ProjectController {
     @GetMapping("/list/{teamId}")
     public Result<List>list(@PathVariable Long teamId){
         log.info("获取项目列表");
-        //每次切换团队时设置团队id
-        BaseContext.setCurrentTeamId(teamId);
         List<Project> projectList = projectService.getProjectList(teamId);
         return Result.success(projectList);
     }
@@ -60,12 +58,17 @@ public class ProjectController {
     /**
      * 删除项目
      * @param id
+     * @param teamId
      * @return
      */
     @DeleteMapping("/delete/{id}")
-    public Result deleteProject(@PathVariable Long id) {
-        log.info("删除项目：{}", id);
-        projectService.deleteProject(id);
+    public Result deleteProject(@PathVariable Long id, @RequestParam Long teamId) {
+        log.info("删除项目：{}, teamId={}", id, teamId);
+        DeleteProjectDTO dto = DeleteProjectDTO.builder()
+                .projectId(id)
+                .teamId(teamId)
+                .build();
+        projectService.deleteProject(dto);
         return Result.success();
     }
 }

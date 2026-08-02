@@ -1,8 +1,11 @@
 package com.tex.texapi.server.controller;
 
+import com.tex.texapi.common.context.BaseContext;
 import com.tex.texapi.common.result.Result;
 import com.tex.texapi.pojo.dto.AddTeamDTO;
 import com.tex.texapi.pojo.dto.AddTeamMemberDTO;
+import com.tex.texapi.pojo.dto.DeleteTeamDTO;
+import com.tex.texapi.pojo.dto.RemoveMemberDTO;
 import com.tex.texapi.pojo.dto.UpdateTeamDTO;
 import com.tex.texapi.pojo.dto.UpdateTeamMemberDTO;
 import com.tex.texapi.pojo.vo.TeamMemberVO;
@@ -29,7 +32,7 @@ public class TeamController {
      */
     @GetMapping("/list")
     public Result<List<TeamVO>> list() {
-        log.info("查询当前用户的团队列表");
+        log.info("查询当前用户的团队列表: {}", BaseContext.getCurrentId());
         List<TeamVO> list = teamService.listTeams();
         return Result.success(list);
     }
@@ -66,7 +69,8 @@ public class TeamController {
     @DeleteMapping("/delete/{id}")
     public Result delete(@PathVariable Long id) {
         log.info("删除团队：{}", id);
-        teamService.deleteTeam(id);
+        DeleteTeamDTO dto = DeleteTeamDTO.builder().teamId(id).build();
+        teamService.deleteTeam(dto);
         return Result.success();
     }
 
@@ -93,7 +97,11 @@ public class TeamController {
     @DeleteMapping("/{id}/member/{userId}")
     public Result removeMember(@PathVariable Long id, @PathVariable Long userId) {
         log.info("移除成员：teamId={}, userId={}", id, userId);
-        teamService.removeMember(id, userId);
+        RemoveMemberDTO dto = RemoveMemberDTO.builder()
+                .teamId(id)
+                .userId(userId)
+                .build();
+        teamService.removeMember(dto);
         return Result.success();
     }
 

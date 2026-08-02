@@ -6,6 +6,8 @@ import com.tex.texapi.common.exception.InputException;
 import com.tex.texapi.common.exception.NoPermissionException;
 import com.tex.texapi.pojo.dto.AddTeamDTO;
 import com.tex.texapi.pojo.dto.AddTeamMemberDTO;
+import com.tex.texapi.pojo.dto.DeleteTeamDTO;
+import com.tex.texapi.pojo.dto.RemoveMemberDTO;
 import com.tex.texapi.pojo.dto.UpdateTeamDTO;
 import com.tex.texapi.pojo.dto.UpdateTeamMemberDTO;
 import com.tex.texapi.pojo.entity.Team;
@@ -13,6 +15,7 @@ import com.tex.texapi.pojo.entity.TeamMember;
 import com.tex.texapi.pojo.entity.User;
 import com.tex.texapi.pojo.vo.TeamMemberVO;
 import com.tex.texapi.pojo.vo.TeamVO;
+import com.tex.texapi.common.enumeration.CheckType;
 import com.tex.texapi.server.annotation.TeamAuth;
 import com.tex.texapi.server.mapper.TeamMapper;
 import com.tex.texapi.server.mapper.TeamMemberMapper;
@@ -88,7 +91,7 @@ public class TeamServiceImpl implements TeamService {
      * @param dto
      */
     @Override
-    @TeamAuth(TeamMember.ADMIN)
+    @TeamAuth(level = TeamMember.ADMIN)
     public void updateTeam(UpdateTeamDTO dto) {
         //校验团队ID
         if (dto.getId() == null) {
@@ -104,12 +107,13 @@ public class TeamServiceImpl implements TeamService {
 
     /**
      * 删除团队
-     * @param id
+     * @param dto
      */
     @Override
     @Transactional
-    @TeamAuth(TeamMember.OWNER)
-    public void deleteTeam(Long id) {
+    @TeamAuth(level = TeamMember.OWNER)
+    public void deleteTeam(DeleteTeamDTO dto) {
+        Long id = dto.getTeamId();
         //校验团队ID
         if (id == null) {
             throw new InputException("团队ID不能为空");
@@ -132,7 +136,7 @@ public class TeamServiceImpl implements TeamService {
      * @param dto
      */
     @Override
-    @TeamAuth(TeamMember.ADMIN)
+    @TeamAuth(level = TeamMember.ADMIN)
     public void inviteMember(AddTeamMemberDTO dto) {
         //校验用户存在
         User user = userMapper.getById(dto.getUserId());
@@ -158,12 +162,13 @@ public class TeamServiceImpl implements TeamService {
 
     /**
      * 移除成员
-     * @param teamId
-     * @param userId
+     * @param dto
      */
     @Override
-    @TeamAuth(TeamMember.ADMIN)
-    public void removeMember(Long teamId, Long userId) {
+    @TeamAuth(level = TeamMember.ADMIN)
+    public void removeMember(RemoveMemberDTO dto) {
+        Long teamId = dto.getTeamId();
+        Long userId = dto.getUserId();
         //不能移除自己
         if (userId.equals(BaseContext.getCurrentId())) {
             throw new InputException("不能移除自己");
@@ -190,7 +195,7 @@ public class TeamServiceImpl implements TeamService {
      * @param dto
      */
     @Override
-    @TeamAuth(TeamMember.OWNER)
+    @TeamAuth(level = TeamMember.OWNER)
     public void updateMemberRole(UpdateTeamMemberDTO dto) {
         //不能修改自己的角色
         if (dto.getUserId().equals(BaseContext.getCurrentId())) {
@@ -211,6 +216,7 @@ public class TeamServiceImpl implements TeamService {
      * @return
      */
     @Override
+    @TeamAuth(level = TeamMember.VIEWER, checkType = CheckType.TEAM)
     public List<TeamMemberVO> listMembers(Long teamId) {
         //查询团队下所有成员
         List<TeamMember> members = teamMemberMapper.getMembersByTeamId(teamId);

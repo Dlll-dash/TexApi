@@ -4,6 +4,7 @@ import com.tex.texapi.pojo.entity.Category;
 import com.tex.texapi.pojo.vo.CategoryVO;
 import org.apache.ibatis.annotations.Delete;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 
 import java.util.List;
@@ -59,4 +60,13 @@ public interface CategoryMapper {
      */
     @Select("select * from category where id=#{id}")
     Category getById(Long id);
+
+    /**
+     * 鉴权查询：一次 JOIN 返回用户在分类所属团队中的角色，无权限返回 null
+     */
+    @Select("SELECT tm.role FROM team_member tm " +
+            "JOIN project p ON tm.team_id = p.team_id " +
+            "JOIN category c ON c.project_id = p.id " +
+            "WHERE c.id = #{categoryId} AND tm.user_id = #{userId}")
+    Integer getUserRole(@Param("categoryId") Long categoryId, @Param("userId") Long userId);
 }
