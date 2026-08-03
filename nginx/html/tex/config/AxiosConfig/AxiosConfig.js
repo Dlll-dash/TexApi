@@ -1,4 +1,6 @@
 // 请求拦截器
+import { showToast } from '../../components/toast.js';
+
 const request=axios.create({
   baseURL: '/tex',
   timeout: 500000,
@@ -25,11 +27,14 @@ request.interceptors.response.use(
     const res = response;
     console.log('✅ 请求成功：', response.config.url, res.data);
 
-    // 成功直接返回
-    if ([200, 0, 1].includes(res.data.code)) {
+    // 业务成功（code=1）直接返回
+    if (res.data.code === 1) {
       return res;
     }
 
+    // 业务错误（code=0 或其他）弹出 toast 提示
+    const errMsg = res.data?.msg || '请求失败';
+    showToast(errMsg, 'error');
     console.warn('⚠️ 业务错误：', res);
     return Promise.reject(res);
   },
@@ -39,8 +44,10 @@ request.interceptors.response.use(
     if (error.response?.status === 401) {
       localStorage.removeItem('token');
       localStorage.removeItem('id');
-      alert('登录已过期，请重新登录');
-      location.href = '/index.html';
+      showToast('登录已过期，请重新登录', 'error', 4000);
+      setTimeout(() => { location.href = '/index.html'; }, 1500);
+    } else {
+      showToast('网络错误，请稍后重试', 'error');
     }
 
     return Promise.reject(error);

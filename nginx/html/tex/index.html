@@ -126,6 +126,23 @@
             box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.1);
         }
 
+        /* 输入框错误状态 */
+        input.error {
+            border-color: #dc2626;
+        }
+        input.error:focus {
+            border-color: #dc2626;
+            box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+        }
+        /* 错误提示文字 */
+        .error-text {
+            display: block;
+            color: #dc2626;
+            font-size: 14px;
+            margin-top: -8px;
+            margin-bottom: 12px;
+        }
+
         /* 输入框占位符样式 */
         input::placeholder {
             color: #a0aec0;
@@ -223,7 +240,8 @@
         
         <input type="text" id="userName" placeholder="userName"><br>
         
-        <input type="password" id="password" placeholder="password"><br><br>
+        <input type="password" id="password" placeholder="password">
+        <span class="error-text" id="loginError"></span><br>
 
         <button type="button" id="loginBtn">登录</button>
         <br>

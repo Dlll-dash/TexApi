@@ -1,10 +1,13 @@
 package com.tex.texapi.server.controller;
 
+import com.tex.texapi.common.enumeration.CheckType;
 import com.tex.texapi.common.result.Result;
 import com.tex.texapi.pojo.dto.AddResponseDTO;
 import com.tex.texapi.pojo.entity.Response;
+import com.tex.texapi.pojo.entity.TeamMember;
 import com.tex.texapi.pojo.vo.AddResponseVO;
 import com.tex.texapi.pojo.vo.ResponseListVO;
+import com.tex.texapi.server.annotation.TeamAuth;
 import com.tex.texapi.server.service.ResponseService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
@@ -33,6 +36,7 @@ public class ResponseController {
      * @return
      */
     @GetMapping("/getResponse/{id}")
+    @TeamAuth(level = TeamMember.VIEWER, checkType = CheckType.RESPONSE)
     public Result<Response> getResponse(@PathVariable Long id){
         log.info("获取响应参数：{}",id);
         String key="response_"+id;
@@ -46,6 +50,7 @@ public class ResponseController {
     }
 
     @PostMapping("/add")
+    @TeamAuth(level = TeamMember.EDITOR, checkType = CheckType.API)
     public Result<AddResponseVO> add(@RequestBody AddResponseDTO addResponseDTO){
         log.info("添加响应参数：{}",addResponseDTO);
         AddResponseVO addResponseVO = responseService.add(addResponseDTO);
@@ -58,6 +63,7 @@ public class ResponseController {
      * @return
      */
     @GetMapping("/list/{apiId}")
+    @TeamAuth(level = TeamMember.VIEWER, checkType = CheckType.API)
     public Result<List> list(@PathVariable Long apiId) {
         log.info("获取响应参数列表：{}", apiId);
         String key="response_list_"+apiId;
@@ -71,6 +77,7 @@ public class ResponseController {
     }
 
     @PutMapping("/updateBody")
+    @TeamAuth(level = TeamMember.EDITOR, checkType = CheckType.RESPONSE)
     public Result updateBody(@RequestBody Response response){
         log.info("更新响应参数：{}",response);
         responseService.update(response);
@@ -81,6 +88,7 @@ public class ResponseController {
     }
 
     @PutMapping("/updateInfo")
+    @TeamAuth(level = TeamMember.EDITOR, checkType = CheckType.RESPONSE)
     public Result updateInfo(@RequestBody Response response){
         log.info("更新响应参数信息：{}",response);
         responseService.updateInfo(response);

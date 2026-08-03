@@ -113,30 +113,47 @@ document.addEventListener('DOMContentLoaded', () => {
     // ========== 登录逻辑 ==========
     const loginForm = document.getElementById('loginForm');
     const loginBtn = document.getElementById('loginBtn');
+    const userNameInput = document.getElementById('userName');
+    const passwordInput = document.getElementById('password');
+    const loginError = document.getElementById('loginError');
 
-    if (!loginForm) {
-        console.error('未找到 ID 为 loginForm 的表单！');
-        alert('页面加载异常，请刷新重试');
+    if (!loginForm || !loginBtn || !userNameInput || !passwordInput) {
+        console.error('登录页面元素未找到！');
         return;
     }
-    if (!loginBtn) {
-        console.error('未找到 ID 为 loginBtn 的登录按钮！');
-        alert('登录按钮未找到，请检查 HTML');
-        return;
+
+    //清除错误状态
+    function clearError() {
+        userNameInput.classList.remove('error');
+        passwordInput.classList.remove('error');
+        loginError.textContent = '';
     }
+    //显示错误
+    function showError(msg, input) {
+        if (input) input.classList.add('error');
+        loginError.textContent = msg;
+    }
+
+    //输入时清除错误
+    userNameInput.addEventListener('input', clearError);
+    passwordInput.addEventListener('input', clearError);
 
     loginBtn.addEventListener('click', async function () {
+        clearError();
+
         const loginData = {
-            userName: document.getElementById('userName').value.trim(),
-            password: document.getElementById('password').value.trim()
+            userName: userNameInput.value.trim(),
+            password: passwordInput.value.trim()
         };
 
         if (!loginData.userName) {
-            alert('用户名不能为空');
+            showError('请输入用户名', userNameInput);
+            userNameInput.focus();
             return;
         }
         if (!loginData.password) {
-            alert('密码不能为空');
+            showError('请输入密码', passwordInput);
+            passwordInput.focus();
             return;
         }
 
@@ -153,7 +170,9 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (err) {
             console.error('登录失败详情：', err);
             const errMsg = err.response?.data?.msg || err.message || '网络错误/后端接口未响应';
-            alert('登录失败：' + errMsg);
+            userNameInput.classList.add('error');
+            passwordInput.classList.add('error');
+            loginError.textContent = "账号或密码错误，请检查后重试";
         }
     });
 });

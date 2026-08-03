@@ -1,11 +1,14 @@
 package com.tex.texapi.server.mapper;
 
+import com.tex.texapi.common.enumeration.OperationType;
 import com.tex.texapi.pojo.entity.Category;
 import com.tex.texapi.pojo.vo.CategoryVO;
+import com.tex.texapi.server.annotation.AutoFill;
 import org.apache.ibatis.annotations.Delete;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.List;
 
@@ -24,6 +27,7 @@ public interface CategoryMapper {
      * 新增分类
      * @param category
      */
+    @AutoFill(OperationType.INSERT)
     void add(Category category);
 
     /**

@@ -1,12 +1,15 @@
 package com.tex.texapi.server.controller;
 
 import com.tex.texapi.common.context.BaseContext;
+import com.tex.texapi.common.enumeration.CheckType;
 import com.tex.texapi.common.result.Result;
 import com.tex.texapi.pojo.dto.*;
 import com.tex.texapi.pojo.entity.Api;
+import com.tex.texapi.pojo.entity.TeamMember;
 import com.tex.texapi.pojo.vo.AddApiVO;
 import com.tex.texapi.pojo.vo.ExportBatchVO;
 import com.tex.texapi.pojo.vo.RequestVO;
+import com.tex.texapi.server.annotation.TeamAuth;
 import com.tex.texapi.server.service.ApiService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,6 +36,7 @@ public class ApiController {
      * @return
      */
     @GetMapping("/list/{id}")
+    @TeamAuth(level = TeamMember.VIEWER, checkType = CheckType.PROJECT)
     public Result<List> list(@PathVariable Long id){
         log.info("获取接口列表：{}",id);
         List<Api> list = apiService.list(id);
@@ -40,6 +44,7 @@ public class ApiController {
     }
 
     @PutMapping("/update")
+    @TeamAuth(level = TeamMember.EDITOR, checkType = CheckType.API)
     public Result updateApi(@RequestBody UpdateApiDTO updateApiDTO){
         log.info("更新接口：{}",updateApiDTO);
         apiService.updateApi(updateApiDTO);
@@ -47,6 +52,7 @@ public class ApiController {
     }
 
      @PostMapping("/add")
+    @TeamAuth(level = TeamMember.EDITOR, checkType = CheckType.PROJECT)
     public Result<AddApiVO> addApi(@RequestBody AddApiDTO apiDTO) {
          log.info("添加接口：{}", apiDTO);
          AddApiVO addApiVO=apiService.addApi(apiDTO);
@@ -54,6 +60,7 @@ public class ApiController {
      }
 
      @PostMapping("/send")
+     @TeamAuth(level = TeamMember.VIEWER, checkType = CheckType.API)
      public Result<RequestVO> send(@RequestBody RequestDTO requestDTO){
          String key= BaseContext.getCurrentId()+"_"+requestDTO.getApiId();
          //设置随机过期时间，防止缓存雪崩
@@ -71,6 +78,7 @@ public class ApiController {
      }
 
      @PutMapping("/updateInfo")
+    @TeamAuth(level = TeamMember.EDITOR, checkType = CheckType.API)
     public Result updateInfo(@RequestBody UpdateApiInfoDTO updateApiInfoDTO){
         log.info("更新接口信息：{}",updateApiInfoDTO);
         apiService.updateInfo(updateApiInfoDTO);
@@ -78,6 +86,7 @@ public class ApiController {
     }
 
     @DeleteMapping("/delete/{id}")
+    @TeamAuth(level = TeamMember.ADMIN, checkType = CheckType.API)
     public Result delete(@PathVariable Long id) {
         log.info("删除接口：{}", id);
         apiService.delete(id);

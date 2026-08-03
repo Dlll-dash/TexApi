@@ -9,10 +9,7 @@ import com.tex.texapi.pojo.dto.*;
 import com.tex.texapi.pojo.entity.Api;
 import com.tex.texapi.pojo.entity.Params;
 import com.tex.texapi.pojo.entity.Request;
-import com.tex.texapi.pojo.entity.TeamMember;
 import com.tex.texapi.pojo.vo.*;
-import com.tex.texapi.common.enumeration.CheckType;
-import com.tex.texapi.server.annotation.TeamAuth;
 import com.tex.texapi.server.mapper.ApiMapper;
 import com.tex.texapi.server.mapper.RequestParamsMapper;
 import com.tex.texapi.server.mapper.ResponseMapper;
@@ -48,7 +45,6 @@ public class ApiServiceImpl implements ApiService {
      * @return
      */
     @Override
-    @TeamAuth(level = TeamMember.VIEWER, checkType = CheckType.PROJECT)
     public List<Api> list(Long id) {
         List<Api> list=apiMapper.list(id);
         return list;
@@ -61,7 +57,6 @@ public class ApiServiceImpl implements ApiService {
      * @return
      */
     @Override
-    @TeamAuth(level = TeamMember.EDITOR, checkType = CheckType.PROJECT)
     public AddApiVO addApi(AddApiDTO addApiDTO) {
         apiMapper.addApi(addApiDTO);
         AddApiVO addApiVO=new AddApiVO();
@@ -70,13 +65,11 @@ public class ApiServiceImpl implements ApiService {
     }
 
     @Override
-    @TeamAuth(level = TeamMember.EDITOR, checkType = CheckType.API)
     public void updateApi(UpdateApiDTO updateApiDTO) {
         apiMapper.updateApi(updateApiDTO);
     }
 
     @Override
-    @TeamAuth(level = TeamMember.VIEWER, checkType = CheckType.API)
     public RequestVO send(RequestDTO requestDTO) {
 
 
@@ -249,14 +242,12 @@ public class ApiServiceImpl implements ApiService {
     }
 
     @Override
-    @TeamAuth(level = TeamMember.EDITOR, checkType = CheckType.API)
     public void updateInfo(UpdateApiInfoDTO updateApiInfoDTO) {
         apiMapper.updateInfo(updateApiInfoDTO);
     }
 
     @Override
     @Transactional
-    @TeamAuth(level = TeamMember.ADMIN, checkType = CheckType.API)
     public void delete(Long id) {
         //删除接口
         apiMapper.deleteById(id);

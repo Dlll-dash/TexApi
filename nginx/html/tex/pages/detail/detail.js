@@ -20,6 +20,7 @@ import {getCheckButton,toCheckSquare,toDashSquare,toSquare,dashSquareIcon,square
 import { createTreeTable } from "../../components/treeTable.js";
 import { createPromptModal } from "../../components/modal.js";
 import { renderTopBar } from "../../components/topBar.js";
+import { createJsonEditor } from "../../components/jsonEditor.js";
 import { exportCategoryBatch, exportSingleApi } from "../../module/Export.js";
 
 const nodeMap=NodeMapManager.getInstance();
@@ -752,7 +753,8 @@ function renderBody(container,config){
         jsonSpan.classList.add('active');
         localStorage.setItem(getContentTypeKey(apiId),requestDataType.Json ); // 存储当前选择的请求体格式，后续发送请求时可以用到
         contentDiv.dataset.type = requestDataType.Json; // 标记数据类型，方便发送请求时区分
-        contentDiv.innerHTML = "<textarea placeholder='输入JSON格式的请求体' class='json-input'></textarea>";
+        contentDiv.innerHTML = '';
+        contentDiv.appendChild(createJsonEditor({ placeholder: '输入JSON格式的请求体' }));
 
         //获取已有的Json数据并预填充
         sendRequest(null, apiId, requestDataType.Json, 'GET')
@@ -2277,7 +2279,7 @@ function renderBodyNodeForm(container){
         console.error('获取参数列表失败详情：', err);
         const errMsg = err.response?.data?.msg || err.message || '网络错误/后端接口未响应';
 
-        alert('获取参数列表失败：' + errMsg);
+        //alert('获取参数列表失败：' + errMsg);
     };
 
     
@@ -2541,7 +2543,8 @@ function renderPreview(apiData){
                 }
             }).then(res => {
                 const data = res.data.data || [];
-                if (data.length > 0) {
+                
+                if (data && data.length > 0) {
                     const paramsList = createParamList(data, true);
                     bodyLeft.appendChild(paramsList);
 
@@ -2554,6 +2557,8 @@ function renderPreview(apiData){
                         }
                     }
                     noParamsTip.style.display = 'none'; // 隐藏暂无参数提示
+                }else{
+                    bodyFlex.style.display = 'none'; // 没有参数时隐藏整个 Body 区域
                 }
             })
         }
@@ -2673,7 +2678,23 @@ function renderPreview(apiData){
     
 }
 window.onload = async function () {
-    renderTopBar();
+    renderTopBar({
+        dropdownItems: [
+            {
+                label: '个人主页',
+                onClick: () => {
+                    window.open('../user/profile.html', '_blank');
+                }
+            },
+            {
+                label: '退出登录',
+                onClick: () => {
+                    localStorage.clear();
+                    window.location.href = '/index.html';
+                }
+            }
+        ]
+    });
     const params=getUrlParams();
     //console.log("创建标题：",params.name);
     document.title='项目空间：'+(params.name || '未命名项目');

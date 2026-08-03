@@ -1,6 +1,7 @@
 package com.tex.texapi.server.controller;
 
 import com.tex.texapi.common.context.BaseContext;
+import com.tex.texapi.common.enumeration.CheckType;
 import com.tex.texapi.common.result.Result;
 import com.tex.texapi.pojo.dto.AddTeamDTO;
 import com.tex.texapi.pojo.dto.AddTeamMemberDTO;
@@ -8,8 +9,10 @@ import com.tex.texapi.pojo.dto.DeleteTeamDTO;
 import com.tex.texapi.pojo.dto.RemoveMemberDTO;
 import com.tex.texapi.pojo.dto.UpdateTeamDTO;
 import com.tex.texapi.pojo.dto.UpdateTeamMemberDTO;
+import com.tex.texapi.pojo.entity.TeamMember;
 import com.tex.texapi.pojo.vo.TeamMemberVO;
 import com.tex.texapi.pojo.vo.TeamVO;
+import com.tex.texapi.server.annotation.TeamAuth;
 import com.tex.texapi.server.service.TeamService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -55,6 +58,7 @@ public class TeamController {
      * @return
      */
     @PutMapping("/update")
+    @TeamAuth(level = TeamMember.ADMIN)
     public Result update(@RequestBody UpdateTeamDTO dto) {
         log.info("更新团队：{}", dto);
         teamService.updateTeam(dto);
@@ -67,6 +71,7 @@ public class TeamController {
      * @return
      */
     @DeleteMapping("/delete/{id}")
+    @TeamAuth(level = TeamMember.OWNER)
     public Result delete(@PathVariable Long id) {
         log.info("删除团队：{}", id);
         DeleteTeamDTO dto = DeleteTeamDTO.builder().teamId(id).build();
@@ -81,6 +86,7 @@ public class TeamController {
      * @return
      */
     @PostMapping("/{id}/invite")
+    @TeamAuth(level = TeamMember.ADMIN)
     public Result invite(@PathVariable Long id, @RequestBody AddTeamMemberDTO dto) {
         log.info("邀请成员：teamId={}, userId={}", id, dto.getUserId());
         dto.setTeamId(id);
@@ -95,6 +101,7 @@ public class TeamController {
      * @return
      */
     @DeleteMapping("/{id}/member/{userId}")
+    @TeamAuth(level = TeamMember.ADMIN)
     public Result removeMember(@PathVariable Long id, @PathVariable Long userId) {
         log.info("移除成员：teamId={}, userId={}", id, userId);
         RemoveMemberDTO dto = RemoveMemberDTO.builder()
@@ -113,6 +120,7 @@ public class TeamController {
      * @return
      */
     @PutMapping("/{id}/member/{userId}")
+    @TeamAuth(level = TeamMember.OWNER)
     public Result updateMemberRole(@PathVariable Long id, @PathVariable Long userId,
                                    @RequestBody UpdateTeamMemberDTO dto) {
         log.info("修改成员角色：teamId={}, userId={}, role={}", id, userId, dto.getRole());
@@ -128,6 +136,7 @@ public class TeamController {
      * @return
      */
     @GetMapping("/{id}/members")
+    @TeamAuth(level = TeamMember.VIEWER, checkType = CheckType.TEAM)
     public Result<List<TeamMemberVO>> members(@PathVariable Long id) {
         log.info("查询团队成员列表：teamId={}", id);
         List<TeamMemberVO> list = teamService.listMembers(id);

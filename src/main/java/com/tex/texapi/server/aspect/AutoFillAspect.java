@@ -50,13 +50,13 @@ public class AutoFillAspect {
         // 根据操作类型进行不同的自动填充逻辑
         if (operationType == OperationType.INSERT) {
             invokeIfExists(entity, AutoFillConstant.SET_CREATE_TIME, LocalDateTime.class, now);
-            invokeIfExists(entity, AutoFillConstant.SET_CREATE_USER, Long.class, id);
+            if (id != null) invokeIfExists(entity, AutoFillConstant.SET_CREATE_USER, Long.class, id);
             invokeIfExists(entity, AutoFillConstant.SET_UPDATE_TIME, LocalDateTime.class, now);
-            invokeIfExists(entity, AutoFillConstant.SET_UPDATE_USER, Long.class, id);
+            if (id != null) invokeIfExists(entity, AutoFillConstant.SET_UPDATE_USER, Long.class, id);
 
         }else if (operationType == OperationType.UPDATE) {
             invokeIfExists(entity, AutoFillConstant.SET_UPDATE_TIME, LocalDateTime.class, now);
-            invokeIfExists(entity, AutoFillConstant.SET_UPDATE_USER, Long.class, id);
+            if (id != null) invokeIfExists(entity, AutoFillConstant.SET_UPDATE_USER, Long.class, id);
         }
 
 

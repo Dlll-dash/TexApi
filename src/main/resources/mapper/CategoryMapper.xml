@@ -5,8 +5,8 @@
 
 
     <insert id="add" keyProperty="id" useGeneratedKeys="true">
-        insert into category (name, project_id,parent_id)
-        VALUES (#{name}, #{projectId},#{parentId})
+        insert into category (name, project_id,parent_id,create_user)
+        VALUES (#{name}, #{projectId},#{parentId},#{createUser})
     </insert>
     <update id="update">
         update category

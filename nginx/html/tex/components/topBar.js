@@ -13,6 +13,7 @@ function createTopBarElement(options = {}) {
         logoUrl = '../../assets/svg/TexApi/图标.svg',
         navItems = [],
         dropdownItems = [],
+        teamName = localStorage.getItem('activeTeamName') || '',
         onAvatarClick = null,
     } = options;
 
@@ -51,6 +52,11 @@ function createTopBarElement(options = {}) {
     const right = document.createElement('div');
     right.className = 'topbar-right';
 
+    //团队名标签
+    const teamNameSpan = document.createElement('span');
+    teamNameSpan.className = 'topbar-team-name';
+    teamNameSpan.textContent = teamName;
+
     const avatarWrap = document.createElement('div');
     avatarWrap.className = 'topbar-avatar-wrap';
 
@@ -81,11 +87,30 @@ function createTopBarElement(options = {}) {
         dropdown.appendChild(menu);
     }
 
+    //点击头像区域切换下拉菜单
+    if (dropdownItems.length > 0) {
+        avatarWrap.style.cursor = 'pointer';
+        avatarWrap.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const menu = dropdown.querySelector('.topbar-dropdown-menu');
+            if (menu) {
+                const isOpen = menu.style.display === 'block';
+                menu.style.display = isOpen ? 'none' : 'block';
+            }
+        });
+        //点击其他地方关闭菜单
+        document.addEventListener('click', () => {
+            const menu = dropdown.querySelector('.topbar-dropdown-menu');
+            if (menu) menu.style.display = 'none';
+        });
+    }
+
     if (onAvatarClick) {
         avatarWrap.style.cursor = 'pointer';
         avatarWrap.addEventListener('click', onAvatarClick);
     }
 
+    right.appendChild(teamNameSpan);
     right.appendChild(avatarWrap);
     right.appendChild(nameSpan);
     right.appendChild(dropdown);
@@ -151,6 +176,20 @@ function injectStyles() {
         .topbar-avatar {
             width: 100%; height: 100%; display: block;
         }
+        .topbar-team-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: #333333;
+            margin-right: 12px;
+            padding: 4px 12px;
+            background: #f3f4f6;
+            border-radius: 6px;
+            cursor: default;
+            max-width: 160px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
         .topbar-username {
             font-size: 0.9rem; color: #4a5568;
             max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
@@ -163,7 +202,9 @@ function injectStyles() {
             list-style: none; padding: 0.4rem 0; min-width: 140px; z-index: 1001;
         }
         .topbar-dropdown-item {
-            padding: 0.5rem 1rem; font-size: 0.85rem; color: #4a5568;
+            width: auto; height: auto;
+            padding: 8px 16px;
+            font-size: 14px; color: #6b7280;
             cursor: pointer; transition: background 0.18s ease;
         }
         .topbar-dropdown-item:hover {

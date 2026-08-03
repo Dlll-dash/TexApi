@@ -15,8 +15,6 @@ import com.tex.texapi.pojo.entity.TeamMember;
 import com.tex.texapi.pojo.entity.User;
 import com.tex.texapi.pojo.vo.TeamMemberVO;
 import com.tex.texapi.pojo.vo.TeamVO;
-import com.tex.texapi.common.enumeration.CheckType;
-import com.tex.texapi.server.annotation.TeamAuth;
 import com.tex.texapi.server.mapper.TeamMapper;
 import com.tex.texapi.server.mapper.TeamMemberMapper;
 import com.tex.texapi.server.mapper.UserMapper;
@@ -91,7 +89,6 @@ public class TeamServiceImpl implements TeamService {
      * @param dto
      */
     @Override
-    @TeamAuth(level = TeamMember.ADMIN)
     public void updateTeam(UpdateTeamDTO dto) {
         //校验团队ID
         if (dto.getId() == null) {
@@ -111,7 +108,6 @@ public class TeamServiceImpl implements TeamService {
      */
     @Override
     @Transactional
-    @TeamAuth(level = TeamMember.OWNER)
     public void deleteTeam(DeleteTeamDTO dto) {
         Long id = dto.getTeamId();
         //校验团队ID
@@ -136,7 +132,6 @@ public class TeamServiceImpl implements TeamService {
      * @param dto
      */
     @Override
-    @TeamAuth(level = TeamMember.ADMIN)
     public void inviteMember(AddTeamMemberDTO dto) {
         //校验用户存在
         User user = userMapper.getById(dto.getUserId());
@@ -165,7 +160,6 @@ public class TeamServiceImpl implements TeamService {
      * @param dto
      */
     @Override
-    @TeamAuth(level = TeamMember.ADMIN)
     public void removeMember(RemoveMemberDTO dto) {
         Long teamId = dto.getTeamId();
         Long userId = dto.getUserId();
@@ -195,7 +189,6 @@ public class TeamServiceImpl implements TeamService {
      * @param dto
      */
     @Override
-    @TeamAuth(level = TeamMember.OWNER)
     public void updateMemberRole(UpdateTeamMemberDTO dto) {
         //不能修改自己的角色
         if (dto.getUserId().equals(BaseContext.getCurrentId())) {
@@ -216,7 +209,6 @@ public class TeamServiceImpl implements TeamService {
      * @return
      */
     @Override
-    @TeamAuth(level = TeamMember.VIEWER, checkType = CheckType.TEAM)
     public List<TeamMemberVO> listMembers(Long teamId) {
         //查询团队下所有成员
         List<TeamMember> members = teamMemberMapper.getMembersByTeamId(teamId);
@@ -233,6 +225,7 @@ public class TeamServiceImpl implements TeamService {
                 .id(entity.getId())
                 .name(entity.getName())
                 .description(entity.getDescription())
+                .createUser(entity.getCreateUser())
                 .createTime(entity.getCreateTime())
                 .build();
     }

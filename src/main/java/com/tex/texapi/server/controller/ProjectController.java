@@ -1,8 +1,11 @@
 package com.tex.texapi.server.controller;
 
+import com.tex.texapi.common.enumeration.CheckType;
 import com.tex.texapi.common.result.Result;
 import com.tex.texapi.pojo.dto.DeleteProjectDTO;
 import com.tex.texapi.pojo.entity.Project;
+import com.tex.texapi.pojo.entity.TeamMember;
+import com.tex.texapi.server.annotation.TeamAuth;
 import com.tex.texapi.server.service.ProjectService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,6 +28,7 @@ public class ProjectController {
      * @return
      */
     @GetMapping("/list/{teamId}")
+    @TeamAuth(level = TeamMember.VIEWER, checkType = CheckType.TEAM)
     public Result<List>list(@PathVariable Long teamId){
         log.info("获取项目列表");
         List<Project> projectList = projectService.getProjectList(teamId);
@@ -37,6 +41,7 @@ public class ProjectController {
      * @return
      */
     @PostMapping("/create")
+    @TeamAuth(level = TeamMember.EDITOR, checkType = CheckType.TEAM)
     public Result createProject(@RequestBody Project project) {
         log.info("创建项目：{}", project);
         projectService.createProject(project);
@@ -49,6 +54,7 @@ public class ProjectController {
      * @return
      */
     @PutMapping("/update")
+    @TeamAuth(level = TeamMember.EDITOR, checkType = CheckType.PROJECT)
     public Result updateProject(@RequestBody Project project) {
         log.info("更新项目：{}", project);
         projectService.updateProject(project);
@@ -62,6 +68,7 @@ public class ProjectController {
      * @return
      */
     @DeleteMapping("/delete/{id}")
+    @TeamAuth(level = TeamMember.OWNER, checkType = CheckType.PROJECT)
     public Result deleteProject(@PathVariable Long id, @RequestParam Long teamId) {
         log.info("删除项目：{}, teamId={}", id, teamId);
         DeleteProjectDTO dto = DeleteProjectDTO.builder()

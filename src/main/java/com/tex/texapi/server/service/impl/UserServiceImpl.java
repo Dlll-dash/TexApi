@@ -10,7 +10,9 @@ import com.tex.texapi.pojo.dto.UserRegistryDTO;
 import com.tex.texapi.pojo.entity.Team;
 import com.tex.texapi.pojo.entity.TeamMember;
 import com.tex.texapi.pojo.entity.User;
+import com.tex.texapi.common.context.BaseContext;
 import com.tex.texapi.pojo.vo.UserLoginVO;
+import com.tex.texapi.pojo.vo.UserProfileVO;
 import com.tex.texapi.server.mapper.TeamMapper;
 import com.tex.texapi.server.mapper.TeamMemberMapper;
 import com.tex.texapi.server.mapper.UserMapper;
@@ -68,6 +70,7 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public void register(UserRegistryDTO userRegistryDTO) {
         userRegistryDTO.setPassword(DigestUtils.md5DigestAsHex(userRegistryDTO.getPassword().getBytes()));
+
         User user=userMapper.getByUserName(userRegistryDTO.getUserName());
         if(user!=null){
             //用户名已存在
@@ -86,6 +89,8 @@ public class UserServiceImpl implements UserService {
             //邮箱不能为空
             throw new LoginException(MessageConstant.EMAIL_EMPTY);
         }
+
+        user=new User();
         BeanUtils.copyProperties(userRegistryDTO,user);
         userMapper.register(user);
 
@@ -107,5 +112,23 @@ public class UserServiceImpl implements UserService {
                 .build();
         teamMemberMapper.addMember(member);
 
+    }
+
+    /**
+     * 获取当前用户信息
+     * @return
+     */
+    @Override
+    public UserProfileVO getProfile() {
+        Long userId = BaseContext.getCurrentId();
+        User user = userMapper.getById(userId);
+        return UserProfileVO.builder()
+                .id(user.getId())
+                .name(user.getName())
+                .userName(user.getUserName())
+                .gender(user.getGender())
+                .phone(user.getPhone())
+                .email(user.getEmail())
+                .build();
     }
 }

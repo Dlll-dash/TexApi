@@ -21,15 +21,22 @@
             padding: 0.5rem 1rem;
         }
 
-        /* 核心容器（居中、卡片化） */
-        #container {
+        /* 外层布局：侧栏 + 内容区 */
+        #app-layout {
+            display: flex;
             max-width: 1500px;
             min-height: calc(100vh - 4rem);
             margin: 0 auto;
             background: #ffffff;
-            border-radius: 12px;
-            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
-            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+        }
+
+        /* 核心容器 */
+        #container {
+            flex: 1;
+            padding: 24px;
         }
 
         .page-head {
@@ -417,7 +424,10 @@
     </style>
 </head>
 <body>
-    <div id="container"></div>
+    <div id="app-layout">
+        <div id="team-sidebar-container"></div>
+        <div id="container"></div>
+    </div>
 
     <div id="rename-backdrop" class="rename-modal-backdrop" aria-hidden="true">
         <div class="rename-modal" role="dialog" aria-modal="true" aria-labelledby="rename-title">

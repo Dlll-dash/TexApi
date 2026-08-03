@@ -1,9 +1,12 @@
 package com.tex.texapi.server.controller;
 
+import com.tex.texapi.common.enumeration.CheckType;
 import com.tex.texapi.common.result.Result;
 import com.tex.texapi.pojo.dto.ParamDTO;
 import com.tex.texapi.pojo.dto.UpdateParamDTO;
 import com.tex.texapi.pojo.entity.Params;
+import com.tex.texapi.pojo.entity.TeamMember;
+import com.tex.texapi.server.annotation.TeamAuth;
 import com.tex.texapi.server.service.RequestParamsService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,6 +33,7 @@ public class RequestParamsController {
      * @return
      */
     @PostMapping("/param")
+    @TeamAuth(level = TeamMember.EDITOR, checkType = CheckType.API)
     public Result<Params> addParam(@RequestBody ParamDTO paramDTO){
         log.info("添加参数：{}", paramDTO);
         clearCache("params_"+paramDTO.getApiId()+"_"+paramDTO.getFormatType());
@@ -44,6 +48,7 @@ public class RequestParamsController {
      * @return
      */
     @GetMapping("/param/list/{apiId}")
+    @TeamAuth(level = TeamMember.VIEWER, checkType = CheckType.API)
     public Result<List> getParams(@PathVariable Long apiId,String formatType){
         log.info("获取参数列表:{}",apiId);
 
@@ -65,6 +70,7 @@ public class RequestParamsController {
      * @return
      */
     @PutMapping("/param/{id}")
+    @TeamAuth(level = TeamMember.EDITOR, checkType = CheckType.PARAM)
     public Result updateParam(@RequestBody UpdateParamDTO updateParamDTO, @PathVariable Long id){
         log.info("更新参数：{}, {}",id,updateParamDTO);
         requestParamsService.upadateParam(updateParamDTO,id);
@@ -78,6 +84,7 @@ public class RequestParamsController {
      * @return
      */
     @DeleteMapping("/param/delete/{id}")
+    @TeamAuth(level = TeamMember.EDITOR, checkType = CheckType.PARAM)
     public Result deleteParam(@PathVariable Long id) {
         log.info("删除参数：{}", id);
         requestParamsService.deleteParam(id);

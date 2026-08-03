@@ -1,4 +1,5 @@
 import { request } from '../../config/AxiosConfig/AxiosConfig.js';
+import { showToast } from '../../components/toast.js';
 
 document.addEventListener('DOMContentLoaded', () => {
 	const registerForm = document.getElementById('registerForm');
@@ -6,7 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 	if (!registerForm || !registerBtn) {
 		console.error('注册页面初始化失败：未找到表单元素');
-		alert('页面加载异常，请刷新重试');
+		showToast('页面加载异常，请刷新重试', 'error');
 		return;
 	}
 
@@ -21,23 +22,23 @@ document.addEventListener('DOMContentLoaded', () => {
 			email: getValue('email')
 		};
 
-		if (!payload.name) return alert('用户姓名不能为空');
-		if (!payload.userName) return alert('用户名不能为空');
-		if (!payload.password) return alert('密码不能为空');
-		if (!payload.phone) return alert('手机号不能为空');
-		if (!payload.email) return alert('邮箱不能为空');
+		if (!payload.name) return showToast('用户姓名不能为空', 'error');
+		if (!payload.userName) return showToast('用户名不能为空', 'error');
+		if (!payload.password) return showToast('密码不能为空', 'error');
+		if (!payload.phone) return showToast('手机号不能为空', 'error');
+		if (!payload.email) return showToast('邮箱不能为空', 'error');
 
 		try {
 			const res = await request.post('/user/register', payload);
             if(res.data.code ==0){
                 throw new Error(res.data.msg || '注册失败');
             }
-			alert('注册成功，请登录');
+			showToast('注册成功，请登录', 'success');
 			window.location.href = '../../index.html';
 		} catch (error) {
 			console.error('注册失败：', error);
 			const message = error.response?.data?.msg || error.message || '网络错误';
-			alert('注册失败：' + message);
+			//showToast('注册失败：' + message, 'error');
 		}
 	}
 

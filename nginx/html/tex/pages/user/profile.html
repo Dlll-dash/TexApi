@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="../../favicon .ico" type="image/x-icon">
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <title>个人主页</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
+        }
+        body {
+            background-color: #f5f7fa;
+            padding: 0.5rem 1rem;
+        }
+        #container {
+            max-width: 600px;
+            min-height: calc(100vh - 4rem);
+            margin: 0 auto;
+            background: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+            padding: 24px;
+        }
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 14px;
+            color: #6b7280;
+            text-decoration: none;
+            margin-bottom: 16px;
+            transition: color 0.15s ease;
+        }
+        .back-link:hover { color: #111827; }
+        .back-link svg { width: 16px; height: 16px; }
+
+        h2 {
+            font-size: 20px;
+            font-weight: 600;
+            color: #111827;
+            margin-bottom: 24px;
+        }
+
+        /* 头像区 */
+        .profile-avatar {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 24px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .avatar-circle-img {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+        .avatar-info .display-name {
+            font-size: 16px;
+            font-weight: 600;
+            color: #111827;
+        }
+        .avatar-info .username {
+            font-size: 14px;
+            color: #9ca3af;
+        }
+
+        /* 信息行 */
+        .info-list {
+            list-style: none;
+        }
+        .info-row {
+            display: flex;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #f3f4f6;
+        }
+        .info-row:last-child { border-bottom: none; }
+        .info-label {
+            font-size: 14px;
+            color: #9ca3af;
+            width: 72px;
+            flex-shrink: 0;
+        }
+        .info-value {
+            font-size: 14px;
+            color: #111827;
+            flex: 1;
+        }
+        .info-value.empty {
+            color: #d1d5db;
+        }
+
+        .error-tip {
+            padding: 12px;
+            color: #e53e3e;
+            background-color: #fef2f2;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <a class="back-link" href="../home/home.html">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="15 18 9 12 15 6"></polyline>
+            </svg>
+            返回
+        </a>
+        <h2>个人主页</h2>
+        <div id="profile-content"></div>
+    </div>
+    <script type="module" src="profile.js"></script>
+</body>
+</html>

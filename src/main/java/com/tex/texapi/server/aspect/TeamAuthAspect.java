@@ -12,6 +12,7 @@ import com.tex.texapi.server.mapper.ProjectMapper;
 import com.tex.texapi.server.mapper.RequestParamsMapper;
 import com.tex.texapi.server.mapper.ResponseMapper;
 import com.tex.texapi.server.mapper.TeamMemberMapper;
+import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.Aspect;
@@ -28,6 +29,12 @@ import java.lang.reflect.Method;
 @Component
 @Slf4j
 public class TeamAuthAspect {
+
+    // 切面加载确认
+    @PostConstruct
+    public void init() {
+        log.info("TeamAuthAspect 切面已加载，开始拦截 @TeamAuth 注解方法");
+    }
     @Autowired
     TeamMemberMapper teamMemberMapper;
     @Autowired
@@ -41,7 +48,7 @@ public class TeamAuthAspect {
     @Autowired
     ResponseMapper responseMapper;
 
-    @Pointcut("execution(* com.tex.texapi.server.service.impl.*(..))&& @annotation(com.tex.texapi.server.annotation.TeamAuth)")
+    @Pointcut("execution(* com.tex.texapi.server.controller.*.*(..)) && @annotation(com.tex.texapi.server.annotation.TeamAuth)")
     public void teamAuthPointcut() {
     }
 

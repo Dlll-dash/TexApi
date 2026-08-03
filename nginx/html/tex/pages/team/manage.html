@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="../../favicon .ico" type="image/x-icon">
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <title>团队管理</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
+        }
+
+        body {
+            background-color: #f5f7fa;
+            padding: 0.5rem 1rem;
+        }
+
+        #container {
+            max-width: 900px;
+            min-height: calc(100vh - 4rem);
+            margin: 0 auto;
+            background: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+            padding: 24px;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 14px;
+            color: #6b7280;
+            text-decoration: none;
+            margin-bottom: 16px;
+            transition: color 0.15s ease;
+        }
+        .back-link:hover {
+            color: #111827;
+        }
+        .back-link svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        h2 {
+            font-size: 20px;
+            font-weight: 600;
+            color: #111827;
+            margin-bottom: 24px;
+        }
+
+        /* 两栏布局 */
+        .manage-layout {
+            display: flex;
+            gap: 32px;
+        }
+        .manage-info {
+            flex: 0 0 320px;
+        }
+        .manage-members {
+            flex: 1;
+            min-width: 0;
+        }
+
+        /* 分区标题 */
+        .section-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #9ca3af;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        /* 表单 */
+        .form-group {
+            margin-bottom: 16px;
+        }
+        .form-group label {
+            display: block;
+            font-size: 14px;
+            color: #6b7280;
+            margin-bottom: 4px;
+        }
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            padding: 8px 12px;
+            font-size: 14px;
+            outline: none;
+            color: #111827;
+        }
+        .form-group input:focus,
+        .form-group textarea:focus {
+            border-color: #4299e1;
+            outline: 2px solid rgba(66, 153, 225, 0.2);
+        }
+        .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        /* 按钮 */
+        .btn-save {
+            border: none;
+            border-radius: 6px;
+            padding: 8px 24px;
+            background: #4299e1;
+            color: #ffffff;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.15s ease;
+        }
+        .btn-save:hover {
+            background: #3182ce;
+        }
+        .btn-save:disabled {
+            background: #a0aec0;
+            cursor: not-allowed;
+        }
+
+        /* 危险区域 */
+        .danger-zone {
+            margin-top: 32px;
+            padding: 16px;
+            border: 1px solid #fee2e2;
+            border-radius: 6px;
+            background: #fef2f2;
+        }
+        .danger-zone .section-title {
+            color: #e53e3e;
+            border-bottom-color: #fecaca;
+        }
+        .danger-zone p {
+            font-size: 14px;
+            color: #6b7280;
+            margin-bottom: 12px;
+        }
+        .btn-delete {
+            border: 1px solid #e53e3e;
+            border-radius: 6px;
+            padding: 8px 24px;
+            background: #ffffff;
+            color: #e53e3e;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.15s ease, color 0.15s ease;
+        }
+        .btn-delete:hover {
+            background: #e53e3e;
+            color: #ffffff;
+        }
+
+        /* 成员列表 */
+        .member-list {
+            list-style: none;
+        }
+        .member-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 0;
+            border-bottom: 1px solid #f3f4f6;
+        }
+        .member-row:last-child {
+            border-bottom: none;
+        }
+        .member-name {
+            flex: 1;
+            font-size: 14px;
+            color: #111827;
+            font-weight: 500;
+        }
+
+        /* 角色标签 */
+        .role-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        .role-badge.owner  { background: #ebf4ff; color: #3182ce; }
+        .role-badge.admin  { background: #fef3c7; color: #d69e2e; }
+        .role-badge.editor { background: #f0fdf4; color: #38a169; }
+        .role-badge.viewer { background: #f8f9fa; color: #9ca3af; }
+
+        /* 角色下拉 */
+        .role-select {
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            padding: 4px 8px;
+            font-size: 13px;
+            color: #111827;
+            background: #ffffff;
+            cursor: pointer;
+            outline: none;
+        }
+        .role-select:focus {
+            border-color: #4299e1;
+        }
+
+        /* 移除按钮 */
+        .btn-remove {
+            border: none;
+            border-radius: 6px;
+            padding: 4px 12px;
+            background: transparent;
+            color: #9ca3af;
+            font-size: 13px;
+            cursor: pointer;
+            transition: color 0.15s ease, background 0.15s ease;
+        }
+        .btn-remove:hover {
+            color: #e53e3e;
+            background: #fef2f2;
+        }
+
+        /* 邀请按钮 */
+        .btn-invite {
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            padding: 8px 16px;
+            background: #ffffff;
+            color: #6b7280;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            margin-top: 12px;
+            transition: background 0.15s ease;
+        }
+        .btn-invite:hover {
+            background: #f8f9fa;
+        }
+
+        /* 弹窗 */
+        .modal-backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.45);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            padding: 16px;
+        }
+        .modal-backdrop.is-open {
+            display: flex;
+        }
+        .modal-dialog {
+            width: min(92vw, 400px);
+            background: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 24px 60px rgba(15, 23, 42, 0.2);
+            padding: 24px;
+        }
+        .modal-dialog h3 {
+            font-size: 16px;
+            font-weight: 600;
+            color: #111827;
+            margin-bottom: 16px;
+        }
+        .modal-dialog label {
+            display: block;
+            font-size: 14px;
+            color: #6b7280;
+            margin-bottom: 4px;
+        }
+        .modal-dialog input,
+        .modal-dialog select {
+            width: 100%;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            padding: 8px 12px;
+            font-size: 14px;
+            outline: none;
+            margin-bottom: 12px;
+        }
+        .modal-dialog input:focus,
+        .modal-dialog select:focus {
+            border-color: #4299e1;
+            outline: 2px solid rgba(66, 153, 225, 0.2);
+        }
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+            margin-top: 8px;
+        }
+        .modal-actions .btn-cancel {
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            padding: 8px 16px;
+            background: #ffffff;
+            color: #6b7280;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+        }
+        .modal-actions .btn-cancel:hover {
+            background: #f8f9fa;
+        }
+        .modal-actions .btn-confirm {
+            border: none;
+            border-radius: 6px;
+            padding: 8px 16px;
+            background: #4299e1;
+            color: #ffffff;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .modal-actions .btn-confirm:hover {
+            background: #3182ce;
+        }
+
+        .error-tip {
+            padding: 12px;
+            color: #e53e3e;
+            background-color: #fef2f2;
+            border-radius: 6px;
+            margin: 12px 0;
+            border: 1px solid #fee2e2;
+            font-size: 14px;
+        }
+
+        @media (max-width: 768px) {
+            .manage-layout {
+                flex-direction: column;
+            }
+            .manage-info {
+                flex: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <a class="back-link" href="../home/home.html">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="15 18 9 12 15 6"></polyline>
+            </svg>
+            返回首页
+        </a>
+        <h2>团队管理</h2>
+        <div id="manage-content"></div>
+    </div>
+
+    <!-- 邀请成员弹窗 -->
+    <div id="invite-backdrop" class="modal-backdrop" aria-hidden="true">
+        <div class="modal-dialog" role="dialog" aria-modal="true">
+            <h3>邀请成员</h3>
+            <label for="invite-user-id">用户ID</label>
+            <input id="invite-user-id" type="number" placeholder="输入要邀请的用户ID" autocomplete="off" />
+            <label for="invite-role">角色</label>
+            <select id="invite-role">
+                <option value="1">viewer - 只读</option>
+                <option value="2" selected>editor - 编辑</option>
+                <option value="3">admin - 管理</option>
+            </select>
+            <div class="modal-actions">
+                <button id="invite-cancel" class="btn-cancel" type="button">取消</button>
+                <button id="invite-confirm" class="btn-confirm" type="button">邀请</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 删除团队确认弹窗 -->
+    <div id="delete-backdrop" class="modal-backdrop" aria-hidden="true">
+        <div class="modal-dialog" role="dialog" aria-modal="true">
+            <h3>删除团队</h3>
+            <p style="font-size: 14px; color: #6b7280; margin-bottom: 16px;">
+                确认删除该团队吗？此操作不可恢复，团队下所有项目将不再归属任何团队。
+            </p>
+            <div class="modal-actions">
+                <button id="delete-cancel" class="btn-cancel" type="button">取消</button>
+                <button id="delete-confirm" class="btn-confirm" type="button"
+                        style="background: #e53e3e;">确认删除</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="manage.js"></script>
+</body>
+</html>

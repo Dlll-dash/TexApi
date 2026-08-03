@@ -22,6 +22,9 @@ public class TeamVO implements Serializable {
     //描述
     String description;
 
+    //创建者
+    Long createUser;
+
     //创建时间
     LocalDateTime createTime;
 }

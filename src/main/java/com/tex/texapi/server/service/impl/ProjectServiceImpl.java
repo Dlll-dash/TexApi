@@ -6,9 +6,6 @@ import com.tex.texapi.common.exception.InputException;
 import com.tex.texapi.common.exception.NoPermissionException;
 import com.tex.texapi.pojo.dto.DeleteProjectDTO;
 import com.tex.texapi.pojo.entity.Project;
-import com.tex.texapi.pojo.entity.TeamMember;
-import com.tex.texapi.common.enumeration.CheckType;
-import com.tex.texapi.server.annotation.TeamAuth;
 import com.tex.texapi.server.mapper.*;
 import com.tex.texapi.server.service.ProjectService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,7 +24,6 @@ public class ProjectServiceImpl implements ProjectService {
      * @param id
      */
     @Override
-    @TeamAuth(level = TeamMember.VIEWER, checkType = CheckType.TEAM)
     public List<Project> getProjectList(Long id) {
         //根据团队id获取项目列表
         List<Project>list =projectMapper.getProjectList(id);
@@ -40,7 +36,6 @@ public class ProjectServiceImpl implements ProjectService {
      */
     @Override
     @Transactional
-    @TeamAuth(level = TeamMember.EDITOR, checkType = CheckType.TEAM)
     public void createProject(Project project) {
         Long userId = BaseContext.getCurrentId();
         project.setCreateUser(userId);
@@ -54,7 +49,6 @@ public class ProjectServiceImpl implements ProjectService {
      * @param project
      */
     @Override
-    @TeamAuth(level = TeamMember.EDITOR, checkType = CheckType.PROJECT)
     public void updateProject(Project project) {
         //校验项目归属：项目必须属于声明的团队
         Project existing = projectMapper.getById(project.getId());
@@ -73,7 +67,6 @@ public class ProjectServiceImpl implements ProjectService {
      * @param dto
      */
     @Override
-    @TeamAuth(level = TeamMember.OWNER, checkType = CheckType.PROJECT)
     public void deleteProject(DeleteProjectDTO dto) {
         Long id = dto.getProjectId();
         //校验项目归属：项目必须属于声明的团队

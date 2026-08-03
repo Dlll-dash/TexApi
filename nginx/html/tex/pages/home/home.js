@@ -1,9 +1,28 @@
 
 import { renderTopBar } from '../../components/topBar.js';
+import { renderTeamSidebar } from '../../components/teamSidebar.js';
+import { showToast } from '../../components/toast.js';
 import { exportProjectBatch } from '../../module/Export.js';
-import { request } from '../../config/AxiosConfig/AxiosConfig.js';
+import { TeamApi } from '../../api/TeamApi.js';
+import { ProjectApi } from '../../api/ProjectApi.js';
 
-renderTopBar();
+renderTopBar({
+    dropdownItems: [
+        {
+            label: '个人主页',
+            onClick: () => {
+                window.open('../user/profile.html', '_blank');
+            }
+        },
+        {
+            label: '退出登录',
+            onClick: () => {
+                localStorage.clear();
+                window.location.href = '/index.html';
+            }
+        }
+    ]
+});
 
 function createMenuButton(label, svgPath, className = '') {
         const button = document.createElement('button');
@@ -46,10 +65,10 @@ function createMenuButton(label, svgPath, className = '') {
     // ========== 图标配置结束 ==========
 
 (async function main() {
-    // 获取并校验ID
-    const id = localStorage.getItem('id');
-    if (!id) {
-        // 美化登录提示
+    //获取并校验用户ID
+    const userId = localStorage.getItem('id');
+    if (!userId) {
+        //美化登录提示
         const container = document.getElementById('container');
         container.innerHTML = `
             <h2>我的项目</h2>
@@ -57,7 +76,22 @@ function createMenuButton(label, svgPath, className = '') {
         `;
         return;
     }
-    console.log('获取到的id：', id);
+    console.log('获取到的id：', userId);
+
+    //初始化团队侧栏
+    renderTeamSidebar({
+        containerId: 'team-sidebar-container',
+        onTeamChange: (teamId, teamName) => {
+            //更新团队上下文
+            localStorage.setItem('activeTeamId', teamId);
+            localStorage.setItem('activeTeamName', teamName);
+            //更新顶栏团队名
+            const teamNameEl = document.querySelector('.topbar-team-name');
+            if (teamNameEl) teamNameEl.textContent = teamName;
+            //刷新项目列表
+            fetchList();
+        }
+    });
 
     const renameBackdrop = document.getElementById('rename-backdrop');
     const renameInput = document.getElementById('rename-input');
@@ -114,15 +148,18 @@ function createMenuButton(label, svgPath, className = '') {
 
     async function submitDelete() {
         if (!deleteState.projectId) return;
+        const teamId = localStorage.getItem('activeTeamId');
+        if (!teamId) {
+            showToast('请先选择团队', 'error');
+            return;
+        }
         try {
-            await request.delete(`project/delete/${deleteState.projectId}`, {
-                headers: { 'token': localStorage.getItem('token') }
-            });
+            await ProjectApi.delete(deleteState.projectId, teamId);
             closeDeleteModal();
             await fetchList();
         } catch (e) {
             console.error('删除失败：', e);
-            alert('删除失败：' + (e.response?.data?.msg || e.message));
+            //showToast('删除失败：' + (e.response?.data?.msg || e.message), 'error');
         }
     }
 
@@ -130,23 +167,26 @@ function createMenuButton(label, svgPath, className = '') {
         if (!modalState.projectId || !renameInput) return;
         const nextName = renameInput.value.trim();
         if (!nextName) {
-            alert('项目名称不能为空');
+            showToast('项目名称不能为空', 'error');
             renameInput.focus();
             return;
         }
+        const teamId = localStorage.getItem('activeTeamId');
+        if (!teamId) {
+            showToast('请先选择团队', 'error');
+            return;
+        }
         try {
-            await request.put('project/update', {
+            await ProjectApi.update({
                 id: modalState.projectId,
-                name: nextName
-            }, {
-                headers: { 
-                    'token': localStorage.getItem('token') }
+                name: nextName,
+                teamId: Number(teamId)
             });
             closeRenameModal();
             await fetchList();
         } catch (e) {
             console.error('重命名失败：', e);
-            alert('修改名称失败：' + (e.response?.data?.msg || e.message));
+            //showToast('修改名称失败：' + (e.response?.data?.msg || e.message), 'error');
         }
     }
 
@@ -196,7 +236,8 @@ function createMenuButton(label, svgPath, className = '') {
         pageHead.className = 'page-head';
 
         const title = document.createElement('h2');
-        title.textContent = '我的项目';
+        const teamName = localStorage.getItem('activeTeamName') || '我的空间';
+        title.textContent = teamName + ' - 项目';
         pageHead.appendChild(title);
 
         const toolbarRow = document.createElement('div');
@@ -398,19 +439,22 @@ function createMenuButton(label, svgPath, className = '') {
         if (!addInput) return;
         const name = addInput.value.trim();
         if (!name) {
-            alert('项目名称不能为空');
+            showToast('项目名称不能为空', 'error');
             addInput.focus();
             return;
         }
+        const teamId = localStorage.getItem('activeTeamId');
+        if (!teamId) {
+            showToast('请先选择团队', 'error');
+            return;
+        }
         try {
-            await request.post('project/create', { name }, {
-                headers: { 'token': localStorage.getItem('token') }
-            });
+            await ProjectApi.create({ name, teamId: Number(teamId) });
             closeAddModal();
             await fetchList();
         } catch (e) {
             console.error('创建失败：', e);
-            alert('创建失败：' + (e.response?.data?.msg || e.message));
+            //showToast('创建失败：' + (e.response?.data?.msg || e.message), 'error');
         }
     }
 
@@ -427,15 +471,21 @@ function createMenuButton(label, svgPath, className = '') {
 
     // 获取并渲染列表的复用函数
     async function fetchList() {
+        const teamId = localStorage.getItem('activeTeamId');
+        if (!teamId) {
+            console.warn('fetchList: 无activeTeamId，跳过加载');
+            return;
+        }
         try {
-            const res = await request.get(`project/list/${id}`, {
-                headers: { 'token': localStorage.getItem('token') }
-            });
+            const res = await ProjectApi.listByTeam(teamId);
             renderHtmlWithCreateElement(res.data.data);
         } catch (err) {
             console.error('列表刷新失败：', err);
             const container = document.getElementById('container');
-            container.innerHTML = `\n                <h2>我的项目</h2>\n                <div class="error-tip">项目获取失败：${err.response?.data?.msg || err.message || '网络错误'}</div>\n            `;
+            container.innerHTML = `
+                <h2>项目列表</h2>
+                <div class="error-tip">项目获取失败：${err.response?.data?.msg || err.message || '网络错误'}</div>
+            `;
         }
     }
 
