@@ -29,6 +29,14 @@ public interface RequestParamsMapper {
     List<Params> getParams(Long apiId, String formatType);
 
     /**
+     * 获取接口所有参数（不分format_type）
+     * @param apiId
+     * @return
+     */
+    @Select("select * from request_params where api_id=#{apiId}")
+    List<Params> getAllParams(Long apiId);
+
+    /**
      * 修改请求参数
      *
      * @param param

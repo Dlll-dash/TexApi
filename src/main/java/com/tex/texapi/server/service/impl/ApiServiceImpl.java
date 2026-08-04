@@ -79,19 +79,15 @@ public class ApiServiceImpl implements ApiService {
         apiMapper.addApi(draftDTO);
         Long draftId = draftDTO.getId();
 
-        //复制主表params到草稿
-        String[] formatTypes = {Request.Query, Request.Header, Request.Json,
-                Request.FormData, Request.Urlencoded};
-        for (String formatType : formatTypes) {
-            List<Params> masterParams = requestParamsMapper.getParams(master.getId(), formatType);
-            if (masterParams != null) {
-                for (Params mp : masterParams) {
-                    Params dp = new Params();
-                    BeanUtils.copyProperties(mp, dp);
-                    dp.setId(null);
-                    dp.setApiId(draftId);
-                    requestParamsMapper.addParam(dp);
-                }
+        //复制主表params到草稿（批量查询）
+        List<Params> masterParams = requestParamsMapper.getAllParams(master.getId());
+        if (masterParams != null) {
+            for (Params mp : masterParams) {
+                Params dp = new Params();
+                BeanUtils.copyProperties(mp, dp);
+                dp.setId(null);
+                dp.setApiId(draftId);
+                requestParamsMapper.addParam(dp);
             }
         }
 
@@ -204,41 +200,37 @@ public class ApiServiceImpl implements ApiService {
             apiMapper.updateMaster(updateMaster);
         }
 
-        //同步草稿params到主表（按 name+format_type 匹配，保留主表参数ID）
-        String[] formatTypes = {Request.Query, Request.Header, Request.Json,
-                Request.FormData, Request.Urlencoded};
-        for (String formatType : formatTypes) {
-            List<Params> draftParams = requestParamsMapper.getParams(draftId, formatType);
-            List<Params> masterParams = requestParamsMapper.getParams(masterId, formatType);
+        //同步草稿params到主表（批量查询 + 内存分组 diff，减少 DB 查询）
+        List<Params> draftParams = requestParamsMapper.getAllParams(draftId);
+        List<Params> masterParams = requestParamsMapper.getAllParams(masterId);
+        if (draftParams == null) draftParams = List.of();
+        if (masterParams == null) masterParams = List.of();
 
-            if (draftParams == null) draftParams = List.of();
-            if (masterParams == null) masterParams = List.of();
+        //按 name+format_type 构建主表参数索引
+        Map<String, Params> masterMap = new java.util.LinkedHashMap<>();
+        for (Params mp : masterParams) {
+            masterMap.put(mp.getName() + "|" + mp.getFormatType(), mp);
+        }
 
-            //构建主表参数索引：name → Params
-            Map<String, Params> masterMap = new java.util.LinkedHashMap<>();
-            for (Params mp : masterParams) {
-                masterMap.put(mp.getName(), mp);
+        for (Params dp : draftParams) {
+            String key = dp.getName() + "|" + dp.getFormatType();
+            Params existing = masterMap.remove(key);
+            if (existing != null) {
+                //更新已有主表参数（保留ID）
+                dp.setId(existing.getId());
+                dp.setApiId(masterId);
+                requestParamsMapper.updateParam(dp);
+            } else {
+                //新增主表参数
+                dp.setId(null);
+                dp.setApiId(masterId);
+                requestParamsMapper.addParam(dp);
             }
+        }
 
-            for (Params dp : draftParams) {
-                Params existing = masterMap.remove(dp.getName());
-                if (existing != null) {
-                    //更新已有主表参数（保留ID）
-                    dp.setId(existing.getId());
-                    dp.setApiId(masterId);
-                    requestParamsMapper.updateParam(dp);
-                } else {
-                    //新增主表参数
-                    dp.setId(null);
-                    dp.setApiId(masterId);
-                    requestParamsMapper.addParam(dp);
-                }
-            }
-
-            //删除草稿中已移除的主表参数
-            for (Params remaining : masterMap.values()) {
-                requestParamsMapper.deleteParamById(remaining.getId());
-            }
+        //删除草稿中已移除的主表参数
+        for (Params remaining : masterMap.values()) {
+            requestParamsMapper.deleteParamById(remaining.getId());
         }
 
         //同步草稿response到主表（保留主表response ID）
