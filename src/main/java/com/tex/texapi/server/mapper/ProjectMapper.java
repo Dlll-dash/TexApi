@@ -52,8 +52,5 @@ public interface ProjectMapper {
     /**
      * 鉴权查询：一次 JOIN 返回用户在项目所属团队中的角色，无权限返回 null
      */
-    @Select("SELECT tm.role FROM team_member tm " +
-            "JOIN project p ON tm.team_id = p.team_id " +
-            "WHERE p.id = #{projectId} AND tm.user_id = #{userId}")
     Integer getUserRole(@Param("projectId") Long projectId, @Param("userId") Long userId);
 }

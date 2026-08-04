@@ -1,6 +1,7 @@
-import { request } from "../config/AxiosConfig/AxiosConfig.js";
 import { requestDataType, httpMimeTypes, responseContentType } from "../config/TypeConfig.js";
 import { CategoryApi } from "../api/CategoryApi.js";
+import { ApiApi } from "../api/ApiApi.js";
+import { RequestParamsApi } from "../api/RequestParamsApi.js";
 import { methodColors } from "../config/MethodConfig.js";
 import { statusColors } from "../config/StatusConfig.js";
 import { getCodeColor } from "../config/ResponseConfig.js";
@@ -33,12 +34,12 @@ export async function exportProjectBatch(projectId, projectName) {
 }
 
 /** 导出单个 API 为独立 HTML */
-export async function exportSingleApi(apiData) {
+export async function exportSingleApi(apiData, useDraft) {
     const toast = showToast('正在收集接口数据...', '#4299e1');
     try {
         const apiId=apiData.id;
         const apiName=apiData.apiName || '未命名接口';
-        const batchData = await fetchBatchData([{ id: apiData.id }]);
+        const batchData = await fetchBatchData([{ id: apiData.id }], useDraft);
         const merged = mergeData([apiData], batchData);
         if (merged.length === 0) { updateToast(toast, '未获取到接口数据', '#e53e3e'); return; }
         await enrichBodyValues(merged);
@@ -135,13 +136,16 @@ async function fetchAllApisInCategory(categoryId, projectId) {
     return { apis: all, categoryTree: targetTree };
 }
 
-function buildExportPayload(apis) {
-    return apis.map(api => ({ apiId: api.id, formatType: localStorage.getItem(getContentTypeKey(api.id)) || requestDataType.None }));
+function buildExportPayload(apis, useDraft) {
+    return apis.map(api => {
+        const fmt = localStorage.getItem(getContentTypeKey(api.id));
+        return { apiId: api.id, formatType: fmt || '', useDraft: useDraft };
+    });
 }
 
-async function fetchBatchData(apis) {
-    const payload = buildExportPayload(apis);
-    const res = await request.post('/api/export', payload);
+async function fetchBatchData(apis, useDraft) {
+    const payload = buildExportPayload(apis, useDraft);
+    const res = await ApiApi.exportBatch(payload);
     return res.data?.data || [];
 }
 
@@ -186,7 +190,7 @@ async function enrichBodyValues(mergedApis) {
         const fmt = localStorage.getItem(getContentTypeKey(api.id)) || requestDataType.None;
         if (fmt === requestDataType.None) return;
         try {
-            const res = await request.get(`/request/param/list/${api.id}`, { params: { formatType: fmt } });
+            const res = await RequestParamsApi.list(api.id, fmt);
             const data = res.data?.data || [];
             if (data.length > 0) p.value = data[0].value || '';
         } catch (e) { /* 静默忽略，value 留空 */ }

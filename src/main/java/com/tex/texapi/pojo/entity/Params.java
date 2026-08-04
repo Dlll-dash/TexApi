@@ -28,8 +28,4 @@ public class Params {
     Boolean isNecessary;
     //是否选中
     Boolean isChecked;
-    //是否是草稿
-    Boolean isDraft;
-    //草稿的主表id
-    Long baseId;
 }

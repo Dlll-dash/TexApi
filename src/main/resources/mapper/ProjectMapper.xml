@@ -15,4 +15,9 @@
         </set>
         where id = #{id}
     </update>
+    <select id="getUserRole" resultType="Integer">
+        SELECT tm.role FROM team_member tm
+        JOIN project p ON tm.team_id = p.team_id
+        WHERE p.id = #{projectId} AND tm.user_id = #{userId}
+    </select>
 </mapper>

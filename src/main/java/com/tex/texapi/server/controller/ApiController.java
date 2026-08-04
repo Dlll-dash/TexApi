@@ -31,16 +31,56 @@ public class ApiController {
     @Autowired
     private RedisTemplate redisTemplate;
     /**
-     * 根据项目id获取接口列表
+     * 获取当前用户的草稿列表（自动补齐）
+     * @param projectId
+     * @return
+     */
+    @GetMapping("/list/{projectId}")
+    @TeamAuth(level = TeamMember.VIEWER, checkType = CheckType.PROJECT)
+    public Result<List> list(@PathVariable Long projectId){
+        log.info("获取草稿列表：{}",projectId);
+        List<Api> list = apiService.listDrafts(projectId);
+        return Result.success(list);
+    }
+
+    /**
+     * 查看主表API（只读参考）
      * @param id
      * @return
      */
-    @GetMapping("/list/{id}")
-    @TeamAuth(level = TeamMember.VIEWER, checkType = CheckType.PROJECT)
-    public Result<List> list(@PathVariable Long id){
-        log.info("获取接口列表：{}",id);
-        List<Api> list = apiService.list(id);
-        return Result.success(list);
+    @GetMapping("/master/{id}")
+    @TeamAuth(level = TeamMember.VIEWER, checkType = CheckType.API)
+    public Result<Api> getMaster(@PathVariable Long id){
+        log.info("查看主表API：{}",id);
+        Api master = apiService.getMaster(id);
+        return Result.success(master);
+    }
+
+    /**
+     * 发布草稿（覆盖主表）
+     * @param draftId
+     * @param expectedMasterUpdateTime
+     * @return
+     */
+    @PostMapping("/{draftId}/publish")
+    @TeamAuth(level = TeamMember.EDITOR, checkType = CheckType.API)
+    public Result publish(@PathVariable Long draftId, @RequestParam(required = false) String expectedMasterUpdateTime){
+        log.info("发布草稿：draftId={}", draftId);
+        apiService.publish(draftId, expectedMasterUpdateTime);
+        return Result.success();
+    }
+
+    /**
+     * 放弃草稿
+     * @param draftId
+     * @return
+     */
+    @DeleteMapping("/{draftId}/draft")
+    @TeamAuth(level = TeamMember.EDITOR, checkType = CheckType.API)
+    public Result discardDraft(@PathVariable Long draftId){
+        log.info("放弃草稿：{}", draftId);
+        apiService.discardDraft(draftId);
+        return Result.success();
     }
 
     @PutMapping("/update")

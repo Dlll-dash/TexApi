@@ -31,7 +31,7 @@ public class ResponseController {
     private RedisTemplate redisTemplate;
 
     /**
-     * 获取响应参数
+     * 根据id获取响应参数
      * @param id
      * @return
      */
@@ -95,6 +95,19 @@ public class ResponseController {
         String key="response_list_"+response.getApiId();
         redisTemplate.delete(key);
         return Result.success();
+    }
+
+    /**
+     * 获取主表响应列表（只读参考）
+     * @param masterApiId
+     * @return
+     */
+    @GetMapping("/master/list/{masterApiId}")
+    @TeamAuth(level = TeamMember.VIEWER, checkType = CheckType.API)
+    public Result<List> getMasterList(@PathVariable Long masterApiId){
+        log.info("获取主表响应列表：{}", masterApiId);
+        List<ResponseListVO> list = responseService.list(masterApiId);
+        return Result.success(list);
     }
 
     private void clearCache(String pattern){

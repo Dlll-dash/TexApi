@@ -44,4 +44,10 @@ public class AddApiDTO {
 
     //分类id
     Long categoryId;
+
+    //是否是草稿
+    Boolean isDraft;
+
+    //草稿对应的主表id
+    Long baseId;
 }

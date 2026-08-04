@@ -37,6 +37,12 @@ function createTopBarElement(options = {}) {
     left.appendChild(logoImg);
     left.appendChild(brand);
 
+    //点击左上角跳转主页
+    left.style.cursor = 'pointer';
+    left.addEventListener('click', () => {
+        window.location.href = '/pages/home/home.html';
+    });
+
     // ── 中间：导航链接（预留） ──
     const center = document.createElement('div');
     center.className = 'topbar-center';

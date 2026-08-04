@@ -260,6 +260,8 @@ public interface XxxMapper {
 - SQL 列名 snake_case，`#{}` 占位符 camelCase
 - 字符串判断：`test="name != null and name != ''"`
 - 包装类型判断：`test="field != null"`
+- **禁止在 SQL 中硬编码业务字段值**（如 `0, NULL`、`1, NULL` 等），所有值通过实体/DTO 的 `#{}` 占位符传入，由 Service 层负责设置。若当前业务场景可依赖 DB 默认值，则不在 INSERT 中列出该列
+- **超过 1 行的 SQL 必须写到 Mapper XML 中**，不允许在 Java 接口中用字符串拼接（`"..." + "..."`）写多行 `@Select`/`@Update`/`@Delete`。单行简单 SQL 可用注解
 
 ---
 

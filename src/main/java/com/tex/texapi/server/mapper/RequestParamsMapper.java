@@ -63,10 +63,5 @@ public interface RequestParamsMapper {
     /**
      * 鉴权查询：一次 JOIN 返回用户在参数所属团队中的角色，无权限返回 null
      */
-    @Select("SELECT tm.role FROM team_member tm " +
-            "JOIN project p ON tm.team_id = p.team_id " +
-            "JOIN api a ON a.project_id = p.id " +
-            "JOIN request_params rp ON rp.api_id = a.id " +
-            "WHERE rp.id = #{paramId} AND tm.user_id = #{userId}")
     Integer getUserRole(@Param("paramId") Long paramId, @Param("userId") Long userId);
 }

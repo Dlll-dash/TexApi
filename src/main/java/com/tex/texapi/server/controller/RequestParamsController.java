@@ -93,6 +93,20 @@ public class RequestParamsController {
         return Result.success();
     }
 
+    /**
+     * 获取主表参数列表（只读参考）
+     * @param masterApiId
+     * @param formatType
+     * @return
+     */
+    @GetMapping("/param/master/list/{masterApiId}")
+    @TeamAuth(level = TeamMember.VIEWER, checkType = CheckType.API)
+    public Result<List> getMasterParams(@PathVariable Long masterApiId, String formatType){
+        log.info("获取主表参数列表:{}", masterApiId);
+        List<Params> list = requestParamsService.getParams(masterApiId, formatType);
+        return Result.success(list);
+    }
+
     private void clearCache(String pattern){
         //根据模式来清除缓存
         Set keys=redisTemplate.keys(pattern);

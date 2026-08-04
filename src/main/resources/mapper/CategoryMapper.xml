@@ -5,8 +5,8 @@
 
 
     <insert id="add" keyProperty="id" useGeneratedKeys="true">
-        insert into category (name, project_id,parent_id,create_user)
-        VALUES (#{name}, #{projectId},#{parentId},#{createUser})
+        insert into category (name, project_id,parent_id,create_user, is_draft, base_id)
+        VALUES (#{name}, #{projectId},#{parentId},#{createUser}, #{isDraft}, #{baseId})
     </insert>
     <update id="update">
         update category
@@ -15,10 +15,11 @@
                     name = #{name},
                 </if>
                 <if test="parentId!=null">
-                    parent_id = #{parentId}
+                    parent_id = #{parentId},
                 </if>
+                version = version + 1
             </set>
-        where id = #{id}
+        where id = #{id} and version = #{version} and is_draft = 0
     </update>
     <delete id="deleteBatchIds">
         delete  from category where id in
@@ -26,4 +27,10 @@
             #{id}
         </foreach>
     </delete>
+    <select id="getUserRole" resultType="Integer">
+        SELECT tm.role FROM team_member tm
+        JOIN project p ON tm.team_id = p.team_id
+        JOIN category c ON c.project_id = p.id
+        WHERE c.id = #{categoryId} AND tm.user_id = #{userId}
+    </select>
 </mapper>

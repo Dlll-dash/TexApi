@@ -28,12 +28,19 @@ public interface ApiMapper {
     void addApi(AddApiDTO apiDTO);
 
     /**
-     * 根据项目id获取接口列表
-     * @param id
+     * 根据项目id获取当前用户的草稿列表
+     * @param projectId
+     * @param userId
      * @return
      */
-    //@Select("select * from api where project_id=#{id} order by status desc")
-    List<Api> list(Long id);
+    List<Api> listDrafts(@Param("projectId") Long projectId, @Param("userId") Long userId);
+
+    /**
+     * 根据项目id获取主表API列表
+     * @param projectId
+     * @return
+     */
+    List<Api> listMasters(Long projectId);
 
     /**
      * 更新api信息
@@ -51,6 +58,22 @@ public interface ApiMapper {
     Api getById(Long id);
 
     /**
+     * 获取主表API
+     * @param id
+     * @return
+     */
+    Api getMaster(Long id);
+
+    /**
+     * 根据baseId和用户获取草稿
+     * @param baseId
+     * @param userId
+     * @return
+     */
+    @Select("select * from api where base_id=#{baseId} and create_user=#{userId} and is_draft = 1")
+    Api getDraftByBaseId(@Param("baseId") Long baseId, @Param("userId") Long userId);
+
+    /**
      * 更新接口信息
      * @param updateApiInfoDTO
      */
@@ -61,7 +84,7 @@ public interface ApiMapper {
      * 删除接口
      * @param id
      */
-    @Delete("delete from api where id=#{id}")
+    @Delete("delete from api where id=#{id} and is_draft = 1")
     void deleteById(Long id);
 
     /**
@@ -80,19 +103,21 @@ public interface ApiMapper {
     /**
      * 批量鉴权：返回用户有权限访问的 API ID 子集
      */
-    @Select("<script>SELECT a.id FROM api a " +
-            "JOIN project p ON a.project_id = p.id " +
-            "JOIN team_member tm ON p.team_id = tm.team_id " +
-            "WHERE a.id IN <foreach collection='ids' item='id' open='(' separator=',' close=')'>#{id}</foreach> " +
-            "AND tm.user_id = #{userId}</script>")
     List<Long> filterAccessibleApiIds(@Param("ids") List<Long> ids, @Param("userId") Long userId);
+
+    /**
+     * 更新主表（发布时使用）
+     * @param api
+     */
+    void updateMaster(Api api);
+
+    /**
+     * 回填草稿的base_id（首次发布后）
+     */
+    void updateDraftBaseId(@Param("draftId") Long draftId, @Param("baseId") Long baseId);
 
     /**
      * 鉴权查询：一次 JOIN 返回用户在接口所属团队中的角色，无权限返回 null
      */
-    @Select("SELECT tm.role FROM team_member tm " +
-            "JOIN project p ON tm.team_id = p.team_id " +
-            "JOIN api a ON a.project_id = p.id " +
-            "WHERE a.id = #{apiId} AND tm.user_id = #{userId}")
     Integer getUserRole(@Param("apiId") Long apiId, @Param("userId") Long userId);
 }

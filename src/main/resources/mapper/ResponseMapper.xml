@@ -40,4 +40,11 @@
 
         where id = #{id}
     </update>
+    <select id="getUserRole" resultType="Integer">
+        SELECT tm.role FROM team_member tm
+        JOIN project p ON tm.team_id = p.team_id
+        JOIN api a ON a.project_id = p.id
+        JOIN response r ON r.api_id = a.id
+        WHERE r.id = #{responseId} AND tm.user_id = #{userId}
+    </select>
 </mapper>

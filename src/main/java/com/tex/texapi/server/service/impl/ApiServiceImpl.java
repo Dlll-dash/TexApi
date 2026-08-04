@@ -22,6 +22,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -36,31 +37,113 @@ public class ApiServiceImpl implements ApiService {
     @Autowired
     private ResponseMapper responseMapper;
     @Autowired
-    private RedisTemplate  redisTemplate;
-
+    private RedisTemplate redisTemplate;
 
     /**
-     * 根据项目id获取接口列表
-     * @param id
+     * 获取当前用户的草稿列表（自动补齐）
+     * @param projectId
      * @return
      */
     @Override
-    public List<Api> list(Long id) {
-        List<Api> list=apiMapper.list(id);
-        return list;
+    public List<Api> listDrafts(Long projectId) {
+        Long userId = BaseContext.getCurrentId();
+
+        //查出当前用户已有草稿
+        List<Api> drafts = apiMapper.listDrafts(projectId, userId);
+
+        //查出项目下所有主表
+        List<Api> masters = apiMapper.listMasters(projectId);
+
+        //为主表中没有草稿的API自动补齐草稿
+        for (Api master : masters) {
+            boolean hasDraft = drafts.stream().anyMatch(d -> master.getId().equals(d.getBaseId()));
+            if (!hasDraft) {
+                Api draft = createDraftFromMaster(master, userId);
+                drafts.add(draft);
+            }
+        }
+
+        return drafts;
+    }
+
+    /**
+     * 从主表创建草稿（自动补齐用）
+     */
+    private Api createDraftFromMaster(Api master, Long userId) {
+        //创建草稿API行
+        AddApiDTO draftDTO = new AddApiDTO();
+        BeanUtils.copyProperties(master, draftDTO);
+        draftDTO.setId(null);
+        draftDTO.setIsDraft(true);
+        draftDTO.setBaseId(master.getId());
+        apiMapper.addApi(draftDTO);
+        Long draftId = draftDTO.getId();
+
+        //复制主表params到草稿
+        String[] formatTypes = {Request.Query, Request.Header, Request.Json,
+                Request.FormData, Request.Urlencoded};
+        for (String formatType : formatTypes) {
+            List<Params> masterParams = requestParamsMapper.getParams(master.getId(), formatType);
+            if (masterParams != null) {
+                for (Params mp : masterParams) {
+                    Params dp = new Params();
+                    BeanUtils.copyProperties(mp, dp);
+                    dp.setId(null);
+                    dp.setApiId(draftId);
+                    requestParamsMapper.addParam(dp);
+                }
+            }
+        }
+
+        //复制主表response到草稿
+        ResponseVO masterResp = responseMapper.getByApiId(master.getId());
+        if (masterResp != null) {
+            com.tex.texapi.pojo.entity.Response dr = new com.tex.texapi.pojo.entity.Response();
+            BeanUtils.copyProperties(masterResp, dr);
+            dr.setId(null);
+            dr.setApiId(draftId);
+            responseMapper.add(dr);
+        }
+
+        //返回草稿实体
+        Api draft = new Api();
+        BeanUtils.copyProperties(draftDTO, draft);
+        draft.setId(draftId);
+        return draft;
+    }
+
+    /**
+     * 查看主表API（只读）
+     * @param masterId
+     * @return
+     */
+    @Override
+    public Api getMaster(Long masterId) {
+        return apiMapper.getMaster(masterId);
     }
 
     /**
      * 添加接口
-     *
+     * isDraft=true  → 草稿新增（不创建主表，发布时才创建）
+     * isDraft=false → 主表新增（直接创建主表骨架）
      * @param addApiDTO
      * @return
      */
     @Override
+    @Transactional
     public AddApiVO addApi(AddApiDTO addApiDTO) {
+        if (Boolean.TRUE.equals(addApiDTO.getIsDraft())) {
+            //草稿新增：不创建主表
+            addApiDTO.setBaseId(null);
+        } else {
+            //主表新增：创建主表骨架
+            addApiDTO.setIsDraft(false);
+            addApiDTO.setBaseId(null);
+        }
         apiMapper.addApi(addApiDTO);
-        AddApiVO addApiVO=new AddApiVO();
-        BeanUtils.copyProperties(addApiDTO,addApiVO);
+
+        AddApiVO addApiVO = new AddApiVO();
+        BeanUtils.copyProperties(addApiDTO, addApiVO);
         return addApiVO;
     }
 
@@ -70,148 +153,265 @@ public class ApiServiceImpl implements ApiService {
     }
 
     @Override
+    public void updateInfo(UpdateApiInfoDTO updateApiInfoDTO) {
+        apiMapper.updateInfo(updateApiInfoDTO);
+    }
+
+    /**
+     * 发布草稿（覆盖主表）
+     * @param draftId
+     * @param expectedMasterUpdateTime
+     */
+    @Override
+    @Transactional
+    public void publish(Long draftId, String expectedMasterUpdateTime) {
+        Api draft = apiMapper.getById(draftId);
+        if (draft == null || !Boolean.TRUE.equals(draft.getIsDraft())) {
+            throw new RequestException("草稿不存在");
+        }
+
+        Long masterId = draft.getBaseId();
+
+        if (masterId == null) {
+            //首次发布：主表不存在，新建主表
+            AddApiDTO masterDTO = new AddApiDTO();
+            BeanUtils.copyProperties(draft, masterDTO);
+            masterDTO.setId(null);
+            masterDTO.setIsDraft(false);
+            masterDTO.setBaseId(null);
+            apiMapper.addApi(masterDTO);
+            masterId = masterDTO.getId();
+
+            //回填草稿的base_id
+            apiMapper.updateDraftBaseId(draftId, masterId);
+        } else {
+            //再次发布：冲突检测
+            Api master = apiMapper.getMaster(masterId);
+            if (expectedMasterUpdateTime != null && master.getUpdateTime() != null) {
+                LocalDateTime expected = LocalDateTime.parse(expectedMasterUpdateTime);
+                if (master.getUpdateTime().isAfter(expected)) {
+                    throw new RequestException("自你开始编辑后，主表已被他人更新。是否强制覆盖？");
+                }
+            }
+
+            //草稿数据覆盖到主表
+            Api updateMaster = new Api();
+            BeanUtils.copyProperties(draft, updateMaster);
+            updateMaster.setId(masterId);
+            updateMaster.setIsDraft(false);
+            updateMaster.setBaseId(null);
+            updateMaster.setCategoryId(master.getCategoryId());
+            apiMapper.updateMaster(updateMaster);
+        }
+
+        //同步草稿params到主表（按 name+format_type 匹配，保留主表参数ID）
+        String[] formatTypes = {Request.Query, Request.Header, Request.Json,
+                Request.FormData, Request.Urlencoded};
+        for (String formatType : formatTypes) {
+            List<Params> draftParams = requestParamsMapper.getParams(draftId, formatType);
+            List<Params> masterParams = requestParamsMapper.getParams(masterId, formatType);
+
+            if (draftParams == null) draftParams = List.of();
+            if (masterParams == null) masterParams = List.of();
+
+            //构建主表参数索引：name → Params
+            Map<String, Params> masterMap = new java.util.LinkedHashMap<>();
+            for (Params mp : masterParams) {
+                masterMap.put(mp.getName(), mp);
+            }
+
+            for (Params dp : draftParams) {
+                Params existing = masterMap.remove(dp.getName());
+                if (existing != null) {
+                    //更新已有主表参数（保留ID）
+                    dp.setId(existing.getId());
+                    dp.setApiId(masterId);
+                    requestParamsMapper.updateParam(dp);
+                } else {
+                    //新增主表参数
+                    dp.setId(null);
+                    dp.setApiId(masterId);
+                    requestParamsMapper.addParam(dp);
+                }
+            }
+
+            //删除草稿中已移除的主表参数
+            for (Params remaining : masterMap.values()) {
+                requestParamsMapper.deleteParamById(remaining.getId());
+            }
+        }
+
+        //同步草稿response到主表（保留主表response ID）
+        ResponseVO draftResp = responseMapper.getByApiId(draftId);
+        ResponseVO masterResp = responseMapper.getByApiId(masterId);
+        if (draftResp != null) {
+            if (masterResp != null) {
+                //更新已有主表response
+                com.tex.texapi.pojo.entity.Response mr = new com.tex.texapi.pojo.entity.Response();
+                BeanUtils.copyProperties(draftResp, mr);
+                mr.setId(masterResp.getId());
+                mr.setApiId(masterId);
+                responseMapper.update(mr);
+            } else {
+                //新增主表response
+                com.tex.texapi.pojo.entity.Response mr = new com.tex.texapi.pojo.entity.Response();
+                BeanUtils.copyProperties(draftResp, mr);
+                mr.setId(null);
+                mr.setApiId(masterId);
+                responseMapper.add(mr);
+            }
+        }
+
+        //清除Redis缓存
+        clearCache("params_" + masterId + "_*");
+        clearCache("response_" + masterId + "*");
+    }
+
+    /**
+     * 放弃草稿
+     * @param draftId
+     */
+    @Override
+    @Transactional
+    public void discardDraft(Long draftId) {
+        //删除草稿params/response
+        requestParamsMapper.deleteByApiId(draftId);
+        responseMapper.deleteByApiId(draftId);
+        //删除草稿行
+        apiMapper.deleteById(draftId);
+    }
+
+    @Override
     public RequestVO send(RequestDTO requestDTO) {
-
-
-        //获取api实体
-        Api api=apiMapper.getById(requestDTO.getApiId());
+        //获取api实体（草稿或主表）
+        Api api = apiMapper.getById(requestDTO.getApiId());
 
         //获取url
-        String baseUrl=api.getRequestUrl();
-
-        if(baseUrl==null||baseUrl.isEmpty()){
-            //url为空则抛出异常
+        String baseUrl = api.getRequestUrl();
+        if (baseUrl == null || baseUrl.isEmpty()) {
             throw new RequestException(MessageConstant.URL_EMPTY);
         }
 
         //判断状态是否为启用
-        if(api.getStatus()==Api.MAINTAINING){
-            //禁用则抛出异常
+        if (api.getStatus() == Api.MAINTAINING) {
             throw new RequestException(MessageConstant.API_FORBIDDEN);
         }
 
-        //获取Query参数
-        String queryKey="params_"+requestDTO.getApiId()+"_"+Request.Query;
-        List<Params>params=(List<Params>) redisTemplate.opsForValue().get(queryKey);
-        if(params==null||params.isEmpty()){
-            //缓存中没有则从数据库中获取
-            params=requestParamsMapper.getParams(requestDTO.getApiId(), Request.Query);
-            //将结果存入缓存
-            redisTemplate.opsForValue().set(queryKey,params);
-        }
+        //使用草稿ID查参数；若为空则fallback到主表
+        Long paramsApiId = requestDTO.getApiId();
+        Long fallbackApiId = api.getBaseId(); //如果当前是草稿，baseId指向主表
 
+        //获取Query参数
+        String queryKey = "params_" + paramsApiId + "_" + Request.Query;
+        List<Params> params = (List<Params>) redisTemplate.opsForValue().get(queryKey);
+        if (params == null || params.isEmpty()) {
+            params = requestParamsMapper.getParams(paramsApiId, Request.Query);
+            if ((params == null || params.isEmpty()) && fallbackApiId != null) {
+                params = requestParamsMapper.getParams(fallbackApiId, Request.Query);
+            }
+            if (params != null && !params.isEmpty()) {
+                redisTemplate.opsForValue().set(queryKey, params);
+            }
+        }
 
         //拼接Query参数到url上
-        HttpUrl.Builder urlBuilder=HttpUrl.parse(baseUrl).newBuilder();
-
-        //遍历每个Query参数，加入到url上
-        params.forEach(p ->{
-            if(p.getIsChecked()) {
-                urlBuilder.addQueryParameter(p.getName(), p.getValue());
-            }
-        } );
-
-        String url=urlBuilder.toString();
+        HttpUrl.Builder urlBuilder = HttpUrl.parse(baseUrl).newBuilder();
+        if (params != null) {
+            params.forEach(p -> {
+                if (p.getIsChecked()) {
+                    urlBuilder.addQueryParameter(p.getName(), p.getValue());
+                }
+            });
+        }
+        String url = urlBuilder.toString();
 
         //获取Body参数
-        String contentType=requestDTO.getContentType();
-        String bodyKey="params_"+requestDTO.getApiId()+"_"+contentType;
-        List<Params>bodyParams=(List<Params>) redisTemplate.opsForValue().get(bodyKey);
-        if(bodyParams==null||bodyParams.isEmpty()){
-            //缓存中没有则从数据库中获取
-            bodyParams=requestParamsMapper.getParams(requestDTO.getApiId(), contentType);
-            //将结果存入缓存
-            redisTemplate.opsForValue().set(bodyKey,bodyParams);
+        String contentType = requestDTO.getContentType();
+        String bodyKey = "params_" + paramsApiId + "_" + contentType;
+        List<Params> bodyParams = (List<Params>) redisTemplate.opsForValue().get(bodyKey);
+        if (bodyParams == null || bodyParams.isEmpty()) {
+            bodyParams = requestParamsMapper.getParams(paramsApiId, contentType);
+            if ((bodyParams == null || bodyParams.isEmpty()) && fallbackApiId != null) {
+                bodyParams = requestParamsMapper.getParams(fallbackApiId, contentType);
+            }
+            if (bodyParams != null && !bodyParams.isEmpty()) {
+                redisTemplate.opsForValue().set(bodyKey, bodyParams);
+            }
         }
-        RequestBody requestBody=null;
 
-        //构建RequestBody
-        if(contentType.equals(Request.FormData)){
+        RequestBody requestBody = null;
+        if (contentType.equals(Request.FormData)) {
             try {
-                //form-data构建（不含文件上传）
                 MultipartBody.Builder builder = new MultipartBody.Builder();
-
-
-                if(bodyParams!=null&&!bodyParams.isEmpty()) {
+                if (bodyParams != null && !bodyParams.isEmpty()) {
                     bodyParams.forEach(p -> {
-                        if(p.getIsChecked()) {
+                        if (p.getIsChecked()) {
                             builder.addFormDataPart(p.getName(), p.getValue());
                         }
                     });
                     requestBody = builder.build();
                 }
-
-
-            }catch (Exception e){
+            } catch (Exception e) {
                 throw new RequestException(MessageConstant.REQUEST_FAILED);
             }
-        }else if(contentType.equals(Request.Json)){
-
-            //json构建
-            String jsonStr=bodyParams.get(0).getValue();
-            requestBody=RequestBody.create(jsonStr,MediaType.parse("application/json"));
-
-        }else if(contentType.equals(Request.Urlencoded)){
-
-            //x-www-urlencode构建
-            FormBody.Builder builder=new FormBody.Builder();
-            bodyParams.forEach(p->{
-                if(p.getIsChecked()!=null&&p.getIsChecked()==true) {
-                    builder.add(p.getName(), p.getValue());
-                }
-            });
-            requestBody=builder.build();
+        } else if (contentType.equals(Request.Json)) {
+            if (bodyParams != null && !bodyParams.isEmpty()) {
+                String jsonStr = bodyParams.get(0).getValue();
+                requestBody = RequestBody.create(jsonStr, MediaType.parse("application/json"));
+            }
+        } else if (contentType.equals(Request.Urlencoded)) {
+            FormBody.Builder builder = new FormBody.Builder();
+            if (bodyParams != null) {
+                bodyParams.forEach(p -> {
+                    if (p.getIsChecked() != null && p.getIsChecked()) {
+                        builder.add(p.getName(), p.getValue());
+                    }
+                });
+            }
+            requestBody = builder.build();
         }
 
         //获取Headers参数
-
-        String headerKey="params_"+requestDTO.getApiId()+"_"+Request.Header;
-        List<Params> headerParams=(List<Params>) redisTemplate.opsForValue().get(headerKey);
-        if(headerParams==null||headerParams.isEmpty()){
-            //缓存中没有则从数据库中获取
-            headerParams=requestParamsMapper.getParams(requestDTO.getApiId(), Request.Header);
-            //将结果存入缓存
-            redisTemplate.opsForValue().set(headerKey,headerParams);
+        String headerKey = "params_" + paramsApiId + "_" + Request.Header;
+        List<Params> headerParams = (List<Params>) redisTemplate.opsForValue().get(headerKey);
+        if (headerParams == null || headerParams.isEmpty()) {
+            headerParams = requestParamsMapper.getParams(paramsApiId, Request.Header);
+            if ((headerParams == null || headerParams.isEmpty()) && fallbackApiId != null) {
+                headerParams = requestParamsMapper.getParams(fallbackApiId, Request.Header);
+            }
+            if (headerParams != null && !headerParams.isEmpty()) {
+                redisTemplate.opsForValue().set(headerKey, headerParams);
+            }
         }
-        //构建Headers
-        Map<String,String>mp=headerParams.stream()
-                .filter(param->param.getIsChecked())
+
+        Map<String, String> mp = headerParams != null ? headerParams.stream()
+                .filter(param -> param.getIsChecked())
                 .collect(Collectors.toMap(
                         Params::getName,
                         Params::getValue,
-                        (oldV,newV)->newV
-                ));
-        Headers headers=Headers.of(mp);
+                        (oldV, newV) -> newV
+                )) : Map.of();
+        Headers headers = Headers.of(mp);
 
         //发送请求
-        String method=api.getRequestMethod();
-        Response response=null;
-
+        String method = api.getRequestMethod();
+        Response response = null;
         try {
             if (method.equals(Request.GET)) {
-                //GET请求
                 response = HttpClientUtil.doGET(url, headers);
-
             } else if (method.equals(Request.POST)) {
-                //POST请求
-                response = HttpClientUtil.doPOST(url,requestBody,headers);
-
+                response = HttpClientUtil.doPOST(url, requestBody, headers);
             } else if (method.equals(Request.PUT)) {
-                //PUT请求
-                response = HttpClientUtil.doPUT(url,requestBody,headers);
-
+                response = HttpClientUtil.doPUT(url, requestBody, headers);
             } else if (method.equals(Request.DELETE)) {
-                //DELETE请求
-                response = HttpClientUtil.doDELETE(url,headers);
-
+                response = HttpClientUtil.doDELETE(url, headers);
             }
-            //返回结果
 
-            if(response==null){
+            if (response == null) {
                 throw new RequestException(MessageConstant.REQUEST_FAILED);
             }
 
-            if(!response.isSuccessful()){
+            if (!response.isSuccessful()) {
                 return RequestVO.builder()
                         .body(response.body().string())
                         .code(String.valueOf(response.code()))
@@ -219,47 +419,39 @@ public class ApiServiceImpl implements ApiService {
             }
 
             String body = null;
-            if (response != null && response.body() != null) {
+            if (response.body() != null) {
                 try (ResponseBody responseBody = response.body()) {
                     body = responseBody.string();
                 } catch (IOException e) {
                     throw new RequestException(MessageConstant.REQUEST_FAILED);
                 }
             }
-            return  RequestVO.builder()
+            return RequestVO.builder()
                     .body(body)
                     .code(String.valueOf(response.code()))
                     .build();
-        }catch (IOException e){
+        } catch (IOException e) {
             throw new RequestException(MessageConstant.REQUEST_FAILED);
-        }
-        finally {
+        } finally {
             if (response != null) {
                 response.close();
             }
         }
-
-    }
-
-    @Override
-    public void updateInfo(UpdateApiInfoDTO updateApiInfoDTO) {
-        apiMapper.updateInfo(updateApiInfoDTO);
     }
 
     @Override
     @Transactional
     public void delete(Long id) {
-        //删除接口
-        apiMapper.deleteById(id);
-        //删除接口相关的参数
+        //删除草稿params/response
         requestParamsMapper.deleteByApiId(id);
-        //删除接口相关的响应参数
         responseMapper.deleteByApiId(id);
+        //删除草稿行
+        apiMapper.deleteById(id);
     }
 
     @Override
-    public List<ExportBatchVO> exportBatch(List<ExportBatchDTO> list) {
-        //批量鉴权：一次SQL查出用户有权访问的API ID
+    public List<ExportBatchVO>exportBatch(List<ExportBatchDTO> list) {
+        //批量鉴权
         List<Long> apiIds = list.stream().map(ExportBatchDTO::getApiId).distinct().toList();
         List<Long> accessible = apiMapper.filterAccessibleApiIds(apiIds, BaseContext.getCurrentId());
         if (accessible.size() < apiIds.size()) {
@@ -267,10 +459,17 @@ public class ApiServiceImpl implements ApiService {
         }
 
         List<ExportBatchVO> exportBatchVOs = new ArrayList<>();
-        //遍历apiId
         for (ExportBatchDTO dto : list) {
-            //获取请求参数（query、body、headers）
             Long apiId = dto.getApiId();
+
+            //导出主表：如果传入的是草稿ID，解析为主表ID
+            if (!Boolean.TRUE.equals(dto.getUseDraft())) {
+                Api api = apiMapper.getById(apiId);
+                if (api != null && Boolean.TRUE.equals(api.getIsDraft()) && api.getBaseId() != null) {
+                    apiId = api.getBaseId();
+                }
+            }
+
             String contentType = dto.getFormatType();
             List<ExportParamVO> queryParams = requestParamsMapper.getExportParams(apiId, Request.Query);
             List<ExportParamVO> bodyParams = requestParamsMapper.getExportParams(apiId, contentType);
@@ -281,14 +480,13 @@ public class ApiServiceImpl implements ApiService {
                     .body(bodyParams)
                     .headers(headerParams)
                     .build();
-            //获取响应体参数
+
             ExportResponseVO exportResponseVO = new ExportResponseVO();
-            //目前还是每个api只有一个响应体，后面可以改为list
             ResponseVO responseVO = responseMapper.getByApiId(apiId);
-            if(responseVO!=null) {
+            if (responseVO != null) {
                 BeanUtils.copyProperties(responseVO, exportResponseVO);
             }
-            //拼接ExportBatchVO，加入返回列表
+
             ExportBatchVO exportBatchVO = ExportBatchVO.builder()
                     .apiId(apiId)
                     .params(exportParamsVO)
@@ -296,7 +494,19 @@ public class ApiServiceImpl implements ApiService {
                     .build();
             exportBatchVOs.add(exportBatchVO);
         }
-        //返回
         return exportBatchVOs;
+    }
+
+    /**
+     * 清除Redis缓存
+     */
+    private void clearCache(String pattern) {
+        try {
+            var keys = redisTemplate.keys(pattern);
+            if (keys != null && !keys.isEmpty()) {
+                redisTemplate.delete(keys);
+            }
+        } catch (Exception ignored) {
+        }
     }
 }

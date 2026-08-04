@@ -1,4 +1,8 @@
-import { request,getUrlParams } from "../../config/AxiosConfig/AxiosConfig.js";
+import { getUrlParams } from "../../config/AxiosConfig/AxiosConfig.js";
+import { ApiApi } from "../../api/ApiApi.js";
+import { RequestParamsApi } from "../../api/RequestParamsApi.js";
+import { showToast } from "../../components/toast.js";
+import { createConfirmModal } from "../../components/tip.js";
 import { methodlist,methodColors,methodBackroundColors } from "../../config/MethodConfig.js";
 import { requestDataType,typeList,httpMimeTypes,queryTypeList,responseContentType as responseContentTypeMap, responseContentType} from "../../config/TypeConfig.js";
 import { debugFormConfig,designFormConfig } from "../../config/FormConfig.js";
@@ -51,6 +55,8 @@ function createDetailMenuButton(label, svgPath, className = '') {
     return button;
 }
 
+const confirmModal = createConfirmModal('detail-confirm-modal', '确认操作');
+
 function closeAllDetailMenus() {
     document.querySelectorAll('.more-menu-container.is-open').forEach(menu => {
         menu.classList.remove('is-open');
@@ -87,16 +93,13 @@ function initTreeTable() {
         onApiRename: async (apiData) => {
             const newName = await apiRenameModal.open(apiData.apiName, '重命名接口');
             if (newName) {
-                await request.put('api/updateInfo', {
-                    id: apiData.id,
-                    apiName: newName
-                });
+                await ApiApi.updateInfo({ id: apiData.id, apiName: newName });
                 if (treeTableRef) treeTableRef.refresh();
             }
         },
 
         onApiDelete: async (apiData) => {
-            await request.delete(`api/delete/${apiData.id}`);
+            await ApiApi.delete(apiData.id);
             if (treeTableRef) treeTableRef.refresh();
         },
 
@@ -108,15 +111,13 @@ function initTreeTable() {
                 status: 1
             };
             if (categoryId) payload.categoryId = categoryId;
-            const res = await request.post('api/add', payload);
+            const res = await ApiApi.add(payload);
             localStorage.setItem('selectedApiId', res?.data?.data?.id || '');
             return res?.data?.data || null;
         },
 
         onApiMove: async (apiData, targetCategoryId) => {
-            await request.put(`api/update`, {
-                id: apiData.id,
-                categoryId: targetCategoryId
+            await ApiApi.update({ id: apiData.id, categoryId: targetCategoryId
             });
         },
 
@@ -247,50 +248,6 @@ function renderTestWindow(apiData){
 
 }
 
-/**
- * Api相关的请求发送函数
- * @param {接口数据} apiData 
- * @param {请求方法} method 
- */
-async function sendApiRequest(apiData,method){
-    
-    let requestData = {};
-    if(method === 'PUT'||method === 'POST'){
-        requestData={
-            id: apiData.id,
-            apiName: apiData.apiName,
-            requestMethod: apiData.requestMethod,
-            requestUrl: apiData.requestUrl,
-            status: apiData.status
-        }
-    }
-    let url = `api`;
-    if(method ==='POST'){
-        url += `/add`;
-    }else if(method === 'PUT') {
-        url += `/update`; // 假设更新需要接口id
-    }else if(method === 'DELETE') {
-        url += `/delete/${apiData.id}`; // 假设删除需要接口id
-    }
-
-    try{
-        const requestConfig = {
-            url: url,
-            method: method,
-            headers: {
-                'token': localStorage.getItem('token') 
-            }
-        };
-        if(method !== 'GET'&& method !== 'DELETE') {
-            requestConfig.data = requestData; // 非GET、DELETE请求才有请求体
-        }
-
-        const res= await request(requestConfig);
-        return res; // 根据后端返回结构调整
-    }catch(err){
-        throw new Error(`请求失败：${err.response?.data?.message || err.message || '未知错误'}`);
-    }
-}
 
 /**
  * 渲染调试窗口
@@ -350,7 +307,7 @@ function renderDebug(apiData,config){
             methodSpan.style.backgroundColor = methodBackroundColors[apiData.requestMethod] || methodBackroundColors['DEFAULT'];
 
             // 更新接口数据中的请求方法后，发送更新接口的请求，保持数据同步
-            sendApiRequest(apiData, 'PUT');
+            ApiApi.update({ id: apiData.id, apiName: apiData.apiName, requestMethod: apiData.requestMethod, requestUrl: apiData.requestUrl, status: apiData.status });
 
             optionList.style.display = 'none'; // 隐藏选项列表
 
@@ -381,11 +338,11 @@ function renderDebug(apiData,config){
     urlInput.placeholder = "接口请求地址";
     urlInput.addEventListener('blur',function(){
         apiData.requestUrl= urlInput.value.trim(); // 更新接口数据中的url字段，后续发送请求时可以用到
-        sendApiRequest(apiData,'PUT') // 发送更新接口的请求，保持数据同步
+        ApiApi.update({ id: apiData.id, apiName: apiData.apiName, requestMethod: apiData.requestMethod, requestUrl: apiData.requestUrl, status: apiData.status }); // 发送更新接口的请求，保持数据同步
         //alert('接口URL已更新'); 
     });
 
-    submitButton.textContent='发送'; 
+    submitButton.textContent='发送';
     submitButton.className = "submit-btn";
     submitButton.addEventListener('click', function() {
         const btn=this;
@@ -472,11 +429,9 @@ function renderDebug(apiData,config){
         console.log(`接口${apiData.id}发送${apiData.requestMethod}请求到：${urlInput.value}`);
 
         //发送请求，告诉后端apiId为xxx的接口要发送请求了，在后端向指定接口发送请求
-        request.post(`api/send`,{
-            
+        ApiApi.send({
             apiId: apiData.id,
-            contentType: localStorage.getItem(getContentTypeKey(apiData.id)) || requestDataType.None // 发送当前选择的请求体格式，后端根据这个参数来区分请求体数据结构
-        
+            contentType: localStorage.getItem(getContentTypeKey(apiData.id)) || requestDataType.None
         }).then(res => {
             finishWithDelay(() => {
                 if (!responseContent) {
@@ -757,7 +712,7 @@ function renderBody(container,config){
         contentDiv.appendChild(createJsonEditor({ placeholder: '输入JSON格式的请求体' }));
 
         //获取已有的Json数据并预填充
-        sendRequest(null, apiId, requestDataType.Json, 'GET')
+        RequestParamsApi.list(apiId, requestDataType.Json)
         .then(res => {
             if(res.data) {
                 const jsonString=res.data.data[0].value;
@@ -785,7 +740,7 @@ function renderBody(container,config){
 
                 //只有一个Json
                 if(!contentDiv.dataset.id) {
-                    sendRequest(param,null,requestDataType.Json, 'POST')
+                    RequestParamsApi.add({ name: param[0], value: param[1], type: param[2], explanation: param[3], apiId: param[4], isNecessary: param[5], isChecked: param[6], formatType: requestDataType.Json })
                     .then(res => {
                         //alert('Json保存成功');
                         if(res.data && res.data.data && res.data.data.id) {
@@ -794,7 +749,7 @@ function renderBody(container,config){
                     })
                 }else{
                     //alert('Json更新成功');
-                    sendRequest(param, contentDiv.dataset.id, requestDataType.Json, 'PUT');
+                    RequestParamsApi.update(contentDiv.dataset.id, { name: param[0], value: param[1], type: param[2], explanation: param[3], apiId: param[4], formatType: requestDataType.Json });
                 }
             }
         });
@@ -849,63 +804,6 @@ function renderHeaders(container,config){
 }
 
 
-/**
- * 参数表单通用发送接口请求函数
- *  @param {请求体数组} param 
- *  @param {(GET)接口 id/(其他)参数 id} id
- *  @param {数据类型,Params,Headers,Body..} dataType
- *  @param {请求方法} method
- **/
-async function sendRequest(param, id, dataType, method) {
-        // 这里可以根据dataType来区分是Params、Headers还是Body的参数，构造不同的请求数据结构
-
-        let requestData = {}; 
-        if(param){
-            requestData = {
-                name: param[0],
-                value: param[1],
-                type: param[2],
-                explanation: param[3],
-                apiId: param[4],
-                isNecessary: param[5],
-                isChecked: param[6],
-                formatType: dataType
-            };
-        }
-        let url = `request/param`;
-        if(method==='GET'){
-            url += `/list`;
-        }
-        else if(method === 'DELETE') {
-            url += `/delete`;
-        }
-        if (id) {
-            url += `/${id}`; // 拼接id，如 /api/params/123
-        }
-
-        try{
-            const requestConfig = {
-                url: url,
-                method: method,
-                headers: {
-                    'token': localStorage.getItem('token') 
-                }
-            };
-            if(method !== 'GET'&& method !== 'DELETE') {
-                requestConfig.data = requestData; // 非GET、DELETE请求才有请求体
-            }
-            else if(method === 'GET'){
-                requestConfig.params = {
-                    formatType: dataType, // 传递数据类型，后端根据这个参数来区分返回哪个接口的参数列表
-                };
-            }
-
-            const res= await request(requestConfig);
-            return res; // 根据后端返回结构调整
-        }catch(err){
-            throw new Error(`请求失败：${err.response?.data?.message || err.message}`);
-        }
-    }
 
 
 //统一创建表单函数
@@ -1129,12 +1027,10 @@ function renderform(container,config){
                 const isNecessary = isNecessaryButton.classList.contains('active') ? true : false;
                 
                 //console.log('isNecessary:', isNecessary);
-                const param = [keyInput.value.trim(), valueInput.value.trim(), typeInput.value.trim(), explainInput.value.trim(), apiId, isNecessary, isChecked];
-                const dataType = container.dataset.type;
-                const method = row.dataset.id ? 'PUT' : 'POST';
-                
-                sendRequest(param, row.dataset.id, dataType, method)
-                .then(res => {
+                const paramData = { name: keyInput.value.trim(), value: valueInput.value.trim(), type: typeInput.value.trim(), explanation: explainInput.value.trim(), apiId: apiId, isNecessary: isNecessary, isChecked: isChecked, formatType: container.dataset.type };
+
+                const req = row.dataset.id ? RequestParamsApi.update(row.dataset.id, paramData) : RequestParamsApi.add(paramData);
+                req.then(res => {
                     if(res.data && res.data.data && res.data.data.id){
                         row.dataset.id = res.data.data.id;
                     }
@@ -1196,8 +1092,7 @@ function renderform(container,config){
             e.stopPropagation();
             if(removeButton.dataset.confirmed === 'true'){
                 if(row.dataset.id){
-                    const dataType = container.dataset.type;
-                    sendRequest(null, row.dataset.id, dataType, 'DELETE');
+                    RequestParamsApi.delete(row.dataset.id);
                 }
                 const others = ul.querySelectorAll('li:not(:first-child)');
                 if(others.length > 1){
@@ -1231,7 +1126,7 @@ function renderform(container,config){
     try{
         const requestDataType = container.dataset.type;
         const apiId = document.getElementById('requestArea').dataset.apiId;
-        sendRequest(null, apiId, requestDataType, 'GET')
+        RequestParamsApi.list(apiId, requestDataType)
         .then(res => {
             const paramsList = res.data.data || [];
             if(paramsList.length > 0){
@@ -1259,7 +1154,7 @@ function renderform(container,config){
 
 //更新接口信息的请求函数
 function updateApiInfoArea(requestBodyData={id,apiName, explanation, status, inChargeUser}) {
-        request.put(`api/updateInfo`, requestBodyData)
+        ApiApi.updateInfo(requestBodyData)
         // fetchApiListAndRender();
     }
 
@@ -1282,8 +1177,20 @@ function renderDesign(apiData,config){
     const responseApi= createResponseApi(apiData.id);
 
     // 复用调试窗口的接口基本信息展示部分（url，请求参数），保持设计窗口和调试窗口风格一致
-    renderDebug(apiData,config); 
-    
+    renderDebug(apiData,config);
+
+    //草稿发布按钮（设计界面url后面，样式同发送按钮）
+    if (apiData.isDraft) {
+        const requestLine = document.getElementById('requestLine');
+        if (requestLine) {
+            const publishBtn = document.createElement('button');
+            publishBtn.textContent = '发布';
+            publishBtn.className = 'submit-btn';
+            publishBtn.addEventListener('click', () => handlePublish(apiData));
+            requestLine.appendChild(publishBtn);
+        }
+    }
+
     const requestInfo = document.getElementById('requestInfo');
 
     const apiInfoArea = document.createElement('div');
@@ -1319,6 +1226,43 @@ function renderDesign(apiData,config){
     
     apiTitleDiv.appendChild(apiName);
     apiTitleDiv.appendChild(statusSpan);
+
+    //草稿标记 + 放弃按钮 + 主表预览（仅草稿显示）
+    if (apiData.isDraft) {
+        const draftBadge = document.createElement('span');
+        draftBadge.textContent = '草稿';
+        draftBadge.style.cssText = 'padding:2px 8px;border-radius:4px;background:#fef3c7;color:#d97706;font-size:0.8rem;font-weight:600;';
+        apiTitleDiv.appendChild(draftBadge);
+
+        const discardBtn = document.createElement('button');
+        discardBtn.textContent = '放弃修改';
+        discardBtn.className = 'btn-secondary';
+        discardBtn.style.cssText = 'padding:4px 12px;font-size:0.85rem;';
+        discardBtn.addEventListener('click', () => handleDiscard(apiData));
+        apiTitleDiv.appendChild(discardBtn);
+
+        //主表预览（如果有base_id）
+        if (apiData.baseId) {
+            const masterBtn = document.createElement('button');
+            masterBtn.textContent = '查看正式版';
+            masterBtn.className = 'btn-secondary';
+            masterBtn.style.cssText = 'padding:4px 12px;font-size:0.85rem;';
+            masterBtn.addEventListener('click', async () => {
+                try {
+                    const res = await ApiApi.getMaster(apiData.baseId);
+                    const master = res.data?.data;
+                    if (master) {
+                        renderPreview(master);
+                        document.querySelectorAll('.test-tab').forEach(t => t.classList.remove('active'));
+                        document.getElementById('tab_preview')?.classList.add('active');
+                    }
+                } catch (e) {
+                    showToast('获取正式版本失败', 'error');
+                }
+            });
+            apiTitleDiv.appendChild(masterBtn);
+        }
+    }
     const apiExplanationDiv = document.createElement('div');
     apiExplanationDiv.className = "api-explanation-div";
 
@@ -2356,7 +2300,7 @@ function renderPreview(apiData){
     const exportButton = document.createElement('button');
     exportButton.innerHTML='<i class="bi bi-box-arrow-up-right"></i>';
     exportButton.className = 'export-btn';
-    
+
     const exportButtonTip= document.createElement('span');
     exportButtonTip.className = 'export-btn-tip';
     exportButtonTip.textContent = '导出接口文档';
@@ -2370,9 +2314,8 @@ function renderPreview(apiData){
     });
 
     exportButton.addEventListener('click', function() {
-        exportSingleApi(apiData);
+        exportSingleApi(apiData, !!apiData.isDraft);
     });
-
     url_statusDiv.appendChild(exportButton);
 
     const apiInfoDiv=document.createElement('div');
@@ -2444,11 +2387,7 @@ function renderPreview(apiData){
     queryParamsDiv.appendChild(queryInfoSpan);
     
 
-    request.get(`/request/param/list/${apiData.id}`,{
-            params: {
-                formatType: requestDataType.Query
-            }
-        }).then(res => {
+    RequestParamsApi.list(apiData.id, requestDataType.Query).then(res => {
             const data = res.data.data || [];
             if(data.length > 0) {
                 const paramsList = createParamList(data);
@@ -2472,11 +2411,7 @@ function renderPreview(apiData){
     headersInfoSpan.appendChild(headersTitle);
     headersParamsDiv.appendChild(headersInfoSpan);
 
-    request.get(`/request/param/list/${apiData.id}`,{
-            params: {
-                formatType: requestDataType.Header
-            }
-        }).then(res => {
+    RequestParamsApi.list(apiData.id, requestDataType.Header).then(res => {
             const data = res.data.data || [];
             if(data.length > 0) {
                 const paramsList = createParamList(data);
@@ -2537,11 +2472,7 @@ function renderPreview(apiData){
         container.appendChild(bodyFlex);
 
         if (bodyFormat !== requestDataType.None) {
-            request.get(`/request/param/list/${apiData.id}`,{
-                params: {
-                    formatType: bodyFormat || ''
-                }
-            }).then(res => {
+            RequestParamsApi.list(apiData.id, bodyFormat || '').then(res => {
                 const data = res.data.data || [];
                 
                 if (data && data.length > 0) {
@@ -2567,11 +2498,7 @@ function renderPreview(apiData){
         container.appendChild(bodyParamsDiv);
 
         if (bodyFormat !== requestDataType.None) {
-            request.get(`/request/param/list/${apiData.id}`,{
-                params: {
-                    formatType: bodyFormat || ''
-                }
-            }).then(res => {
+            RequestParamsApi.list(apiData.id, bodyFormat || '').then(res => {
                 const data = res.data.data || [];
                 if (data.length > 0) {
                     const paramsList = createParamList(data);
@@ -2714,5 +2641,49 @@ window.onload = async function () {
                 <div class="error-tip">项目获取失败：${errMsg}</div>
             `;
         }
+    }
+}
+
+// ========== 发布/放弃草稿 ==========
+
+/**
+ * 发布草稿
+ */
+async function handlePublish(apiData) {
+    try {
+        await ApiApi.publish(apiData.id, apiData.masterUpdateTime);
+        showToast('发布成功', 'success');
+        if (treeTableRef) treeTableRef.refresh();
+    } catch (err) {
+        const msg = err.response?.data?.msg || err.message || '';
+        if (msg.includes('已被他人更新')) {
+            const force = await confirmModal.open(msg + '\n是否强制覆盖？', '发布冲突', '强制覆盖');
+            if (force) {
+                try {
+                    await ApiApi.publish(apiData.id, null);
+                    showToast('已强制覆盖', 'success');
+                    if (treeTableRef) treeTableRef.refresh();
+                } catch (e) {
+                    showToast('发布失败：' + (e.response?.data?.msg || e.message), 'error');
+                }
+            }
+        } else {
+            showToast('发布失败：' + msg, 'error');
+        }
+    }
+}
+
+/**
+ * 放弃草稿
+ */
+async function handleDiscard(apiData) {
+    const ok = await confirmModal.open('确定放弃当前草稿？所有未发布的修改将丢失。', '放弃草稿', '放弃');
+    if (!ok) return;
+    try {
+        await ApiApi.discardDraft(apiData.id);
+        showToast('草稿已放弃', 'success');
+        if (treeTableRef) treeTableRef.refresh();
+    } catch (err) {
+        showToast('操作失败：' + (err.response?.data?.msg || err.message), 'error');
     }
 }

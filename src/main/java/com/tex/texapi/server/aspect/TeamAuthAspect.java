@@ -66,8 +66,11 @@ public class TeamAuthAspect {
 
         // 一条 SQL 完成鉴权：JOIN 走完归属链 + 查角色
         Integer role = getUserRole(checkType, resourceId, userId);
-        log.info("团队鉴权: userId={}, resourceId={}, checkType={}, role={}",
-                userId, resourceId, checkType, role);
+
+        String methodName = joinPoint.getTarget().getClass().getSimpleName()
+                + "." + methodSignature.getMethod().getName();
+        log.info("鉴权 {} — userId={}, resourceId={}, checkType={}, requiredLevel={}, role={}",
+                methodName, userId, resourceId, checkType, requiredLevel, role);
 
         if (role == null) {
             throw new NoPermissionException(MessageConstant.NOT_TEAM_MEMBER);

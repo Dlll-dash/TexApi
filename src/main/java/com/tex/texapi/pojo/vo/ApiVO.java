@@ -44,4 +44,13 @@ public class ApiVO {
 
     //分类
     Long categoryId;
+
+    //是否是草稿
+    Boolean isDraft;
+
+    //草稿对应的主表id
+    Long baseId;
+
+    //主表更新时间（用于冲突检测，仅草稿有值）
+    LocalDateTime masterUpdateTime;
 }

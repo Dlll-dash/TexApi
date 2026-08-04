@@ -72,14 +72,9 @@ create table request_params
     api_id       bigint               not null comment '所属接口id',
     format_type  varchar(20)          not null comment '格式类型(query，formData，urlencoded，json，header)',
     is_necessary tinyint(1)           null comment '是否必须',
-    is_checked   tinyint(1)           null comment '是否被选中',
-    base_id      bigint               null comment '草稿对应的主表行ID',
-    is_draft     tinyint(1) default 0 not null comment '0=主表 1=草稿'
+    is_checked   tinyint(1)           null comment '是否被选中'
 )
     comment 'Query请求参数表';
-
-create index idx_draft_api
-    on request_params (api_id, is_draft);
 
 create table response
 (
@@ -89,14 +84,9 @@ create table response
     response_code varchar(200)         not null comment 'HTTP 状态码',
     content_type  varchar(50)          not null comment '内容格式',
     response_body varchar(2048)        null comment '响应Body',
-    api_id        bigint               not null comment '所属接口id',
-    is_draft      tinyint(1) default 0 not null comment '0=主表 1=草稿',
-    base_id       bigint               null comment '草稿对应的主表行ID'
+    api_id        bigint               not null comment '所属接口id'
 )
     comment '响应参数表';
-
-create index idx_draft_api
-    on response (api_id, is_draft);
 
 create table team
 (

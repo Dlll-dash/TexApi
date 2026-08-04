@@ -29,4 +29,10 @@ public class Category {
 
     //乐观锁版本号
     Long version;
+
+    //草稿的主表id
+    Long baseId;
+
+    //是否是草稿
+    Boolean isDraft;
 }

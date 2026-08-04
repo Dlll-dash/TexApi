@@ -20,7 +20,7 @@ public interface CategoryMapper {
      * @param projectId
      * @return
      */
-    @Select("select * from category where project_id= #{projectId}")
+    @Select("select * from category where project_id= #{projectId} and is_draft = 0")
     List<CategoryVO> getVoByProjectId(Long projectId);
 
     /**
@@ -48,7 +48,7 @@ public interface CategoryMapper {
      * @param parentId
      * @return
      */
-    @Select("select * from category where parent_id=#{parentId}")
+    @Select("select * from category where parent_id=#{parentId} and is_draft = 0")
     List<Category> getByParentId(Long parentId);
 
     /**
@@ -62,15 +62,11 @@ public interface CategoryMapper {
      * @param id
      * @return
      */
-    @Select("select * from category where id=#{id}")
+    @Select("select * from category where id=#{id} and is_draft = 0")
     Category getById(Long id);
 
     /**
      * 鉴权查询：一次 JOIN 返回用户在分类所属团队中的角色，无权限返回 null
      */
-    @Select("SELECT tm.role FROM team_member tm " +
-            "JOIN project p ON tm.team_id = p.team_id " +
-            "JOIN category c ON c.project_id = p.id " +
-            "WHERE c.id = #{categoryId} AND tm.user_id = #{userId}")
     Integer getUserRole(@Param("categoryId") Long categoryId, @Param("userId") Long userId);
 }
