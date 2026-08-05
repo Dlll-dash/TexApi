@@ -264,8 +264,8 @@ function prerenderApiPreview(api) {
     apiInfoDiv.className = 'api-info-div';
     apiInfoDiv.appendChild(createInfoItem('创建时间', formatDateToChinese(api.createTime)));
     apiInfoDiv.appendChild(createInfoItem('修改时间', formatRelativeTime(api.updateTime)));
-    apiInfoDiv.appendChild(createInfoItem('修改者', api.updateUser || api.modifiedBy));
-    apiInfoDiv.appendChild(createInfoItem('创建者', api.createUser || api.createdBy));
+    apiInfoDiv.appendChild(createInfoItem('修改者', api.updateUserName || api.modifiedBy));
+    apiInfoDiv.appendChild(createInfoItem('创建者', api.createUserName || api.createdBy));
     apiInfoDiv.appendChild(createInfoItem('责任人', api.inChargeUser));
     container.appendChild(apiInfoDiv);
 

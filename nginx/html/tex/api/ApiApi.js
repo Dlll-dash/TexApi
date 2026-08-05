@@ -34,6 +34,14 @@ export const ApiApi = {
     },
 
     /**
+     * 获取主表API列表（已发布，所有成员）
+     * @param {number} projectId
+     */
+    async listMasters(projectId) {
+        return request.get(`/api/master/list/${projectId}`);
+    },
+
+    /**
      * 发送调试请求
      * @param {Object} data - { apiId, contentType }
      */

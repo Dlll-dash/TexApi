@@ -1,9 +1,11 @@
 import { request } from '../config/AxiosConfig/AxiosConfig.js';
 import { CategoryApi } from '../api/CategoryApi.js';
+import { ApiApi } from '../api/ApiApi.js';
 import { methodColors, methodBackroundColors } from '../config/MethodConfig.js';
 import { statusColors, statusText } from '../config/StatusConfig.js';
 import { createPromptModal } from '../components/modal.js';
 import { createConfirmModal } from '../components/tip.js';
+import { showToast } from '../components/toast.js';
 
 // ========== Icon Constants ==========
 const foldArrowIcon = '<i class="bi bi-caret-right-fill"></i>';
@@ -85,11 +87,40 @@ function buildTree(categories, apis) {
 
     // Uncategorized APIs at root level
     const uncategorized = apis.filter(api => !api.categoryId);
-    uncategorized.forEach(api => {
-        root.children.push(new TreeTableNode('api', api, null));
-    });
+    if (uncategorized.length > 0) {
+        //console.log('未分类的API:', uncategorized.length, '个 (categoryId 为空)');
+    }
+
+    // Diagnostic: check if any APIs failed to match any category
+    const matchedCount = apis.length - uncategorized.length;
+    //console.log('API匹配结果: 总数=' + apis.length + ', 已匹配=' + matchedCount + ', 未分类=' + uncategorized.length);
 
     return root;
+}
+
+// ========== Helper: find API data by ID from the tree ==========
+function findApiData(node, apiId) {
+    for (const child of node.children) {
+        if (child.type === 'api' && String(child.data.id) === String(apiId)) {
+            return child.data;
+        }
+        if (child.type === 'category') {
+            const found = findApiData(child, apiId);
+            if (found) return found;
+        }
+    }
+    return null;
+}
+
+// ========== Helper: collect all category IDs from a nested tree ==========
+function collectAllCatIds(node) {
+    const ids = [node.id];
+    if (node.children) {
+        node.children.forEach(child => {
+            ids.push(...collectAllCatIds(child));
+        });
+    }
+    return ids;
 }
 
 // ========== Helper: create SVG-based menu button ==========
@@ -121,14 +152,16 @@ function createTreeTable(container, options = {}) {
         onApiMove,                           // func (apiData, targetCategoryId) => void
         onApiExport,                         // func (apiData) => void
         onCategoryExport,                    // func (categoryId, categoryName) => void
+        readOnly = false,                    // if true, hide all more-menus (no CRUD)
+        apiListFetcher = null,               // optional: custom function (projectId) => Promise<Api[]> for non-draft API lists
     } = options;
 
     let treeRoot = null;
     let rootCategoryId = null;
     let outsideCloseBound = false;
 
-    const categoryRenameModal = createPromptModal('category-prompt-modal', '重命名分类');
-    const confirmModal = createConfirmModal('tree-confirm-modal', '确认操作');
+    const categoryRenameModal = readOnly ? null : createPromptModal('category-prompt-modal', '重命名分类');
+    const confirmModal = readOnly ? null : createConfirmModal('tree-confirm-modal', '确认操作');
 
     // --- Close all open menus ---
     function closeAllMenus() {
@@ -314,6 +347,31 @@ function createTreeTable(container, options = {}) {
         };
         optionList.appendChild(exportBatchOpt);
 
+        // Publish (only for draft categories)
+        if (catNode.data.isDraft) {
+            const publishCatOpt = createMenuButton('发布', `
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <polyline points="16 3 21 3 21 8"></polyline>
+                    <line x1="4" y1="20" x2="21" y2="3"></line>
+                    <polyline points="21 16 21 21 16 21"></polyline>
+                    <line x1="15" y1="15" x2="21" y2="21"></line>
+                    <line x1="4" y1="4" x2="9" y2="9"></line>
+                </svg>
+            `, 'tree-option-item');
+            publishCatOpt.onclick = async (e) => {
+                e.stopPropagation();
+                closeAllMenus();
+                try {
+                    await CategoryApi.publishCategory(catNode.data.id);
+                    showToast('发布成功', 'success');
+                    refresh();
+                } catch (err) {
+                    showToast('发布失败：' + (err.response?.data?.msg || err.message), 'error');
+                }
+            };
+            optionList.appendChild(publishCatOpt);
+        }
+
         // Delete (hidden for root)
         if (!isRoot) {
             const deleteOpt = createMenuButton('删除', `
@@ -405,6 +463,45 @@ function createTreeTable(container, options = {}) {
         };
         optionList.appendChild(exportOpt);
 
+        // Publish (only for draft APIs)
+        if (apiData.isDraft) {
+            const publishApiOpt = createMenuButton('发布', `
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <polyline points="16 3 21 3 21 8"></polyline>
+                    <line x1="4" y1="20" x2="21" y2="3"></line>
+                    <polyline points="21 16 21 21 16 21"></polyline>
+                    <line x1="15" y1="15" x2="21" y2="21"></line>
+                    <line x1="4" y1="4" x2="9" y2="9"></line>
+                </svg>
+            `, 'tree-option-item');
+            publishApiOpt.onclick = async (e) => {
+                e.stopPropagation();
+                closeAllMenus();
+                try {
+                    await ApiApi.publish(apiData.id, apiData.masterUpdateTime);
+                    showToast('发布成功', 'success');
+                    refresh();
+                } catch (err) {
+                    const msg = err.response?.data?.msg || err.message || '';
+                    if (msg.includes('已被他人更新')) {
+                        const force = await confirmModal.open(msg + '\n是否强制覆盖？', '发布冲突', '强制覆盖');
+                        if (force) {
+                            try {
+                                await ApiApi.publish(apiData.id, null);
+                                showToast('已强制覆盖', 'success');
+                                refresh();
+                            } catch (e) {
+                                showToast('发布失败：' + (e.response?.data?.msg || e.message), 'error');
+                            }
+                        }
+                    } else {
+                        showToast('发布失败：' + msg, 'error');
+                    }
+                }
+            };
+            optionList.appendChild(publishApiOpt);
+        }
+
         // Delete
         const deleteOpt = createMenuButton('删除', `
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -465,14 +562,25 @@ function createTreeTable(container, options = {}) {
         nameSpan.className = 'tree-category-name';
         nameSpan.textContent = catNode.data.name || '未命名分类';
 
-        // More menu
-        const menuContainer = createMoreMenuContainer();
-        renderCategoryMenu(catNode, menuContainer);
-
         li.appendChild(arrow);
         li.appendChild(folder);
         li.appendChild(nameSpan);
-        li.appendChild(menuContainer);
+
+        // Draft badge (only in edit mode for draft categories)
+        if (!readOnly && catNode.data.isDraft) {
+            const badge = document.createElement('span');
+            badge.className = 'tree-draft-badge';
+            badge.textContent = catNode.data.baseId ? '已修改' : '草稿';
+            badge.style.cssText = 'font-size:11px;color:#d97706;background:#fef3c7;padding:1px 6px;border-radius:4px;margin-left:6px;';
+            li.appendChild(badge);
+        }
+
+        // More menu (hidden in readOnly mode)
+        if (!readOnly) {
+            const menuContainer = createMoreMenuContainer();
+            renderCategoryMenu(catNode, menuContainer);
+            li.appendChild(menuContainer);
+        }
 
         // Toggle collapse on arrow click or double-click on name
         function toggleCollapse() {
@@ -546,16 +654,18 @@ function createTreeTable(container, options = {}) {
             li.appendChild(statusWrap);
         }
 
-        // More menu
-        const menuContainer = createMoreMenuContainer();
-        renderApiMoreMenu(apiData, menuContainer);
-        li.appendChild(menuContainer);
+        // More menu (hidden in readOnly mode)
+        if (!readOnly) {
+            const menuContainer = createMoreMenuContainer();
+            renderApiMoreMenu(apiData, menuContainer);
+            li.appendChild(menuContainer);
+        }
 
         // Click to select
         li.addEventListener('click', (e) => {
             closeAllMenus();
             localStorage.setItem('selectedApiId', apiData.id);
-            console.log('选中接口ID:', apiData.id, '已保存到localStorage');
+            //console.log('选中接口ID:', apiData.id, '已保存到localStorage');
             // Update active state
             document.querySelectorAll('.tree-api-row.active').forEach(el => el.classList.remove('active'));
             li.classList.add('active');
@@ -594,15 +704,19 @@ function createTreeTable(container, options = {}) {
         let rootNode = null; // raw root node from API (single object, not array)
 
         // Step 1: Fetch category root node
+        // Edit mode: draft-aware tree (draft category IDs match draft API categoryIds)
+        // Master/readOnly mode: master-only tree
         try {
-            const catRes = await CategoryApi.getCategories(pId);
+            const catRes = readOnly
+                ? await CategoryApi.getCategories(pId)
+                : await CategoryApi.getDraftCategories(pId);
             rootNode = catRes?.data?.data || null;
-            console.log('获取到的分类根节点：', rootNode);
+            //console.log('获取到的分类根节点：', rootNode);
 
-            // Auto-create root "接口" category if none exists
-            if (!rootNode) {
+            // Auto-create root "接口" category if none exists (only in editable mode)
+            if (!rootNode && !readOnly) {
                 try {
-                    console.log('项目无分类，自动创建根分类「接口」...');
+                    //console.log('项目无分类，自动创建根分类「接口」...');
                     const createRes = await CategoryApi.add({ name: '接口', projectId: pId });
                     rootNode = createRes?.data?.data || null;
                     console.log('根分类创建结果：', rootNode);
@@ -616,12 +730,20 @@ function createTreeTable(container, options = {}) {
 
         // Normalize: wrap single root node as array for buildTree
         categories = rootNode ? [rootNode] : [];
+        //console.log('获取到的分类数据 (draft mode=' + !readOnly + ')：', rootNode);
 
-        // Step 2: Fetch API list
+        // Step 2: Fetch API list (use custom fetcher if provided, otherwise draft list)
         try {
-            const apiRes = await request.get(`/api/list/${pId}`);
+            const apiRes = apiListFetcher
+                ? await apiListFetcher(pId)
+                : await request.get(`/api/list/${pId}`);
             apis = apiRes?.data?.data || [];
-            console.log('获取到的接口数据：', apis);
+            //console.log('获取到的接口数据：', apis);
+            if (apis.length > 0) {
+                //console.log('API categoryIds:', apis.map(a => a.categoryId));
+                const catIds = rootNode ? collectAllCatIds(rootNode) : [];
+                //console.log('Category IDs:', catIds);
+            }
         } catch (err) {
             console.error('获取接口列表失败：', err);
         }
@@ -654,14 +776,29 @@ function createTreeTable(container, options = {}) {
         container.appendChild(rootUl);
 
         renderTree(treeRoot, 0, rootUl);
-        const selectedApiId = `api-row-${localStorage.getItem('selectedApiId')}`;
-        rootUl.querySelectorAll('.tree-api-row').forEach(row => {
-            if (row.id === selectedApiId) {
-                console.log('首次渲染默认选中api:', row.dataset.apiId);
-                row.classList.add('active');
-                row.click();
+        // Auto-select: try direct ID match first, then fallback to baseId (master ID → draft ID)
+        const storedId = localStorage.getItem('selectedApiId');
+        if (storedId) {
+            const directMatchId = `api-row-${storedId}`;
+            let selectedRow = rootUl.querySelector(`#${directMatchId}`);
+            if (!selectedRow) {
+                // Not found by draft ID — try matching by baseId (master ID stored by master page)
+                rootUl.querySelectorAll('.tree-api-row').forEach(row => {
+                    if (!selectedRow && row.dataset.apiId) {
+                        // Check if this draft API's baseId matches the stored master ID
+                        const apiData = findApiData(treeRoot, row.dataset.apiId);
+                        if (apiData && String(apiData.baseId) === String(storedId)) {
+                            selectedRow = row;
+                        }
+                    }
+                });
             }
-        });
+            if (selectedRow) {
+                console.log('自动选中api:', selectedRow.dataset.apiId, storedId);
+                selectedRow.classList.add('active');
+                selectedRow.click();
+            }
+        }
         if (!outsideCloseBound) {
             document.addEventListener('click', closeAllMenus);
             document.addEventListener('keydown', (e) => {

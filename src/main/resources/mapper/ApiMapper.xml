@@ -31,6 +31,9 @@
                 <if test="categoryId !=null">
                     category_id = #{categoryId},
                 </if>
+                <if test="markDeleted != null">
+                    mark_deleted = #{markDeleted},
+                </if>
             </set>
         where id = #{id} and is_draft = 1
     </update>
@@ -80,10 +83,12 @@
                category_id,
                base_id,
                is_draft,
-               u1.name as create_user,
-               u2.name as update_user
+               a.create_user,
+               u1.name as create_user_name,
+               a.update_user,
+               u2.name as update_user_name
                from api a left join user u1 on a.create_user = u1.id left join user u2 on a.update_user=u2.id
-               where project_id=#{projectId} and is_draft = 1 and create_user = #{userId}
+               where project_id=#{projectId} and is_draft = 1 and create_user = #{userId} and a.mark_deleted = 0
         order by status desc
     </select>
 
@@ -101,8 +106,10 @@
                category_id,
                base_id,
                is_draft,
-               u1.name as create_user,
-               u2.name as update_user
+               a.create_user,
+               u1.name as create_user_name,
+               a.update_user,
+               u2.name as update_user_name
                from api a left join user u1 on a.create_user = u1.id left join user u2 on a.update_user=u2.id
                where project_id=#{projectId} and is_draft = 0
         order by status desc
@@ -119,8 +126,10 @@
                explanation,
                in_charge_user,
                category_id,
-               u1.name as create_user,
-               u2.name as update_user
+               a.create_user,
+               u1.name as create_user_name,
+               a.update_user,
+               u2.name as update_user_name
         from api a left join user u1 on a.create_user = u1.id left join user u2 on a.update_user=u2.id
         where category_id=#{categoryId}
         order by status desc
@@ -186,8 +195,10 @@
                category_id,
                base_id,
                is_draft,
-               u1.name as create_user,
-               u2.name as update_user
+               a.create_user,
+               u1.name as create_user_name,
+               a.update_user,
+               u2.name as update_user_name
         from api a left join user u1 on a.create_user = u1.id left join user u2 on a.update_user = u2.id
         where a.id = #{id} and a.is_draft = 0
     </select>

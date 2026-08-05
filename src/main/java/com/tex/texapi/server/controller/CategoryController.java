@@ -1,5 +1,6 @@
 package com.tex.texapi.server.controller;
 
+import com.tex.texapi.common.context.BaseContext;
 import com.tex.texapi.common.enumeration.CheckType;
 import com.tex.texapi.common.result.Result;
 import com.tex.texapi.pojo.dto.AddCategoryDTO;
@@ -25,11 +26,25 @@ public class CategoryController {
     @Autowired
     private CategoryService categoryService;
 
+    /**
+     * 获取主表分类树（只读，供主表浏览页使用）
+     */
     @GetMapping("/{projecId}")
     @TeamAuth(level = TeamMember.VIEWER, checkType = CheckType.PROJECT)
     public Result<CategoryVO>getCategories(@PathVariable Long projecId){
-        log.info("获取分类：{}",projecId);
+        log.info("获取主表分类：{}",projecId);
         CategoryVO categoryVO = categoryService.getCategories(projecId);
+        return Result.success(categoryVO);
+    }
+
+    /**
+     * 获取草稿+主表合并分类树（编辑页面使用）
+     */
+    @GetMapping("/drafts/{projectId}")
+    @TeamAuth(level = TeamMember.VIEWER, checkType = CheckType.PROJECT)
+    public Result<CategoryVO>listDrafts(@PathVariable Long projectId){
+        log.info("获取草稿分类树：{}",projectId);
+        CategoryVO categoryVO = categoryService.listDrafts(projectId);
         return Result.success(categoryVO);
     }
 
@@ -62,6 +77,31 @@ public class CategoryController {
     public Result<List<ApiVO>> getCategoryApi(@PathVariable Long categoryId){
         log.info("获取分类下的接口：{}",categoryId);
         return Result.success(categoryService.getApiByCategoryId(categoryId));
+    }
+
+    /**
+     * 发布草稿分类到主表
+     */
+    /**
+     * 发布单个分类及其子孙（分类右键发布）
+     */
+    @PostMapping("/{id}/publish")
+    @TeamAuth(level = TeamMember.EDITOR, checkType = CheckType.CATEGORY)
+    public Result publishSingleCategory(@PathVariable Long id){
+        log.info("发布分类及子孙：categoryId={}", id);
+        categoryService.publishCategorySubtree(BaseContext.getCurrentId(), id);
+        return Result.success();
+    }
+
+    /**
+     * 丢弃所有草稿分类
+     */
+    @DeleteMapping("/drafts/{projectId}")
+    @TeamAuth(level = TeamMember.EDITOR, checkType = CheckType.PROJECT)
+    public Result discardCategories(@PathVariable Long projectId){
+        log.info("丢弃草稿分类：projectId={}", projectId);
+        categoryService.discardCategories(BaseContext.getCurrentId(), projectId);
+        return Result.success();
     }
 
 }

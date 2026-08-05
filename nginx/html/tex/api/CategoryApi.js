@@ -21,6 +21,22 @@ const CategoryApi={
     //根据分类id获取接口列表
     getApisByCategoryId(categoryId){
         return request.get(`${baseUrl}/${categoryId}/apis`)
+    },
+    //获取草稿+主表合并分类树（编辑页面使用）
+    getDraftCategories(projectId){
+        return request.get(`${baseUrl}/drafts/${projectId}`)
+    },
+    //发布草稿分类到主表
+    publishCategories(projectId){
+        return request.post(`${baseUrl}/publish/${projectId}`)
+    },
+    //发布单个分类及其子孙
+    publishCategory(categoryId){
+        return request.post(`${baseUrl}/${categoryId}/publish`)
+    },
+    //丢弃草稿分类
+    discardCategories(projectId){
+        return request.delete(`${baseUrl}/drafts/${projectId}`)
     }
 }
 

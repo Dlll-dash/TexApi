@@ -15,7 +15,8 @@ create table api
     update_user    bigint                               null comment '修改人id',
     category_id    bigint                               not null comment '所属分类id',
     base_id        bigint                               null comment '草稿对应的主表行id',
-    is_draft       tinyint(1) default 0                 not null comment '0=主表 1=草稿'
+    is_draft       tinyint(1) default 0                 not null comment '0=主表 1=草稿',
+    mark_deleted   tinyint(1) default 0                 not null comment '草稿已删除标记'
 )
     charset = utf8mb4;
 
@@ -30,15 +31,16 @@ create index idx_project_id
 
 create table category
 (
-    id          bigint auto_increment comment '分类主键'
+    id           bigint auto_increment comment '分类主键'
         primary key,
-    project_id  bigint               not null comment '所属项目id',
-    name        varchar(100)         null comment '分类名',
-    parent_id   bigint               null comment '父节点分类id (0 表示无父节点 )',
-    version     bigint     default 0 not null comment '乐观锁版本号',
-    create_user bigint               not null comment '分类创建者id',
-    base_id     bigint               null comment '主表的草稿ID',
-    is_draft    tinyint(1) default 0 not null comment '是否为草稿'
+    project_id   bigint               not null comment '所属项目id',
+    name         varchar(100)         null comment '分类名',
+    parent_id    bigint               null comment '父节点分类id (0 表示无父节点 )',
+    version      bigint     default 0 not null comment '乐观锁版本号',
+    create_user  bigint               not null comment '分类创建者id',
+    base_id      bigint               null comment '主表的草稿ID',
+    is_draft     tinyint(1) default 0 not null comment '是否为草稿',
+    mark_deleted tinyint    default 0 not null comment '标记已删除'
 )
     comment '接口分类表';
 
@@ -65,14 +67,14 @@ create table request_params
 (
     id           bigint auto_increment
         primary key,
-    name         varchar(50)          not null comment '参数名',
-    value        varchar(200)         null comment '参数值',
-    type         varchar(20)          null comment '参数值类型',
-    explanation  varchar(50)          null comment '说明',
-    api_id       bigint               not null comment '所属接口id',
-    format_type  varchar(20)          not null comment '格式类型(query，formData，urlencoded，json，header)',
-    is_necessary tinyint(1)           null comment '是否必须',
-    is_checked   tinyint(1)           null comment '是否被选中'
+    name         varchar(50)  not null comment '参数名',
+    value        varchar(200) null comment '参数值',
+    type         varchar(20)  null comment '参数值类型',
+    explanation  varchar(50)  null comment '说明',
+    api_id       bigint       not null comment '所属接口id',
+    format_type  varchar(20)  not null comment '格式类型(query，formData，urlencoded，json，header)',
+    is_necessary tinyint(1)   null comment '是否必须',
+    is_checked   tinyint(1)   null comment '是否被选中'
 )
     comment 'Query请求参数表';
 
@@ -80,11 +82,11 @@ create table response
 (
     id            bigint auto_increment comment '主键'
         primary key,
-    name          varchar(50)          not null comment '名称',
-    response_code varchar(200)         not null comment 'HTTP 状态码',
-    content_type  varchar(50)          not null comment '内容格式',
-    response_body varchar(2048)        null comment '响应Body',
-    api_id        bigint               not null comment '所属接口id'
+    name          varchar(50)   not null comment '名称',
+    response_code varchar(200)  not null comment 'HTTP 状态码',
+    content_type  varchar(50)   not null comment '内容格式',
+    response_body varchar(2048) null comment '响应Body',
+    api_id        bigint        not null comment '所属接口id'
 )
     comment '响应参数表';
 

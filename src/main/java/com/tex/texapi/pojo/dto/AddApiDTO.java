@@ -50,4 +50,5 @@ public class AddApiDTO {
 
     //草稿对应的主表id
     Long baseId;
+
 }

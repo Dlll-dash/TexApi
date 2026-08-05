@@ -26,4 +26,13 @@ public class CategoryVO {
 
     //子分类列表
     List<CategoryVO> children;
+
+    //草稿标记
+    Boolean isDraft;
+
+    //草稿对应的主表ID
+    Long baseId;
+
+    //创建者ID
+    Long createUser;
 }

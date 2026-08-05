@@ -24,14 +24,20 @@ public class ApiVO {
     //创建时间
     LocalDateTime createTime;
 
-    //创建者
-    String createUser;
+    //创建者ID
+    Long createUser;
+
+    //创建者名称
+    String createUserName;
 
     //接口更新时间
     LocalDateTime updateTime;
 
-    //更新者
-    String updateUser;
+    //更新者ID
+    Long updateUser;
+
+    //更新者名称
+    String updateUserName;
 
     //状态 0 开发中 1 维护中 2 已发行
     Integer status;

@@ -57,6 +57,19 @@ public class ApiController {
     }
 
     /**
+     * 获取项目下所有已发布（主表）API列表 — 团队主表浏览用
+     * @param projectId
+     * @return
+     */
+    @GetMapping("/master/list/{projectId}")
+    @TeamAuth(level = TeamMember.VIEWER, checkType = CheckType.PROJECT)
+    public Result<List<Api>> listMasters(@PathVariable Long projectId){
+        log.info("获取主表API列表：projectId={}", projectId);
+        List<Api> list = apiService.listMasterApis(projectId);
+        return Result.success(list);
+    }
+
+    /**
      * 发布草稿（覆盖主表）
      * @param draftId
      * @param expectedMasterUpdateTime

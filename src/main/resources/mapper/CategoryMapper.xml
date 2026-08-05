@@ -21,6 +21,55 @@
             </set>
         where id = #{id} and version = #{version} and is_draft = 0
     </update>
+
+    <update id="updateDraft">
+        update category
+            <set>
+                <if test="name != null and name != ''">
+                    name = #{name},
+                </if>
+                <if test="parentId != null">
+                    parent_id = #{parentId},
+                </if>
+                <if test="markDeleted != null">
+                    mark_deleted = #{markDeleted},
+                </if>
+                version = version + 1
+            </set>
+        where id = #{id} and is_draft = 1 and version = #{version}
+    </update>
+
+    <update id="updateMaster">
+        update category
+            <set>
+                <if test="name != null and name != ''">
+                    name = #{name},
+                </if>
+                <if test="parentId != null">
+                    parent_id = #{parentId},
+                </if>
+                version = version + 1
+            </set>
+        where id = #{id} and is_draft = 0 and version = #{version}
+    </update>
+
+    <insert id="insertBatch" keyProperty="id" useGeneratedKeys="true">
+        insert into category (name, project_id, parent_id, create_user, is_draft, base_id, mark_deleted, version)
+        values
+        <foreach collection="list" item="c" separator=",">
+            (#{c.name}, #{c.projectId}, #{c.parentId}, #{c.createUser}, #{c.isDraft}, #{c.baseId}, #{c.markDeleted}, 0)
+        </foreach>
+    </insert>
+
+    <update id="batchUpdateDraftBaseId">
+        update category set base_id = #{baseId} where id = #{draftId} and is_draft = 1
+    </update>
+
+    <update id="batchUpdateMasterParentId">
+        update category set parent_id = #{parentId}, version = version + 1
+        where id = #{id} and is_draft = 0
+    </update>
+
     <delete id="deleteBatchIds">
         delete  from category where id in
         <foreach collection="ids" item="id" open="(" separator="," close=")">

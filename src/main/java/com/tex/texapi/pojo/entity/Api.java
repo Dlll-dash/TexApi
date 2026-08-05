@@ -30,14 +30,20 @@ public class Api {
     //创建时间
     LocalDateTime createTime;
 
-    //创建者
-    String createUser;
+    //创建者ID
+    Long createUser;
+
+    //创建者名称（由 mapper JOIN 填充）
+    String createUserName;
 
     //接口更新时间
     LocalDateTime updateTime;
 
-    //更新者
-    String updateUser;
+    //更新者ID
+    Long updateUser;
+
+    //更新者名称（由 mapper JOIN 填充）
+    String updateUserName;
 
     //状态 0 开发中 1 维护中 2 已发行
     Integer status;
@@ -56,6 +62,9 @@ public class Api {
 
     //是否是草稿
     Boolean isDraft;
+
+    //草稿删除标记（1=已删除，发布时删除主表；listDrafts 时跳过）
+    Boolean markDeleted;
 
     //接口状态
     public static final int DEVELOPING = 1;

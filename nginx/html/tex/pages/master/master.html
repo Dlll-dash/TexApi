@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="../../favicon .ico" type="image/x-icon">
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <style>
+        *:not(pre):not(pre *) {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
+        }
+
+        body {
+            background-color: #f5f7fa;
+            padding: 2rem 1rem;
+            display: flex;
+            gap: 1.5rem;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* ---- Left Panel: Category Tree ---- */
+        #apiList {
+            width: 300px;
+            min-width: 280px;
+            background: #ffffff;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+            padding: 1.5rem;
+            overflow-y: auto;
+            max-height: calc(100vh - 4rem);
+        }
+
+        #apiList .api-list-title {
+            color: #111827;
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #e5e7eb;
+            text-align: center;
+        }
+
+        /* ---- Right Panel: API Preview ---- */
+        #previewPanel {
+            flex: 1;
+            background: #ffffff;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+            padding: 24px;
+            overflow-y: auto;
+            max-height: calc(100vh - 4rem);
+        }
+
+        /* ---- Header Bar ---- */
+        .master-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .master-header .project-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #111827;
+        }
+
+        .master-header .header-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .master-header .btn-edit {
+            padding: 8px 16px;
+            font-size: 14px;
+            font-weight: 500;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            background: #ffffff;
+            color: #374151;
+            cursor: pointer;
+            transition: background 0.15s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .master-header .btn-edit:hover {
+            background: #f3f4f6;
+        }
+
+        /* ---- Preview: API Info ---- */
+        .preview-api-name {
+            font-size: 24px;
+            font-weight: 600;
+            color: #111827;
+            margin-bottom: 16px;
+        }
+
+        .preview-url-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 24px;
+            padding: 12px 16px;
+            background: #f9fafb;
+            border-radius: 6px;
+            border: 1px solid #e5e7eb;
+        }
+
+        .preview-url-row .method-badge {
+            font-size: 12px;
+            font-weight: 700;
+            padding: 4px 8px;
+            border-radius: 4px;
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+
+        .preview-url-row .api-url {
+            font-size: 16px;
+            color: #374151;
+            font-family: "SF Mono", "Cascadia Code", monospace;
+            word-break: break-all;
+        }
+
+        /* ---- Preview: Info Grid ---- */
+        .preview-info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .preview-info-item {
+            padding: 8px 12px;
+            background: #f9fafb;
+            border-radius: 6px;
+        }
+
+        .preview-info-item .info-label {
+            font-size: 12px;
+            color: #6b7280;
+            margin-bottom: 4px;
+        }
+
+        .preview-info-item .info-value {
+            font-size: 14px;
+            color: #111827;
+        }
+
+        /* ---- Preview: Section ---- */
+        .preview-section {
+            margin-bottom: 24px;
+        }
+
+        .preview-section h4 {
+            font-size: 16px;
+            font-weight: 600;
+            color: #111827;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .preview-explanation {
+            font-size: 14px;
+            color: #374151;
+            line-height: 1.6;
+            padding: 12px;
+            background: #f9fafb;
+            border-radius: 6px;
+        }
+
+        /* ---- Preview: Param Table ---- */
+        .preview-param-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .preview-param-table th,
+        .preview-param-table td {
+            text-align: left;
+            padding: 8px 12px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .preview-param-table th {
+            font-weight: 600;
+            color: #6b7280;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            background: #f9fafb;
+        }
+
+        .preview-param-table td {
+            color: #374151;
+        }
+
+        .preview-param-table .param-required {
+            color: #ef4444;
+            font-weight: 600;
+        }
+
+        /* ---- Preview: Hint ---- */
+        .preview-hint {
+            font-size: 14px;
+            color: #9ca3af;
+            padding: 24px;
+            text-align: center;
+            background: #f9fafb;
+            border-radius: 6px;
+        }
+
+        /* ---- Preview: Response ---- */
+        .preview-response-code {
+            font-size: 14px;
+            font-weight: 600;
+            color: #111827;
+            margin-bottom: 8px;
+        }
+
+        .preview-response-body {
+            font-size: 13px;
+            font-family: "SF Mono", "Cascadia Code", monospace;
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 16px;
+            border-radius: 6px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            line-height: 1.5;
+        }
+
+        /* ============ treeTable Styles (from detail.html) ============ */
+        .tree-table-ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 0.1rem;
+        }
+
+        .tree-children-ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            max-height: 5000px;
+            overflow: visible;
+            transition: max-height 0.3s ease, opacity 0.25s ease;
+            opacity: 1;
+        }
+
+        .tree-children-ul.collapsed {
+            max-height: 0;
+            opacity: 0;
+            overflow: hidden;
+            transition: max-height 0.25s ease, opacity 0.2s ease;
+        }
+
+        .tree-category-row {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.45rem 0.5rem;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            user-select: none;
+        }
+
+        .tree-category-row:hover {
+            background-color: #edf0f2;
+        }
+
+        .tree-arrow {
+            flex-shrink: 0;
+            width: 1.2rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: #718096;
+            font-size: 0.75rem;
+            transition: transform 0.2s ease, color 0.2s ease;
+        }
+
+        .tree-arrow:hover {
+            color: #4299e1;
+        }
+
+        .tree-folder {
+            flex-shrink: 0;
+            width: 1.2rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: #718096;
+            font-size: 0.95rem;
+        }
+
+        .tree-category-name {
+            flex: 1;
+            font-weight: 500;
+            color: #777;
+            font-size: 1rem;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            cursor: default;
+        }
+
+        .tree-api-row {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.45rem 0.5rem;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            position: relative;
+        }
+
+        .tree-api-row:hover {
+            background-color: #edf0f2;
+        }
+
+        .tree-api-row.active {
+            background-color: #edf0f2;
+        }
+
+        .tree-api-row .method {
+            font-weight: 600;
+            font-size: 0.9rem;
+            min-width: 52px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+
+        .tree-api-row .name {
+            flex: 1;
+            font-weight: 300;
+            color: #718096;
+            font-size: 1.05rem;
+        }
+
+        /* Status dot in tree */
+        .status-indicator {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            flex-shrink: 0;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .status-tooltip {
+            display: none;
+            position: absolute;
+            top: -28px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #333;
+            color: #fff;
+            font-size: 11px;
+            padding: 2px 8px;
+            border-radius: 4px;
+            white-space: nowrap;
+            pointer-events: none;
+        }
+
+        .status-indicator:hover .status-tooltip {
+            display: block;
+        }
+
+        /* treeTable more-menu (hidden in master view but keeps DOM clean) */
+        .tree-menu-container {
+            position: relative;
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2;
+        }
+
+        /* ============ Modal Backdrop (hidden by default, for future reuse) ============ */
+        .rename-modal-backdrop {
+            position: fixed;
+            inset: 0;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+            background: rgba(15, 23, 42, 0.45);
+            z-index: 10000;
+        }
+
+        .rename-modal-backdrop.is-open {
+            display: flex;
+        }
+
+        .rename-modal {
+            width: min(92vw, 440px);
+            padding: 1.25rem;
+            border-radius: 8px;
+            background: #ffffff;
+            box-shadow: 0 24px 60px rgba(15, 23, 42, 0.2);
+        }
+
+        .rename-modal h3 {
+            margin-bottom: 1rem;
+            color: #111827;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .rename-modal label {
+            display: block;
+            margin-bottom: 0.4rem;
+            font-size: 14px;
+            color: #374151;
+        }
+
+        .rename-modal input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .rename-modal input:focus {
+            border-color: #4299e1;
+            box-shadow: 0 0 0 3px rgba(66,153,225,0.15);
+        }
+
+        .rename-modal .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+            margin-top: 1rem;
+        }
+
+        .rename-modal .btn-primary {
+            padding: 8px 20px;
+            background: #4299e1;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .rename-modal .btn-primary:hover {
+            background: #3182ce;
+        }
+
+        .rename-modal .btn-secondary {
+            padding: 8px 20px;
+            background: #fff;
+            color: #374151;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .rename-modal .btn-secondary:hover {
+            background: #f3f4f6;
+        }
+
+        /* ============ Empty State (matching home page style) ============ */
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            min-height: 340px;
+            gap: 0.6rem;
+            opacity: 0;
+            animation: fadeInUp 0.5s ease forwards;
+        }
+
+        .empty-state-icon {
+            width: 72px;
+            height: 72px;
+            border-radius: 50%;
+            background: #ebf4ff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 0.4rem;
+        }
+
+        .empty-state-icon i {
+            font-size: 36px;
+            color: #4299e1;
+        }
+
+        .empty-state-title {
+            font-size: 18px;
+            font-weight: 500;
+            color: #2d3748;
+        }
+
+        .empty-state-desc {
+            font-size: 14px;
+            color: #a0aec0;
+            max-width: 280px;
+            text-align: center;
+            line-height: 1.5;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* ---- JSON / XML Syntax Highlighting ---- */
+        .response-xml-pre {
+            margin-top: 0.75rem;
+            font-family: Consolas, Monaco, 'Courier New', monospace !important;
+            font-size: 14px;
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 16px;
+            border-radius: 6px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            line-height: 1.6;
+        }
+
+        .xml-decl { color: #808080; }
+        .xml-punct { color: #808080; }
+        .xml-tag { color: #569cd6; }
+        .xml-text { color: #ce9178; }
+
+        /* ---- JSON Syntax Highlighting ---- */
+        .response-json-pre {
+            margin-top: 0.75rem;
+            font-family: Consolas, Monaco, 'Courier New', monospace !important;
+            font-size: 14px;
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 16px;
+            border-radius: 6px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            line-height: 1.6;
+        }
+
+        .json-punct { color: #d4d4d4; }
+        .json-key { color: #569cd6; }
+        .json-string { color: #ce9178; }
+        .json-number { color: #b5cea8; }
+        .json-boolean { color: #569cd6; }
+        .json-null { color: #569cd6; }
+
+        /* ---- Responsive ---- */
+        @media (max-width: 768px) {
+            body {
+                flex-direction: column;
+            }
+            #apiList {
+                width: 100%;
+                max-height: 40vh;
+            }
+            #previewPanel {
+                max-height: 50vh;
+            }
+        }
+    </style>
+    <title>主表浏览</title>
+</head>
+<body>
+    <!-- Left Panel: Category Tree (treeTable fills the title dynamically) -->
+    <div id="apiList"></div>
+
+    <!-- Right Panel: Preview -->
+    <div id="previewPanel">
+        <div class="empty-state">
+            <div class="empty-state-icon">
+                <i class="bi bi-journal-text"></i>
+            </div>
+            <div class="empty-state-title">选择接口查看详情</div>
+            <div class="empty-state-desc">点击左侧树中的接口，即可查看完整的接口文档</div>
+        </div>
+    </div>
+
+    <script type="module" src="./master.js"></script>
+</body>
+</html>

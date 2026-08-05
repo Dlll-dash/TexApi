@@ -2343,8 +2343,8 @@ function renderPreview(apiData){
 
     apiInfoDiv.appendChild(createInfoItem('创建时间', formatDateToChinese(apiData.createTime)));
     apiInfoDiv.appendChild(createInfoItem('修改时间', formatRelativeTime(apiData.updateTime)));
-    apiInfoDiv.appendChild(createInfoItem('修改者', apiData.updateUser || apiData.modifiedBy || '未设置'));
-    apiInfoDiv.appendChild(createInfoItem('创建者', apiData.createUser || apiData.createdBy || '未设置'));
+    apiInfoDiv.appendChild(createInfoItem('修改者', apiData.updateUserName || apiData.modifiedBy || '未设置'));
+    apiInfoDiv.appendChild(createInfoItem('创建者', apiData.createUserName || apiData.createdBy || '未设置'));
     apiInfoDiv.appendChild(createInfoItem('责任人', apiData.inChargeUser || '未设置'));
 
     container.appendChild(apiInfoDiv);

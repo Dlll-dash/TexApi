@@ -30,4 +30,7 @@ public class UpdateApiDTO {
     //分类id
     Long categoryId;
 
+    //软删除标记
+    Boolean markDeleted;
+
 }

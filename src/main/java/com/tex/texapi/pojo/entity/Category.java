@@ -35,4 +35,7 @@ public class Category {
 
     //是否是草稿
     Boolean isDraft;
+
+    //草稿删除标记（1=标记删除，发布时删除主表）
+    Boolean markDeleted;
 }

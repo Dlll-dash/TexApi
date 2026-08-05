@@ -14,6 +14,7 @@ import com.tex.texapi.server.mapper.ApiMapper;
 import com.tex.texapi.server.mapper.RequestParamsMapper;
 import com.tex.texapi.server.mapper.ResponseMapper;
 import com.tex.texapi.server.service.ApiService;
+import com.tex.texapi.server.service.CategoryService;
 import okhttp3.*;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,6 +39,8 @@ public class ApiServiceImpl implements ApiService {
     private ResponseMapper responseMapper;
     @Autowired
     private RedisTemplate redisTemplate;
+    @Autowired
+    private CategoryService categoryService;
 
     /**
      * 获取当前用户的草稿列表（自动补齐）
@@ -54,12 +57,30 @@ public class ApiServiceImpl implements ApiService {
         //查出项目下所有主表
         List<Api> masters = apiMapper.listMasters(projectId);
 
-        //为主表中没有草稿的API自动补齐草稿
+        //修复已有草稿的 categoryId：如果指向主表分类，解析为草稿分类
+        for (Api draft : drafts) {
+            if (draft.getCategoryId() != null) {
+                Long resolved = categoryService.resolveToDraftId(draft.getCategoryId());
+                if (!resolved.equals(draft.getCategoryId())) {
+                    UpdateApiDTO fixDto = new UpdateApiDTO();
+                    fixDto.setId(draft.getId());
+                    fixDto.setCategoryId(resolved);
+                    apiMapper.updateApi(fixDto);
+                    draft.setCategoryId(resolved);
+                }
+            }
+        }
+
+        //为主表中没有草稿的API自动补齐草稿（跳过用户已删除的）
         for (Api master : masters) {
             boolean hasDraft = drafts.stream().anyMatch(d -> master.getId().equals(d.getBaseId()));
             if (!hasDraft) {
-                Api draft = createDraftFromMaster(master, userId);
-                drafts.add(draft);
+                // 检查用户是否之前删除过该草稿（mark_deleted=1）——跳过自动补齐
+                Api deleted = apiMapper.getDraftByBaseId(master.getId(), userId);
+                if (deleted == null) {
+                    Api draft = createDraftFromMaster(master, userId);
+                    drafts.add(draft);
+                }
             }
         }
 
@@ -76,6 +97,11 @@ public class ApiServiceImpl implements ApiService {
         draftDTO.setId(null);
         draftDTO.setIsDraft(true);
         draftDTO.setBaseId(master.getId());
+        // 将主表 categoryId 解析为草稿 categoryId
+        Long originalCatId = master.getCategoryId();
+        Long resolvedCatId = categoryService.resolveToDraftId(originalCatId);
+        System.out.println("createDraftFromMaster: masterApiId=" + master.getId() + ", originalCatId=" + originalCatId + ", resolvedCatId=" + resolvedCatId);
+        draftDTO.setCategoryId(resolvedCatId);
         apiMapper.addApi(draftDTO);
         Long draftId = draftDTO.getId();
 
@@ -116,6 +142,16 @@ public class ApiServiceImpl implements ApiService {
     @Override
     public Api getMaster(Long masterId) {
         return apiMapper.getMaster(masterId);
+    }
+
+    /**
+     * 获取项目下所有已发布（主表）API列表
+     * @param projectId
+     * @return
+     */
+    @Override
+    public List<Api> listMasterApis(Long projectId) {
+        return apiMapper.listMasters(projectId);
     }
 
     /**
@@ -166,6 +202,27 @@ public class ApiServiceImpl implements ApiService {
             throw new RequestException("草稿不存在");
         }
 
+        // 草稿标记已删除 → 直接删除主表
+        if (Boolean.TRUE.equals(draft.getMarkDeleted())) {
+            Long masterId = draft.getBaseId();
+            if (masterId != null) {
+                requestParamsMapper.deleteByApiId(masterId);
+                responseMapper.deleteByApiId(masterId);
+                apiMapper.deleteById(masterId);
+            }
+            // 删除草稿本身
+            requestParamsMapper.deleteByApiId(draftId);
+            responseMapper.deleteByApiId(draftId);
+            apiMapper.deleteById(draftId);
+            return;
+        }
+
+        // 只发布该 API 所在分类的祖先链（而非全项目草稿）
+        categoryService.publishCategoryPath(draft.getCreateUser(), draft.getCategoryId());
+
+        // 将草稿 categoryId 解析为主表 categoryId
+        Long resolvedCategoryId = categoryService.resolveToMasterId(draft.getCategoryId());
+
         Long masterId = draft.getBaseId();
 
         if (masterId == null) {
@@ -175,6 +232,7 @@ public class ApiServiceImpl implements ApiService {
             masterDTO.setId(null);
             masterDTO.setIsDraft(false);
             masterDTO.setBaseId(null);
+            masterDTO.setCategoryId(resolvedCategoryId);
             apiMapper.addApi(masterDTO);
             masterId = masterDTO.getId();
 
@@ -196,7 +254,7 @@ public class ApiServiceImpl implements ApiService {
             updateMaster.setId(masterId);
             updateMaster.setIsDraft(false);
             updateMaster.setBaseId(null);
-            updateMaster.setCategoryId(master.getCategoryId());
+            updateMaster.setCategoryId(resolvedCategoryId);
             apiMapper.updateMaster(updateMaster);
         }
 
@@ -260,6 +318,20 @@ public class ApiServiceImpl implements ApiService {
     }
 
     /**
+     * 批量发布指定分类集合下的所有草稿 API
+     */
+    @Override
+    public void publishDraftsUnderCategories(Long projectId, Long userId, List<Long> draftCategoryIds) {
+        if (draftCategoryIds == null || draftCategoryIds.isEmpty()) return;
+        List<Api> drafts = apiMapper.listDrafts(projectId, userId);
+        for (Api draft : drafts) {
+            if (draft.getCategoryId() != null && draftCategoryIds.contains(draft.getCategoryId())) {
+                publish(draft.getId(), null);
+            }
+        }
+    }
+
+    /**
      * 放弃草稿
      * @param draftId
      */
@@ -276,6 +348,7 @@ public class ApiServiceImpl implements ApiService {
     @Override
     public RequestVO send(RequestDTO requestDTO) {
         //获取api实体（草稿或主表）
+
         Api api = apiMapper.getById(requestDTO.getApiId());
 
         //获取url
@@ -434,11 +507,15 @@ public class ApiServiceImpl implements ApiService {
     @Override
     @Transactional
     public void delete(Long id) {
-        //删除草稿params/response
-        requestParamsMapper.deleteByApiId(id);
-        responseMapper.deleteByApiId(id);
-        //删除草稿行
-        apiMapper.deleteById(id);
+        // 软删除：标记草稿为已删除（保留参数和响应，发布时删除主表）
+        Api draft = apiMapper.getById(id);
+        if (draft != null && Boolean.TRUE.equals(draft.getIsDraft())) {
+            draft.setMarkDeleted(true);
+            UpdateApiDTO dto = new UpdateApiDTO();
+            dto.setId(id);
+            dto.setMarkDeleted(true);
+            apiMapper.updateApi(dto);
+        }
     }
 
     @Override

@@ -318,6 +318,20 @@ function createMenuButton(label, svgPath, className = '') {
 
             itemMenu.appendChild(renameBtn);
 
+            // "编辑接口" → opens detail page (editor mode)
+            const editApiBtn = createMenuButton('编辑接口', `
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path>
+                </svg>
+            `);
+            editApiBtn.addEventListener('click', (event) => {
+                event.stopPropagation();
+                hideItemMenu();
+                const editUrl = `../detail/detail.html?id=${item.id}&name=${encodeURIComponent(item.name || '未命名项目')}`;
+                window.open(editUrl, '_blank');
+            });
+            itemMenu.appendChild(editApiBtn);
+
             const exportBtn = createMenuButton('导出文档', `
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                     <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
@@ -360,11 +374,10 @@ function createMenuButton(label, svgPath, className = '') {
             nameSpan.textContent = item.name || "未命名项目"; // 兜底
             li.appendChild(nameSpan);
 
-            // 点击项目，跳转项目空间
+            // 点击项目，跳转主表浏览页
             li.addEventListener('click', () => {
                 if (itemMenu.classList.contains('is-open')) return;
-                // 拼接参数（编码特殊字符）
-                const targetUrl = `../detail/detail.html?id=${item.id}&name=${encodeURIComponent(item.name || "未命名项目")}`;
+                const targetUrl = `../master/master.html?id=${item.id}&name=${encodeURIComponent(item.name || "未命名项目")}`;
                 window.open(targetUrl, '_blank');
             });
 

@@ -66,10 +66,25 @@ public interface ApiService {
     void publish(Long draftId, String expectedMasterUpdateTime);
 
     /**
+     * 批量发布指定分类集合下的所有草稿 API（用于分类发布时级联发布接口）
+     * @param projectId
+     * @param userId
+     * @param draftCategoryIds 草稿分类 ID 集合
+     */
+    void publishDraftsUnderCategories(Long projectId, Long userId, List<Long> draftCategoryIds);
+
+    /**
      * 放弃草稿
      * @param draftId
      */
     void discardDraft(Long draftId);
+
+    /**
+     * 获取项目下所有已发布（主表）API列表
+     * @param projectId
+     * @return
+     */
+    List<Api> listMasterApis(Long projectId);
 
     /**
      * 批量导出接口
