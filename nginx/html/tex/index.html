@@ -9,70 +9,9 @@
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <!-- CDN 引入 anime.js，用于动画效果 -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <link rel="stylesheet" href="css/reset.css">
+    <link rel="stylesheet" href="css/auth.css">
     <style>
-        /* 全局样式重置 */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-
-        /* 页面整体布局 — 高级渐变背景 */
-        body {
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            background: linear-gradient(135deg, #e8f0f8 0%, #dce8f4 25%, #e3edf7 50%, #d6e6f5 75%, #eaf3fb 100%);
-            background-size: 400% 400%;
-            animation: bgShift 20s ease-in-out infinite;
-            position: relative;
-            overflow: hidden;
-        }
-
-        /* 背景渐变动画 */
-        @keyframes bgShift {
-            0%, 100% { background-position: 0% 50%; }
-            25% { background-position: 100% 0%; }
-            50% { background-position: 100% 100%; }
-            75% { background-position: 0% 100%; }
-        }
-
-        /* 微妙网格纹理覆盖层 */
-        body::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background-image:
-                linear-gradient(rgba(66, 153, 225, 0.04) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(66, 153, 225, 0.04) 1px, transparent 1px);
-            background-size: 60px 60px;
-            pointer-events: none;
-            z-index: 0;
-        }
-
-        /* 背景加深覆盖层 — 由 JS 通过 --bg-deepen 控制透明度 */
-        body::after {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: rgba(20, 40, 70, 1);
-            opacity: var(--bg-deepen, 0);
-            pointer-events: none;
-            z-index: 0;
-            transition: opacity 0.3s ease;
-        }
-
-        /* 浮动几何装饰元素容器 */
-        .bg-ornament {
-            position: absolute;
-            border-radius: 50%;
-            pointer-events: none;
-            z-index: 0;
-            filter: blur(80px);
-        }
-
         /* 登录表单容器 — 玻璃拟态 */
         #loginForm {
             width: 100%;
@@ -191,25 +130,6 @@
             transform: translateY(-1px);
         }
 
-        
-        /* ========== 鼠标跟随光晕凹陷层 ========== */
-        .mouse-glow {
-            position: fixed;
-            pointer-events: none;
-            z-index: 1;
-            width: 600px;
-            height: 600px;
-            border-radius: 50%;
-            /* 中心稍深、向外渐变消失的凹陷感 */
-            background: radial-gradient(circle at center,
-                    rgba(30, 60, 100, 0.10) 0%,
-                    rgba(40, 80, 130, 0.06) 25%,
-                    rgba(66, 120, 180, 0.03) 50%,
-                    transparent 70%);
-            transform: translate(-50%, -50%);
-            will-change: left, top;
-            transition: left 0.15s ease-out, top 0.15s ease-out;
-        }
 
         /* 响应式适配小屏幕 */
         @media (max-width: 480px) {

@@ -12,6 +12,7 @@ import com.tex.texapi.pojo.vo.RequestVO;
 import com.tex.texapi.server.annotation.TeamAuth;
 import com.tex.texapi.server.service.ApiService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.web.bind.annotation.*;
@@ -100,7 +101,9 @@ public class ApiController {
     @TeamAuth(level = TeamMember.EDITOR, checkType = CheckType.API)
     public Result updateApi(@RequestBody UpdateApiDTO updateApiDTO){
         log.info("更新接口：{}",updateApiDTO);
-        apiService.updateApi(updateApiDTO);
+        Api api = new Api();
+        BeanUtils.copyProperties(updateApiDTO, api);
+        apiService.updateApi(api);
         return Result.success();
     }
 
@@ -151,6 +154,16 @@ public class ApiController {
         log.info("批量导出接口：{}",list);
         List<ExportBatchVO> exportBatchVOs = apiService.exportBatch(list);
         return Result.success(exportBatchVOs);
+    }
+
+    /**
+     * 设置草稿 body 参数格式
+     */
+    @PutMapping("/bodyType/{apiId}")
+    public Result setBodyType(@PathVariable Long apiId, @RequestParam("bodyType") String bodyType) {
+        log.info("设置 API body 格式：apiId={}, bodyType={}", apiId, bodyType);
+        apiService.setBodyType(apiId, bodyType);
+        return Result.success();
     }
 
 }

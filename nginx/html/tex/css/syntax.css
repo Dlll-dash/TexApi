@@ -1,0 +1,13 @@
+/* JSON 语法高亮 */
+.json-punct  { color: #d4d4d4; }
+.json-key    { color: #569cd6; }
+.json-string { color: #9cdcfe; }
+.json-number,
+.json-boolean,
+.json-null   { color: #9cdcfe; }
+
+/* XML 语法高亮 */
+.xml-decl  { color: #9cdcfe; }
+.xml-punct { color: #d4d4d4; }
+.xml-tag   { color: #4ec96f; }
+.xml-text  { color: #6a9955; }

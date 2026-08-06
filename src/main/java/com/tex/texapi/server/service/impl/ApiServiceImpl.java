@@ -62,11 +62,8 @@ public class ApiServiceImpl implements ApiService {
             if (draft.getCategoryId() != null) {
                 Long resolved = categoryService.resolveToDraftId(draft.getCategoryId());
                 if (!resolved.equals(draft.getCategoryId())) {
-                    UpdateApiDTO fixDto = new UpdateApiDTO();
-                    fixDto.setId(draft.getId());
-                    fixDto.setCategoryId(resolved);
-                    apiMapper.updateApi(fixDto);
                     draft.setCategoryId(resolved);
+                    apiMapper.updateApi(draft);
                 }
             }
         }
@@ -180,8 +177,8 @@ public class ApiServiceImpl implements ApiService {
     }
 
     @Override
-    public void updateApi(UpdateApiDTO updateApiDTO) {
-        apiMapper.updateApi(updateApiDTO);
+    public void updateApi(Api api) {
+        apiMapper.updateApi(api);
     }
 
     @Override
@@ -511,10 +508,7 @@ public class ApiServiceImpl implements ApiService {
         Api draft = apiMapper.getById(id);
         if (draft != null && Boolean.TRUE.equals(draft.getIsDraft())) {
             draft.setMarkDeleted(true);
-            UpdateApiDTO dto = new UpdateApiDTO();
-            dto.setId(id);
-            dto.setMarkDeleted(true);
-            apiMapper.updateApi(dto);
+            apiMapper.updateApi(draft);
         }
     }
 
@@ -564,6 +558,16 @@ public class ApiServiceImpl implements ApiService {
             exportBatchVOs.add(exportBatchVO);
         }
         return exportBatchVOs;
+    }
+
+    @Override
+    public void setBodyType(Long apiId, String bodyType) {
+        Api api = apiMapper.getById(apiId);
+        if (api == null || !Boolean.TRUE.equals(api.getIsDraft())) {
+            throw new RequestException("只能设置草稿的 body 格式");
+        }
+        api.setBodyType(bodyType);
+        apiMapper.updateApi(api);
     }
 
     /**

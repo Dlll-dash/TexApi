@@ -1,0 +1,251 @@
+/* ===== 空状态 + 模态框 + 按钮（home / detail / master 共享） ===== */
+
+/* 淡入上升动画 */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ---- 空状态：detail 编辑页 ---- */
+.empty-tip {
+    padding: 1.5rem;
+    text-align: center;
+    color: #718096;
+    font-size: 1rem;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    margin: 0.5rem 0;
+}
+
+.empty-api-tip {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    min-height: 300px;
+    gap: 0.6rem;
+    opacity: 0;
+    animation: fadeInUp 0.5s ease forwards;
+}
+
+.empty-api-icon {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    background: #ebf4ff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 0.4rem;
+}
+
+.empty-api-icon i {
+    font-size: 2rem;
+    color: #4299e1;
+}
+
+.empty-api-title {
+    font-size: 1.1rem;
+    font-weight: 500;
+    color: #2d3748;
+}
+
+.empty-api-desc {
+    font-size: 0.9rem;
+    color: #a0aec0;
+    max-width: 280px;
+    text-align: center;
+    line-height: 1.5;
+}
+
+/* ---- 空状态：home 主页 ---- */
+.empty-project-tip {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 340px;
+    gap: 0.6rem;
+    opacity: 0;
+    animation: fadeInUp 0.5s ease forwards;
+}
+
+.empty-project-icon {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    background: #ebf4ff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 0.4rem;
+}
+
+.empty-project-icon svg {
+    width: 36px;
+    height: 36px;
+    color: #4299e1;
+}
+
+.empty-project-title {
+    font-size: 1.1rem;
+    font-weight: 500;
+    color: #2d3748;
+}
+
+.empty-project-desc {
+    font-size: 0.9rem;
+    color: #a0aec0;
+    max-width: 280px;
+    text-align: center;
+    line-height: 1.5;
+}
+
+/* ---- 空状态：master 浏览页 ---- */
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    min-height: 340px;
+    gap: 0.6rem;
+    opacity: 0;
+    animation: fadeInUp 0.5s ease forwards;
+}
+
+.empty-state-icon {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    background: #ebf4ff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 0.4rem;
+}
+
+.empty-state-icon i {
+    font-size: 36px;
+    color: #4299e1;
+}
+
+.empty-state-title {
+    font-size: 18px;
+    font-weight: 500;
+    color: #2d3748;
+}
+
+.empty-state-desc {
+    font-size: 14px;
+    color: #a0aec0;
+    max-width: 280px;
+    text-align: center;
+    line-height: 1.5;
+}
+
+/* ---- 模态框 ---- */
+.rename-modal-backdrop {
+    position: fixed;
+    inset: 0;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    background: rgba(15, 23, 42, 0.45);
+    z-index: 10000;
+}
+
+.rename-modal-backdrop.is-open {
+    display: flex;
+}
+
+.rename-modal {
+    width: min(92vw, 440px);
+    padding: 1.25rem;
+    border-radius: 16px;
+    background: #ffffff;
+    box-shadow: 0 24px 60px rgba(15, 23, 42, 0.2);
+}
+
+.rename-modal h3 {
+    margin-bottom: 1rem;
+    color: #1f2937;
+    font-size: 1.1rem;
+}
+
+.rename-modal label {
+    display: block;
+    margin-bottom: 0.45rem;
+    color: #4b5563;
+    font-size: 0.92rem;
+}
+
+.rename-modal input {
+    width: 100%;
+    padding: 0.8rem 0.9rem;
+    border: 1px solid #d1d5db;
+    border-radius: 10px;
+    outline: none;
+    font-size: 1rem;
+}
+
+.rename-modal input:focus {
+    border-color: #4299e1;
+    box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.15);
+}
+
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    margin-top: 1rem;
+}
+
+.confirm-message {
+    color: #4a5568;
+    font-size: 0.95rem;
+    margin-bottom: 1rem;
+    line-height: 1.5;
+}
+
+/* ---- 按钮 ---- */
+.btn-secondary,
+.btn-primary {
+    border: none;
+    border-radius: 10px;
+    padding: 0.7rem 1rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.btn-secondary {
+    background: #e5e7eb;
+    color: #64748b;
+}
+
+.btn-primary {
+    background: #4299e1;
+    color: #ffffff;
+}
+
+.btn-danger {
+    border: none;
+    border-radius: 10px;
+    padding: 0.7rem 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    background: #e53e3e !important;
+    color: #ffffff;
+}
+
+.btn-danger:hover {
+    background: #c53030 !important;
+}

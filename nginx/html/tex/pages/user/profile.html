@@ -6,15 +6,10 @@
     <link rel="icon" href="../../favicon .ico" type="image/x-icon">
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <title>个人主页</title>
+    <link rel="stylesheet" href="../../css/reset.css">
+    <link rel="stylesheet" href="../../css/layout.css">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
-        }
         body {
-            background-color: #f5f7fa;
             padding: 0.5rem 1rem;
         }
         #container {
@@ -26,19 +21,6 @@
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
             padding: 24px;
         }
-        .back-link {
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            font-size: 14px;
-            color: #6b7280;
-            text-decoration: none;
-            margin-bottom: 16px;
-            transition: color 0.15s ease;
-        }
-        .back-link:hover { color: #111827; }
-        .back-link svg { width: 16px; height: 16px; }
-
         h2 {
             font-size: 20px;
             font-weight: 600;
@@ -97,13 +79,6 @@
             color: #d1d5db;
         }
 
-        .error-tip {
-            padding: 12px;
-            color: #e53e3e;
-            background-color: #fef2f2;
-            border-radius: 6px;
-            font-size: 14px;
-        }
     </style>
 </head>
 <body>

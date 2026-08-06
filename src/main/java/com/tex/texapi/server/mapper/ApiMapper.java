@@ -44,10 +44,10 @@ public interface ApiMapper {
 
     /**
      * 更新api信息
-     * @param updateApiDTO
+     * @param api
      */
     @AutoFill(OperationType.UPDATE)
-    void updateApi(UpdateApiDTO updateApiDTO);
+    void updateApi(Api api);
 
     /**
      * 根据id获取api

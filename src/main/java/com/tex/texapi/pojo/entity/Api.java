@@ -66,6 +66,9 @@ public class Api {
     //草稿删除标记（1=已删除，发布时删除主表；listDrafts 时跳过）
     Boolean markDeleted;
 
+    //Body 参数格式（null/none, json, formData, urlencoded）
+    String bodyType;
+
     //接口状态
     public static final int DEVELOPING = 1;
     public static final int MAINTAINING = 0;

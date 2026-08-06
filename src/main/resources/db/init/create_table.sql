@@ -16,7 +16,8 @@ create table api
     category_id    bigint                               not null comment '所属分类id',
     base_id        bigint                               null comment '草稿对应的主表行id',
     is_draft       tinyint(1) default 0                 not null comment '0=主表 1=草稿',
-    mark_deleted   tinyint(1) default 0                 not null comment '草稿已删除标记'
+    mark_deleted   tinyint    default 0                 not null,
+    body_type      varchar(20)                          null comment '请求体参数类型'
 )
     charset = utf8mb4;
 

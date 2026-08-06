@@ -265,15 +265,20 @@ public class CategoryServiceImpl implements CategoryService {
 
         // 3. 修正 parent_id
         List<Category> allNonDeleted = new ArrayList<>();
-        allNonDeleted.addAll(newDrafts); allNonDeleted.addAll(updateDrafts);
+        allNonDeleted.addAll(newDrafts);
+        allNonDeleted.addAll(updateDrafts);
         for (Category draft : allNonDeleted) {
             if (draft.getParentId() == null) continue;
+            //获取草稿的主表id
             Long masterId = draftToMaster.get(draft.getId());
             if (masterId == null) continue;
+            //获取草稿的父分类的主表id
             Long resolvedParentId = draftToMaster.getOrDefault(draft.getParentId(), draft.getParentId());
             if (draft.getBaseId() != null) {
                 Category m = masterById.get(masterId);
+                //确认父分类主表已存在
                 if (m != null && !Objects.equals(m.getParentId(), resolvedParentId)) {
+                    //更新草稿的主表的parentId指向草稿父分类的主表id
                     categoryMapper.batchUpdateMasterParentId(masterId, resolvedParentId);
                 }
             }

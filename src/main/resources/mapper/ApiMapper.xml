@@ -3,8 +3,8 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="com.tex.texapi.server.mapper.ApiMapper">
     <insert id="addApi" keyProperty="id" useGeneratedKeys="true">
-        insert into api (project_id, api_name, request_url, request_method, status, explanation, in_charge_user, create_time,create_user,update_time,update_user,category_id, is_draft, base_id)
-        VALUES (#{projectId}, #{apiName}, #{requestUrl}, #{requestMethod}, #{status}, #{explanation}, #{inChargeUser},#{createTime},#{createUser},#{updateTime},#{updateUser},#{categoryId}, #{isDraft}, #{baseId})
+        insert into api (project_id, api_name, request_url, request_method, status, explanation, in_charge_user, create_time,create_user,update_time,update_user,category_id, is_draft, base_id, body_type)
+        VALUES (#{projectId}, #{apiName}, #{requestUrl}, #{requestMethod}, #{status}, #{explanation}, #{inChargeUser},#{createTime},#{createUser},#{updateTime},#{updateUser},#{categoryId}, #{isDraft}, #{baseId}, #{bodyType})
     </insert>
 
     <update id="updateApi">
@@ -34,6 +34,9 @@
                 <if test="markDeleted != null">
                     mark_deleted = #{markDeleted},
                 </if>
+                <if test="bodyType != null">
+                    body_type = #{bodyType},
+                </if>
             </set>
         where id = #{id} and is_draft = 1
     </update>
@@ -57,6 +60,9 @@
                 </if>
                 <if test="updateUser!=null">
                     update_user=#{updateUser}
+                </if>
+                <if test="bodyType != null">
+                    ,body_type = #{bodyType}
                 </if>
             </set>
         where id = #{id} and is_draft = 1
@@ -83,6 +89,7 @@
                category_id,
                base_id,
                is_draft,
+               body_type,
                a.create_user,
                u1.name as create_user_name,
                a.update_user,
@@ -106,6 +113,7 @@
                category_id,
                base_id,
                is_draft,
+               body_type,
                a.create_user,
                u1.name as create_user_name,
                a.update_user,
@@ -132,6 +140,7 @@
                u2.name as update_user_name
         from api a left join user u1 on a.create_user = u1.id left join user u2 on a.update_user=u2.id
         where category_id=#{categoryId}
+          and (is_draft = 0 or is_draft is null)
         order by status desc
     </select>
 
@@ -165,6 +174,9 @@
                 <if test="categoryId !=null">
                     category_id = #{categoryId},
                 </if>
+                <if test="bodyType != null">
+                    body_type = #{bodyType},
+                </if>
             </set>
         where id = #{id} and is_draft = 0
     </update>
@@ -195,6 +207,7 @@
                category_id,
                base_id,
                is_draft,
+               body_type,
                a.create_user,
                u1.name as create_user_name,
                a.update_user,

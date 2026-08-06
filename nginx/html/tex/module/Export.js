@@ -13,6 +13,17 @@ import { createResponseJsonExampleDiv } from "../components/responseJsonExampleD
 import { createResponseXmlExampleDiv } from "../components/responseXmlExampleDiv.js";
 import { formatDateToChinese, formatRelativeTime } from "../utils/DateUtil.js";
 
+// 导出样式：通过 fetch 加载，支持从任意页面导出
+const EXPORT_CSS_URL = '/css/export.css';
+let exportCssCache = null;
+async function getExportCss() {
+    if (exportCssCache) return exportCssCache;
+    const res = await fetch(EXPORT_CSS_URL);
+    if (!res.ok) throw new Error('Failed to load export CSS');
+    exportCssCache = await res.text();
+    return exportCssCache;
+}
+
 function getContentTypeKey(apiId) {
     return 'contentType_' + (apiId || 'default');
 }
@@ -51,7 +62,7 @@ export async function exportSingleApi(apiData, useDraft) {
         exportContainer.className = 'export-container';
         exportContainer.appendChild(container.firstChild.cloneNode(true));
         const fragment = exportContainer.outerHTML;
-        const css = document.getElementById('export-style')?.innerHTML;
+        const css = await getExportCss();
         const htmlContent = '<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><title>' + esc(apiName || '未命名接口') + '</title><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css"><style>' + css + '</style></head><body>' + fragment + '</body></html>';
         downloadHtml(htmlContent, apiName || '未命名接口');
         updateToast(toast, '导出成功！', '#48bb78');
@@ -85,7 +96,7 @@ export async function exportCategoryBatch(categoryId, categoryName, projectId) {
         // 构建分类+接口嵌套树，用于左侧目录
         const tree = buildSidebarTree(categoryTree, merged);
 
-        const html = buildExportHtml(categoryName, rendered, tree);
+        const html = await buildExportHtml(categoryName, rendered, tree);
         downloadHtml(html, categoryName || '接口文档');
 
         updateToast(toast, '导出成功！', '#48bb78');
@@ -461,11 +472,11 @@ function createInfoItem(label, value) {
 }
 
 // ========== 构建导出 HTML ==========
-function buildExportHtml(categoryName, renderedHtmls, tree) {
+async function buildExportHtml(categoryName, renderedHtmls, tree) {
     const previewBlocks = renderedHtmls.map((html, i) =>
         `<div class="api-preview" id="preview-${i}" style="display:none">${html}</div>`
     ).join('\n');
-    const css = document.getElementById('export-style')?.innerHTML || '';
+    const css = await getExportCss();
 
     return `<!DOCTYPE html>
 <html lang="zh-CN">

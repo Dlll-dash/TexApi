@@ -6,16 +6,10 @@
     <link rel="icon" href="../../favicon .ico" type="image/x-icon">
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <title>团队管理</title>
+    <link rel="stylesheet" href="../../css/reset.css">
+    <link rel="stylesheet" href="../../css/layout.css">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
-        }
-
         body {
-            background-color: #f5f7fa;
             padding: 0.5rem 1rem;
         }
 
@@ -27,24 +21,6 @@
             border-radius: 8px;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
             padding: 24px;
-        }
-
-        .back-link {
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            font-size: 14px;
-            color: #6b7280;
-            text-decoration: none;
-            margin-bottom: 16px;
-            transition: color 0.15s ease;
-        }
-        .back-link:hover {
-            color: #111827;
-        }
-        .back-link svg {
-            width: 16px;
-            height: 16px;
         }
 
         h2 {
@@ -323,16 +299,6 @@
         }
         .modal-actions .btn-confirm:hover {
             background: #3182ce;
-        }
-
-        .error-tip {
-            padding: 12px;
-            color: #e53e3e;
-            background-color: #fef2f2;
-            border-radius: 6px;
-            margin: 12px 0;
-            border: 1px solid #fee2e2;
-            font-size: 14px;
         }
 
         @media (max-width: 768px) {

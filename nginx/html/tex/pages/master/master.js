@@ -9,6 +9,7 @@ import { statusColors, statusText } from '../../config/StatusConfig.js';
 import { formatDateToChinese } from '../../utils/DateUtil.js';
 import { createResponseJsonExampleDiv } from '../../components/responseJsonExampleDiv.js';
 import { createResponseXmlExampleDiv } from '../../components/responseXmlExampleDiv.js';
+import { TreeNode } from '../../module/BodyTree.js';
 
 // ========== Init TopBar ==========
 renderTopBar({
@@ -155,7 +156,7 @@ async function renderPreview(apiData) {
     // Fetch params and response from master
     try {
         // Request params: query, body, headers
-        const types = ['query', 'json', 'form-data', 'urlencoded', 'header'];
+        const types = ['query', 'json', 'formData', 'urlencoded', 'header'];
         const paramResults = await Promise.allSettled(
             types.map(type =>
                 request.get(`/request/param/master/list/${apiData.id}`, { params: { formatType: type } })
@@ -168,14 +169,18 @@ async function renderPreview(apiData) {
             renderParamSection('Query 参数', queryParams);
         }
 
-        // Body params (try json first, then form-data, then urlencoded)
+        // Body params — 根据 bodyType 选择格式
+        const bodyType = apiData.bodyType;
         const bodyParamsJson = getParamData(paramResults[1]);
         const bodyParamsForm = getParamData(paramResults[2]);
         const bodyParamsUrlEncoded = getParamData(paramResults[3]);
-        const bodyParams = bodyParamsJson || bodyParamsForm || bodyParamsUrlEncoded;
-        if (bodyParams && bodyParams.length > 0) {
-            const bodyType = bodyParamsJson ? 'JSON' : bodyParamsForm ? 'Form-Data' : 'URL-Encoded';
-            renderParamSection(`Body 参数 (${bodyType})`, bodyParams);
+
+        if (bodyType === 'json' && bodyParamsJson && bodyParamsJson.length > 0) {
+            renderJsonBodyTable(bodyParamsJson);
+        } else if (bodyType === 'formData' && bodyParamsForm && bodyParamsForm.length > 0) {
+            renderParamSection('Body 参数 (Form-Data)', bodyParamsForm);
+        } else if (bodyType === 'urlencoded' && bodyParamsUrlEncoded && bodyParamsUrlEncoded.length > 0) {
+            renderParamSection('Body 参数 (URL-Encoded)', bodyParamsUrlEncoded);
         }
 
         // Headers
@@ -195,7 +200,7 @@ async function renderPreview(apiData) {
             const respId = respList[0].id;
             const detailRes = await request.get(`/response/getResponse/${respId}`);
             const respData = detailRes?.data?.data;
-            if (respData && respData.responseBody) {
+            if (respData && respData.responseBody && respData.responseBody !== '{}') {
                 const respSection = document.createElement('div');
                 respSection.className = 'preview-section';
                 const statusCode = respData.responseCode || '200';
@@ -250,7 +255,7 @@ function renderParamSection(title, params) {
     let tableHtml = `<h4>${escapeHtml(title)}</h4>
         <table class="preview-param-table">
             <thead><tr>
-                <th>参数名</th><th>类型</th><th>值</th><th>必填</th><th>说明</th>
+                <th>参数名</th><th>类型</th><th>必填</th><th>说明</th>
             </tr></thead><tbody>`;
 
     params.forEach(p => {
@@ -258,7 +263,6 @@ function renderParamSection(title, params) {
         tableHtml += `<tr>
             <td>${escapeHtml(p.name || '')}</td>
             <td>${escapeHtml(p.type || 'string')}</td>
-            <td>${escapeHtml(p.value || '')}</td>
             <td>${isRequired ? '<span class="param-required">是</span>' : '否'}</td>
             <td>${escapeHtml(p.explanation || '')}</td>
         </tr>`;
@@ -267,6 +271,68 @@ function renderParamSection(title, params) {
     tableHtml += '</tbody></table>';
     section.innerHTML = tableHtml;
     previewPanel.appendChild(section);
+}
+
+// JSON body 展开/收起表格 — 复用 BodyTree 解析，风格与其他参数表格一致
+function renderJsonBodyTable(params) {
+    if (!previewPanel || !params.length) return;
+    const section = document.createElement('div');
+    section.className = 'preview-section';
+
+    let tableHtml = '<h4>Body 参数 (JSON)</h4><table class="preview-param-table"><thead><tr><th>参数名</th><th>类型</th><th>必填</th><th>说明</th></tr></thead><tbody>';
+
+    try {
+        const json = JSON.parse(params[0].value || '{}');
+        const root = TreeNode.convertFromJson(json);
+        const rows = [];
+        buildJsonRows(root.children, rows, 0);
+        tableHtml += rows.join('');
+    } catch (e) {
+        tableHtml += '<tr><td colspan="4" class="preview-hint">无法解析 JSON</td></tr>';
+    }
+
+    tableHtml += '</tbody></table>';
+    section.innerHTML = tableHtml;
+    previewPanel.appendChild(section);
+
+    // 绑定展开/收起事件
+    section.querySelectorAll('.json-toggle').forEach(toggle => {
+        toggle.addEventListener('click', function() {
+            const depth = parseInt(this.dataset.depth);
+            const arrow = this;
+            // 切换后续同级子行
+            let next = this.parentElement.nextElementSibling;
+            while (next) {
+                const nextDepth = parseInt(next.dataset.depth || 0);
+                if (nextDepth <= depth) break;
+                next.style.display = next.style.display === 'none' ? '' : 'none';
+                next = next.nextElementSibling;
+            }
+            arrow.textContent = arrow.textContent === '▶' ? '▼' : '▶';
+        });
+    });
+}
+
+function buildJsonRows(nodes, rows, depth) {
+    if (!nodes) return;
+    nodes.forEach(node => {
+        const hasChildren = node.type === 'object' && node.children && node.children.length > 0;
+        const indent = depth * 20;
+        const arrow = hasChildren
+            ? `<span class="json-toggle" data-depth="${depth}" style="cursor:pointer;margin-right:4px;">▶</span>`
+            : '<span style="display:inline-block;width:16px;margin-right:4px;"></span>';
+
+        rows.push(`<tr data-depth="${depth}">
+            <td style="padding-left:${indent + 8}px;">${arrow}${escapeHtml(node.key || '')}</td>
+            <td>${escapeHtml(node.type || 'string')}</td>
+            <td>${node.isNecessary ? '<span class="param-required">是</span>' : '否'}</td>
+            <td>${escapeHtml(node.explanation || '')}</td>
+        </tr>`);
+
+        if (hasChildren) {
+            buildJsonRows(node.children, rows, depth + 1);
+        }
+    });
 }
 
 // ========== Init TreeTable (read-only master mode) ==========

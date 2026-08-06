@@ -28,7 +28,7 @@ public interface ApiService {
      * 更新草稿信息
      * @param updateApiDTO
      */
-    void updateApi(UpdateApiDTO updateApiDTO);
+    void updateApi(Api api);
 
     /**
      * 向指定接口发送请求（使用草稿参数）
@@ -92,4 +92,9 @@ public interface ApiService {
      * @return
      */
     List<ExportBatchVO> exportBatch(List<ExportBatchDTO> list);
+
+    /**
+     * 设置草稿 body 参数格式
+     */
+    void setBodyType(Long apiId, String bodyType);
 }

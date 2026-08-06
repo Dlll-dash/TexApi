@@ -157,6 +157,10 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
+        // 禁用按钮防止重复点击，并显示加载状态
+        loginBtn.disabled = true;
+        loginBtn.textContent = '登录中...';
+
         try {
             const res = await axios.post('tex/user/login', loginData, {
                 withCredentials: true
@@ -169,10 +173,12 @@ document.addEventListener('DOMContentLoaded', () => {
             window.location.href = '/pages/home/home.html';
         } catch (err) {
             console.error('登录失败详情：', err);
-            const errMsg = err.response?.data?.msg || err.message || '网络错误/后端接口未响应';
             userNameInput.classList.add('error');
             passwordInput.classList.add('error');
             loginError.textContent = "账号或密码错误，请检查后重试";
+        } finally {
+            loginBtn.disabled = false;
+            loginBtn.textContent = '登录';
         }
     });
 });

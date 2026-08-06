@@ -690,24 +690,27 @@ function renderBody(container,config){
     noneSpan.onclick = function(){
         formatContainer.querySelectorAll('.body-format-tab').forEach(tab => tab.classList.remove('active'));
         noneSpan.classList.add('active');
-        localStorage.setItem(getContentTypeKey(apiId),requestDataType.None ); // 存储当前选择的请求体格式，后续发送请求时可以用到
+        localStorage.setItem(getContentTypeKey(apiId),requestDataType.None );
+        ApiApi.setBodyType(apiId, 'none').catch(() => {});
         contentDiv.innerHTML = "<div class='empty-tip'>该请求没有Body</div>";
     };
 
     formDataSpan.onclick = function(){
         formatContainer.querySelectorAll('.body-format-tab').forEach(tab => tab.classList.remove('active'));
         formDataSpan.classList.add('active');
-        localStorage.setItem(getContentTypeKey(apiId),requestDataType.FormData ); // 存储当前选择的请求体格式，后续发送请求时可以用到
+        localStorage.setItem(getContentTypeKey(apiId),requestDataType.FormData );
+        ApiApi.setBodyType(apiId, 'formData').catch(() => {});
 
-        contentDiv.dataset.type = requestDataType.FormData; // 标记数据类型，方便发送请求时区分
+        contentDiv.dataset.type = requestDataType.FormData;
         renderform(contentDiv,config);
     };
 
     jsonSpan.onclick = function(){
         formatContainer.querySelectorAll('.body-format-tab').forEach(tab => tab.classList.remove('active'));
         jsonSpan.classList.add('active');
-        localStorage.setItem(getContentTypeKey(apiId),requestDataType.Json ); // 存储当前选择的请求体格式，后续发送请求时可以用到
-        contentDiv.dataset.type = requestDataType.Json; // 标记数据类型，方便发送请求时区分
+        localStorage.setItem(getContentTypeKey(apiId),requestDataType.Json );
+        ApiApi.setBodyType(apiId, 'json').catch(() => {});
+        contentDiv.dataset.type = requestDataType.Json;
         contentDiv.innerHTML = '';
         contentDiv.appendChild(createJsonEditor({ placeholder: '输入JSON格式的请求体' }));
 
@@ -759,8 +762,9 @@ function renderBody(container,config){
     urlencodedSpan.onclick = function(){
         formatContainer.querySelectorAll('.body-format-tab').forEach(tab => tab.classList.remove('active'));
         urlencodedSpan.classList.add('active');
-        localStorage.setItem(getContentTypeKey(apiId),requestDataType.Urlencoded ); // 存储当前选择的请求体格式，后续发送请求时可以用到
-        contentDiv.dataset.type = requestDataType.Urlencoded; // 标记数据类型，方便发送请求时区分
+        localStorage.setItem(getContentTypeKey(apiId),requestDataType.Urlencoded );
+        ApiApi.setBodyType(apiId, 'urlencoded').catch(() => {});
+        contentDiv.dataset.type = requestDataType.Urlencoded;
         renderform(contentDiv,config);
     };
 
@@ -2425,7 +2429,7 @@ function renderPreview(apiData){
 
 
 
-    const bodyFormat = localStorage.getItem(getContentTypeKey(apiData.id)) || requestDataType.None;
+    const bodyFormat = apiData.bodyType || localStorage.getItem(getContentTypeKey(apiData.id)) || requestDataType.None;
     const isBodyJsonOrXml = (bodyFormat === requestDataType.Json || bodyFormat === requestDataType.Xml);
 
     const bodyParamsDiv=document.createElement('div');
@@ -2587,7 +2591,7 @@ function renderPreview(apiData){
                 const data = res.data.data || {};
                 //异步返回替换原节点
                 console.log('!!获取响应信息成功：', data);
-                if(responseData.contentType==='HTML'||responseData.contentType==='Raw'||responseData.contentType==='No-Content') {
+                if(responseData.contentType==='HTML'||responseData.contentType==='Raw'||responseData.contentType==='No-Content'|| data.responseBody === '{}') {
                     data.responseBody=null;
                 }
                 createResponsePreviewDiv(data.responseBody, responsePreviewDiv);

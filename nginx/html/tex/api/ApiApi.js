@@ -90,5 +90,16 @@ export const ApiApi = {
      */
     async exportBatch(list) {
         return request.post('/api/export', list);
+    },
+
+    /**
+     * 设置 body 参数格式
+     * @param {number} apiId
+     * @param {string} bodyType - none / json / formData / urlencoded
+     */
+    async setBodyType(apiId, bodyType) {
+        return request.put(`/api/bodyType/${apiId}`, null, {
+            params: { bodyType }
+        });
     }
 };
