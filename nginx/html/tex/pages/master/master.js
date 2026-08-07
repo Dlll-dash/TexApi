@@ -17,7 +17,7 @@ renderTopBar({
         {
             label: '个人主页',
             onClick: () => {
-                window.open('../user/profile.html', '_blank');
+                window.location.href = '../user/profile.html';
             }
         },
         {
@@ -42,6 +42,11 @@ if (!projectId) {
     }
     throw new Error('缺少项目ID参数');
 }
+
+// Empty state "编辑接口" button
+document.getElementById('btn-empty-edit')?.addEventListener('click', () => {
+    window.location.href = `../detail/detail.html?id=${projectId}&name=${encodeURIComponent(projectName)}`;
+});
 
 // ========== Right Panel: Preview Rendering ==========
 const previewPanel = document.getElementById('previewPanel');
@@ -234,7 +239,7 @@ async function renderPreview(apiData) {
             if (currentApiId) {
                 localStorage.setItem('selectedApiId', currentApiId);
             }
-            window.open(`../detail/detail.html?id=${projectId}&name=${encodeURIComponent(projectName)}`, '_blank');
+            window.location.href = `../detail/detail.html?id=${projectId}&name=${encodeURIComponent(projectName)}`;
         });
     }
 }

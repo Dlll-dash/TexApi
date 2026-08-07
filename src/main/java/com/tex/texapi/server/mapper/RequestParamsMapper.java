@@ -57,6 +57,12 @@ public interface RequestParamsMapper {
     @Delete("delete from request_params where api_id = #{apiId}")
     void deleteByApiId(Long apiId);
 
+    /**
+     * 按接口ID批量删除
+     */
+    @Delete("<script>delete from request_params where api_id in <foreach collection='list' item='id' open='(' separator=',' close=')'>#{id}</foreach></script>")
+    void deleteBatchByApiIds(List<Long> apiIds);
+
     @Select("select * from request_params where api_id=#{apiId} and format_type=#{formatType}")
     List<ExportParamVO> getExportParams(Long apiId,String formatType);
 

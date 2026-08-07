@@ -13,11 +13,20 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.stream.Stream;
 
 @Service
 public class ProjectServiceImpl implements ProjectService {
     @Autowired
     private ProjectMapper projectMapper;
+    @Autowired
+    private CategoryMapper categoryMapper;
+    @Autowired
+    private ApiMapper apiMapper;
+    @Autowired
+    private RequestParamsMapper requestParamsMapper;
+    @Autowired
+    private ResponseMapper responseMapper;
 
     /**
      * 根据团队id获取项目列表
@@ -68,21 +77,34 @@ public class ProjectServiceImpl implements ProjectService {
      */
     @Override
     public void deleteProject(DeleteProjectDTO dto) {
-        Long id = dto.getProjectId();
-        //校验项目归属：项目必须属于声明的团队
-        Project existing = projectMapper.getById(id);
+        Long projectId = dto.getProjectId();
+        Project existing = projectMapper.getById(projectId);
         if (existing == null) {
             throw new InputException(MessageConstant.NOT_FOUND);
         }
         if (!existing.getTeamId().equals(dto.getTeamId())) {
             throw new NoPermissionException(MessageConstant.PERMISSION_DENIED);
         }
-        //删除项目成员关系
-        //projectUserMapper.deleteProjectUser(id,userId);
 
-        //如果是管理员，删除项目
-        projectMapper.deleteProject(id);
+        //级联删除：参数 → 响应 → 接口 → 分类 → 项目
+        List<Long> categoryIds = categoryMapper.getIdsByProjectIds(List.of(projectId));
+        List<Long> apiIdsFromCategory = categoryIds.isEmpty()
+                ? List.of() : apiMapper.getIdsByCategoryIds(categoryIds);
+        List<Long> apiIdsFromProject = apiMapper.getIdsByProjectIds(List.of(projectId));
+        List<Long> allApiIds = Stream.concat(
+                apiIdsFromProject.stream(), apiIdsFromCategory.stream()
+        ).distinct().toList();
 
+        if (!allApiIds.isEmpty()) {
+            requestParamsMapper.deleteBatchByApiIds(allApiIds);
+            responseMapper.deleteBatchByApiIds(allApiIds);
+        }
+        if (!categoryIds.isEmpty()) {
+            apiMapper.deleteBatchByCategoryId(categoryIds);
+        }
+        apiMapper.deleteBatchByIds(allApiIds);
+        categoryMapper.deleteByProjectIds(List.of(projectId));
+        projectMapper.deleteProject(projectId);
     }
 
 

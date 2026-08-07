@@ -93,6 +93,26 @@
             background: #f3f4f6;
         }
 
+        /* ---- Empty State ---- */
+        .empty-state-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 16px;
+            padding: 8px 24px;
+            border: none;
+            border-radius: 6px;
+            background: #4299e1;
+            color: #ffffff;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .empty-state-btn:hover {
+            background: #3182ce;
+        }
+
         /* ---- Preview: API Info ---- */
         .preview-api-name {
             font-size: 24px;
@@ -327,6 +347,9 @@
             </div>
             <div class="empty-state-title">选择接口查看详情</div>
             <div class="empty-state-desc">点击左侧树中的接口，即可查看完整的接口文档</div>
+            <button class="empty-state-btn" id="btn-empty-edit">
+                <i class="bi bi-pencil-square"></i> 编辑接口
+            </button>
         </div>
     </div>
 

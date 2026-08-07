@@ -76,4 +76,70 @@ function createPromptModal(id, defaultTitle = '请输入') {
     return api;
 }
 
-export { createPromptModal };
+/**
+ * Generic confirm modal — returns a Promise that resolves with true (confirmed) or false (cancelled).
+ * @param {string} id - unique DOM id for the backdrop element
+ * @returns {{ open: (message: string, title?: string, confirmLabel?: string) => Promise<boolean> }}
+ */
+function createConfirmModal(id) {
+    let existing = document.getElementById(id);
+    if (existing) return existing._confirmApi;
+
+    const backdrop = document.createElement('div');
+    backdrop.id = id;
+    backdrop.className = 'rename-modal-backdrop';
+    backdrop.setAttribute('aria-hidden', 'true');
+    backdrop.innerHTML = `
+        <div class="rename-modal" role="dialog" aria-modal="true">
+            <h3></h3>
+            <p class="confirm-message"></p>
+            <div class="modal-actions">
+                <button class="btn-secondary" type="button">取消</button>
+                <button class="btn-primary btn-danger" type="button">确认</button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(backdrop);
+
+    let resolvePromise = null;
+    const titleEl = backdrop.querySelector('h3');
+    const msgEl = backdrop.querySelector('.confirm-message');
+    const cancelBtn = backdrop.querySelector('.btn-secondary');
+    const confirmBtn = backdrop.querySelector('.btn-primary');
+
+    function close(result) {
+        backdrop.classList.remove('is-open');
+        backdrop.setAttribute('aria-hidden', 'true');
+        if (resolvePromise) {
+            resolvePromise(result);
+            resolvePromise = null;
+        }
+    }
+
+    cancelBtn.addEventListener('click', () => close(false));
+    confirmBtn.addEventListener('click', () => close(true));
+    backdrop.addEventListener('click', (e) => {
+        if (e.target === backdrop) close(false);
+    });
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && backdrop.classList.contains('is-open')) close(false);
+    });
+
+    const api = {
+        open(message, title = '确认操作', confirmLabel = '确认') {
+            return new Promise((resolve) => {
+                resolvePromise = resolve;
+                titleEl.textContent = title;
+                msgEl.textContent = message;
+                confirmBtn.textContent = confirmLabel;
+                backdrop.classList.add('is-open');
+                backdrop.setAttribute('aria-hidden', 'false');
+            });
+        }
+    };
+
+    backdrop._confirmApi = api;
+    return api;
+}
+
+export { createPromptModal, createConfirmModal };

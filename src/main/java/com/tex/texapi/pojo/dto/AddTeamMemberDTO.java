@@ -13,8 +13,11 @@ public class AddTeamMemberDTO {
     //团队id
     Long teamId;
 
-    //用户id
+    //用户id（旧版兼容，逐步废弃）
     Long userId;
+
+    //用户uuid（新版推荐）
+    String userUuid;
 
     //用户名
     String userName;

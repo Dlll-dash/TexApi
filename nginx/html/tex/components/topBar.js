@@ -58,10 +58,50 @@ function createTopBarElement(options = {}) {
     const right = document.createElement('div');
     right.className = 'topbar-right';
 
-    //团队名标签
+    //团队名标签（可点击，展开下拉）
+    const teamId = localStorage.getItem('activeTeamId') || '';
     const teamNameSpan = document.createElement('span');
     teamNameSpan.className = 'topbar-team-name';
-    teamNameSpan.textContent = teamName;
+    teamNameSpan.textContent = teamName || '选择团队';
+    teamNameSpan.style.cursor = 'pointer';
+    teamNameSpan.title = '点击查看团队选项';
+
+    const teamDropdown = document.createElement('div');
+    teamDropdown.className = 'topbar-team-dropdown';
+    const teamMenu = document.createElement('ul');
+    teamMenu.className = 'topbar-dropdown-menu';
+    teamMenu.innerHTML = `
+        <li class="topbar-dropdown-item" data-action="master">
+            <i class="bi bi-grid-3x3-gap-fill" style="font-size:13px;color:#9ca3af;"></i> 项目浏览
+        </li>
+        <li class="topbar-dropdown-item" data-action="settings">
+            <i class="bi bi-gear-fill" style="font-size:13px;color:#9ca3af;"></i> 团队设置
+        </li>
+    `;
+    teamDropdown.appendChild(teamMenu);
+
+    if (teamId) {
+        teamMenu.querySelector('[data-action="master"]').addEventListener('click', () => {
+            window.location.href = '/pages/home/home.html';
+        });
+        teamMenu.querySelector('[data-action="settings"]').addEventListener('click', () => {
+            window.location.href = `/pages/team/manage.html?teamId=${teamId}`;
+        });
+    }
+    //统一关闭所有下拉（运行时查，避免创建顺序问题）
+    function closeAllMenus() {
+        teamMenu.style.display = 'none';
+        const avMenu = avatarDropdown.querySelector('.topbar-dropdown-menu');
+        if (avMenu) avMenu.style.display = 'none';
+    }
+
+    teamNameSpan.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const isOpen = teamMenu.style.display === 'block';
+        closeAllMenus();
+        if (!isOpen) teamMenu.style.display = 'block';
+    });
+    document.addEventListener('click', closeAllMenus);
 
     const avatarWrap = document.createElement('div');
     avatarWrap.className = 'topbar-avatar-wrap';
@@ -78,19 +118,26 @@ function createTopBarElement(options = {}) {
     nameSpan.textContent = userName;
 
     // 下拉菜单占位容器
-    const dropdown = document.createElement('div');
-    dropdown.className = 'topbar-dropdown';
+    //图标映射（按标签名匹配）
+    const defaultIcons = {
+        '个人主页': 'bi-person-circle',
+        '退出登录': 'bi-box-arrow-right',
+    };
+
+    const avatarDropdown = document.createElement('div');
+    avatarDropdown.className = 'topbar-dropdown';
     if (dropdownItems.length > 0) {
         const menu = document.createElement('ul');
         menu.className = 'topbar-dropdown-menu';
         dropdownItems.forEach(item => {
             const li = document.createElement('li');
             li.className = 'topbar-dropdown-item';
-            li.textContent = item.label;
+            const icon = defaultIcons[item.label] || '';
+            li.innerHTML = (icon ? `<i class="bi ${icon}" style="font-size:13px;color:#9ca3af;"></i> ` : '') + item.label;
             if (item.onClick) li.addEventListener('click', item.onClick);
             menu.appendChild(li);
         });
-        dropdown.appendChild(menu);
+        avatarDropdown.appendChild(menu);
     }
 
     //点击头像区域切换下拉菜单
@@ -98,16 +145,10 @@ function createTopBarElement(options = {}) {
         avatarWrap.style.cursor = 'pointer';
         avatarWrap.addEventListener('click', (e) => {
             e.stopPropagation();
-            const menu = dropdown.querySelector('.topbar-dropdown-menu');
-            if (menu) {
-                const isOpen = menu.style.display === 'block';
-                menu.style.display = isOpen ? 'none' : 'block';
-            }
-        });
-        //点击其他地方关闭菜单
-        document.addEventListener('click', () => {
-            const menu = dropdown.querySelector('.topbar-dropdown-menu');
-            if (menu) menu.style.display = 'none';
+            const menu = avatarDropdown.querySelector('.topbar-dropdown-menu');
+            const isOpen = menu && menu.style.display === 'block';
+            closeAllMenus();
+            if (menu && !isOpen) menu.style.display = 'block';
         });
     }
 
@@ -117,9 +158,10 @@ function createTopBarElement(options = {}) {
     }
 
     right.appendChild(teamNameSpan);
+    right.appendChild(teamDropdown);
     right.appendChild(avatarWrap);
     right.appendChild(nameSpan);
-    right.appendChild(dropdown);
+    right.appendChild(avatarDropdown);
 
     topbar.appendChild(left);
     topbar.appendChild(center);
@@ -186,35 +228,83 @@ function injectStyles() {
             font-size: 14px;
             font-weight: 600;
             color: #333333;
-            margin-right: 12px;
-            padding: 4px 12px;
+            margin-right: 4px;
+            padding: 4px 8px 4px 12px;
             background: #f3f4f6;
             border-radius: 6px;
-            cursor: default;
+            cursor: pointer;
             max-width: 160px;
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
+            transition: background 0.15s ease;
+            user-select: none;
+        }
+        .topbar-team-name::after {
+            content: '';
+            display: inline-block;
+            width: 0; height: 0;
+            margin-left: 6px;
+            vertical-align: middle;
+            border-left: 4px solid transparent;
+            border-right: 4px solid transparent;
+            border-top: 5px solid #9ca3af;
+            transition: border-top-color 0.15s ease;
+        }
+        .topbar-team-name:hover {
+            background: #e5e7eb;
+        }
+        .topbar-team-name:hover::after {
+            border-top-color: #6b7280;
+        }
+
+        /* ── 下拉菜单（头像 + 团队名共用） ── */
+        .topbar-dropdown       { position: relative; }
+        .topbar-team-dropdown  { position: relative; }
+        .topbar-dropdown-menu {
+            display: none;
+            position: absolute; top: 100%; right: 0;
+            margin-top: 4px;
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            list-style: none;
+            padding: 0;
+            min-width: 130px;
+            z-index: 1001;
+        }
+        .topbar-dropdown-item {
+            width: auto; height: auto;
+            padding: 7px 14px;
+            font-size: 14px; color: #374151;
+            line-height: 1.4;
+            cursor: pointer;
+            transition: background 0.1s ease;
+            white-space: nowrap;
+            border-radius: 0;
+            box-shadow: none;
+            border: none;
+            margin: 0;
+            display: block;
+            position: static;
+        }
+        .topbar-dropdown-item:first-child {
+            border-radius: 3px 3px 0 0;
+        }
+        .topbar-dropdown-item:last-child {
+            border-radius: 0 0 3px 3px;
+        }
+        .topbar-dropdown-item i {
+            margin-right: 6px;
+            vertical-align: middle;
+        }
+        .topbar-dropdown-item:hover {
+            background: #f3f4f6;
+            border-radius: 3px;
         }
         .topbar-username {
             font-size: 0.9rem; color: #4a5568;
             max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-        }
-        .topbar-dropdown { position: relative; }
-        .topbar-dropdown-menu {
-            display: none; position: absolute; top: 100%; right: 0;
-            margin-top: 0.5rem; background: #ffffff; border-radius: 8px;
-            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
-            list-style: none; padding: 0.4rem 0; min-width: 140px; z-index: 1001;
-        }
-        .topbar-dropdown-item {
-            width: auto; height: auto;
-            padding: 8px 16px;
-            font-size: 14px; color: #6b7280;
-            cursor: pointer; transition: background 0.18s ease;
-        }
-        .topbar-dropdown-item:hover {
-            background: #f5f7fa; color: #2d3748;
         }
         /* ── 布局补偿：顶栏撑高了 body，同步缩减容器高度避免滚动条 ── */
         :root { --topbar-height: 46px; }

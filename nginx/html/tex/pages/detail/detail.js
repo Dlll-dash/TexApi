@@ -2614,7 +2614,7 @@ window.onload = async function () {
             {
                 label: '个人主页',
                 onClick: () => {
-                    window.open('../user/profile.html', '_blank');
+                    window.location.href = '../user/profile.html';
                 }
             },
             {

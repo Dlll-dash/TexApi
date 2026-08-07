@@ -3,8 +3,21 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="com.tex.texapi.server.mapper.UserMapper">
         <insert id="register" parameterType="com.tex.texapi.pojo.entity.User" useGeneratedKeys="true" keyProperty="id">
-            insert into user (name, user_name, password, phone, email) values
-            (#{name}, #{userName}, #{password}, #{phone}, #{email});
+            insert into user (uuid, name, user_name, password, phone, email) values
+            (#{uuid}, #{name}, #{userName}, #{password}, #{phone}, #{email});
         </insert>
+
+        <select id="searchByKeyword" resultType="com.tex.texapi.pojo.entity.User">
+            select id, uuid, name, user_name, email from user
+            where user_name like concat('%', #{keyword}, '%')
+               or name like concat('%', #{keyword}, '%')
+               or email like concat('%', #{keyword}, '%')
+            limit 20
+        </select>
+
+        <select id="listByIds" resultType="com.tex.texapi.pojo.entity.User">
+            select id, uuid from user where id in
+            <foreach collection="list" item="id" open="(" separator="," close=")">#{id}</foreach>
+        </select>
 
 </mapper>

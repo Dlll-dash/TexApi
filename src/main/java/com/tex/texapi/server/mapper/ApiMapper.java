@@ -94,6 +94,24 @@ public interface ApiMapper {
     void deleteBatchByCategoryId(List<Long> categoryIds);
 
     /**
+     * 批量查询接口ID（按分类ID）
+     */
+    @Select("<script>select id from api where category_id in <foreach collection='list' item='id' open='(' separator=',' close=')'>#{id}</foreach></script>")
+    List<Long> getIdsByCategoryIds(List<Long> categoryIds);
+
+    /**
+     * 批量查询接口ID（按项目ID，覆盖直接挂在项目下无分类的接口）
+     */
+    @Select("<script>select id from api where project_id in <foreach collection='list' item='id' open='(' separator=',' close=')'>#{id}</foreach></script>")
+    List<Long> getIdsByProjectIds(List<Long> projectIds);
+
+    /**
+     * 按接口ID批量删除
+     */
+    @Delete("<script>delete from api where id in <foreach collection='list' item='id' open='(' separator=',' close=')'>#{id}</foreach></script>")
+    void deleteBatchByIds(List<Long> ids);
+
+    /**
      * 根据分类id获取接口列表
      * @param categoryId
      * @return

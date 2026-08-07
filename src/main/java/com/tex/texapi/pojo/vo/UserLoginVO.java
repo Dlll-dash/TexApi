@@ -13,8 +13,11 @@ import java.io.Serializable;
 @AllArgsConstructor
 public class UserLoginVO implements Serializable {
 
-    //主键
+    //主键（内部使用）
     Long id;
+
+    //对外唯一标识
+    String uuid;
 
     //用户名
     String userName;

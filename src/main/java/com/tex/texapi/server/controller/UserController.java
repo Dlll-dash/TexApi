@@ -5,10 +5,13 @@ import com.tex.texapi.pojo.dto.UserLoginDTO;
 import com.tex.texapi.pojo.dto.UserRegistryDTO;
 import com.tex.texapi.pojo.vo.UserLoginVO;
 import com.tex.texapi.pojo.vo.UserProfileVO;
+import com.tex.texapi.pojo.vo.UserSearchResultVO;
 import com.tex.texapi.server.service.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/tex/user")
@@ -51,5 +54,17 @@ public class UserController {
         log.info("获取当前用户信息");
         UserProfileVO profile = userService.getProfile();
         return Result.success(profile);
+    }
+
+    /**
+     * 搜索用户（按用户名、姓名或邮箱模糊匹配）
+     * @param keyword 搜索关键词（至少2个字符）
+     * @return
+     */
+    @GetMapping("/search")
+    public Result<List<UserSearchResultVO>> search(@RequestParam String keyword) {
+        log.info("用户搜索：keyword={}", keyword);
+        List<UserSearchResultVO> results = userService.searchUsers(keyword);
+        return Result.success(results);
     }
 }

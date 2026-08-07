@@ -3,8 +3,8 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="com.tex.texapi.server.mapper.ApiMapper">
     <insert id="addApi" keyProperty="id" useGeneratedKeys="true">
-        insert into api (project_id, api_name, request_url, request_method, status, explanation, in_charge_user, create_time,create_user,update_time,update_user,category_id, is_draft, base_id, body_type)
-        VALUES (#{projectId}, #{apiName}, #{requestUrl}, #{requestMethod}, #{status}, #{explanation}, #{inChargeUser},#{createTime},#{createUser},#{updateTime},#{updateUser},#{categoryId}, #{isDraft}, #{baseId}, #{bodyType})
+        insert into api (project_id, api_name, request_url, request_method, status, explanation, in_charge_user, create_time,create_user,update_time,update_user,category_id, is_draft, base_id)
+        VALUES (#{projectId}, #{apiName}, #{requestUrl}, #{requestMethod}, #{status}, #{explanation}, #{inChargeUser},#{createTime},#{createUser},#{updateTime},#{updateUser},#{categoryId}, #{isDraft}, #{baseId})
     </insert>
 
     <update id="updateApi">
@@ -60,9 +60,6 @@
                 </if>
                 <if test="updateUser!=null">
                     update_user=#{updateUser}
-                </if>
-                <if test="bodyType != null">
-                    ,body_type = #{bodyType}
                 </if>
             </set>
         where id = #{id} and is_draft = 1

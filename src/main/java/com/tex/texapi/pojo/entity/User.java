@@ -10,8 +10,11 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class User {
-    //用户id
+    //用户id（内部使用）
     Long id;
+
+    //对外唯一标识
+    String uuid;
 
     //用户姓名
     String name;

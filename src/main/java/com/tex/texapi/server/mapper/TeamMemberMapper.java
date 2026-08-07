@@ -49,6 +49,6 @@ public interface TeamMemberMapper {
      * @param teamId
      * @return
      */
-    @Select("select * from team_member where team_id = #{teamId}")
+    @Select("select * from team_member where team_id = #{teamId} order by role desc")
     List<TeamMember> getMembersByTeamId(Long teamId);
 }

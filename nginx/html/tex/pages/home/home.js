@@ -11,7 +11,7 @@ renderTopBar({
         {
             label: '个人主页',
             onClick: () => {
-                window.open('../user/profile.html', '_blank');
+                window.location.href = '../user/profile.html';
             }
         },
         {
@@ -328,7 +328,7 @@ function createMenuButton(label, svgPath, className = '') {
                 event.stopPropagation();
                 hideItemMenu();
                 const editUrl = `../detail/detail.html?id=${item.id}&name=${encodeURIComponent(item.name || '未命名项目')}`;
-                window.open(editUrl, '_blank');
+                window.location.href = editUrl;
             });
             itemMenu.appendChild(editApiBtn);
 

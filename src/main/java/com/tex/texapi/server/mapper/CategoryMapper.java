@@ -87,6 +87,18 @@ public interface CategoryMapper {
     List<Category> getMastersByProjectId(Long projectId);
 
     /**
+     * 批量查询项目下的分类ID（含草稿和主表）
+     */
+    @Select("<script>select id from category where project_id in <foreach collection='list' item='id' open='(' separator=',' close=')'>#{id}</foreach></script>")
+    List<Long> getIdsByProjectIds(List<Long> projectIds);
+
+    /**
+     * 按项目ID批量删除分类
+     */
+    @Delete("<script>delete from category where project_id in <foreach collection='list' item='id' open='(' separator=',' close=')'>#{id}</foreach></script>")
+    void deleteByProjectIds(List<Long> projectIds);
+
+    /**
      * 更新草稿分类
      */
     void updateDraft(Category category);

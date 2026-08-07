@@ -2,6 +2,7 @@ package com.tex.texapi.server.service.impl;
 
 import com.tex.texapi.common.constant.JwtClaimsConstant;
 import com.tex.texapi.common.constant.MessageConstant;
+import com.tex.texapi.common.exception.InputException;
 import com.tex.texapi.common.exception.LoginException;
 import com.tex.texapi.common.properties.JwtProperties;
 import com.tex.texapi.common.utils.JwtUtil;
@@ -13,6 +14,7 @@ import com.tex.texapi.pojo.entity.User;
 import com.tex.texapi.common.context.BaseContext;
 import com.tex.texapi.pojo.vo.UserLoginVO;
 import com.tex.texapi.pojo.vo.UserProfileVO;
+import com.tex.texapi.pojo.vo.UserSearchResultVO;
 import com.tex.texapi.server.mapper.TeamMapper;
 import com.tex.texapi.server.mapper.TeamMemberMapper;
 import com.tex.texapi.server.mapper.UserMapper;
@@ -25,7 +27,9 @@ import org.springframework.util.DigestUtils;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class UserServiceImpl implements UserService {
@@ -60,6 +64,7 @@ public class UserServiceImpl implements UserService {
 
         return UserLoginVO.builder()
                 .id(user.getId())
+                .uuid(user.getUuid())
                 .name(user.getName())
                 .userName(username)
                 .token(token)
@@ -92,6 +97,7 @@ public class UserServiceImpl implements UserService {
 
         user=new User();
         BeanUtils.copyProperties(userRegistryDTO,user);
+        user.setUuid(java.util.UUID.randomUUID().toString());
         userMapper.register(user);
 
         //自动创建个人团队
@@ -124,11 +130,33 @@ public class UserServiceImpl implements UserService {
         User user = userMapper.getById(userId);
         return UserProfileVO.builder()
                 .id(user.getId())
+                .uuid(user.getUuid())
                 .name(user.getName())
                 .userName(user.getUserName())
                 .gender(user.getGender())
                 .phone(user.getPhone())
                 .email(user.getEmail())
                 .build();
+    }
+
+    /**
+     * 搜索用户
+     * @param keyword 搜索关键词
+     * @return
+     */
+    @Override
+    public List<UserSearchResultVO> searchUsers(String keyword) {
+        if (keyword == null || keyword.trim().length() < 2) {
+            throw new InputException("搜索关键词至少需要2个字符");
+        }
+        List<User> users = userMapper.searchByKeyword(keyword.trim());
+        return users.stream()
+                .map(u -> UserSearchResultVO.builder()
+                        .uuid(u.getUuid())
+                        .userName(u.getUserName())
+                        .name(u.getName())
+                        .email(u.getEmail())
+                        .build())
+                .collect(Collectors.toList());
     }
 }

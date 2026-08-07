@@ -4,9 +4,24 @@
  */
 import { renderTopBar } from '../../components/topBar.js';
 import { showToast } from '../../components/toast.js';
+import { createConfirmModal } from '../../components/modal.js';
 import { TeamApi } from '../../api/TeamApi.js';
 
-renderTopBar();
+renderTopBar({
+    dropdownItems: [
+        {
+            label: '个人主页',
+            onClick: () => { window.location.href = '../user/profile.html'; }
+        },
+        {
+            label: '退出登录',
+            onClick: () => {
+                localStorage.clear();
+                window.location.href = '/index.html';
+            }
+        }
+    ]
+});
 
 (async function main() {
     //解析URL参数
@@ -22,15 +37,18 @@ renderTopBar();
     let myRole = 0;
     let teamData = null;
 
-    //弹窗元素
+    //弹窗
     const inviteBackdrop = document.getElementById('invite-backdrop');
-    const inviteUserId = document.getElementById('invite-user-id');
+    const inviteUserSearch = document.getElementById('invite-user-search');
+    const inviteUserResults = document.getElementById('invite-user-results');
+    const inviteUserUuid = document.getElementById('invite-user-uuid');
     const inviteRole = document.getElementById('invite-role');
     const inviteCancel = document.getElementById('invite-cancel');
     const inviteConfirm = document.getElementById('invite-confirm');
-    const deleteBackdrop = document.getElementById('delete-backdrop');
-    const deleteCancel = document.getElementById('delete-cancel');
-    const deleteConfirm = document.getElementById('delete-confirm');
+
+    //通用确认弹窗
+    const confirmDelete = createConfirmModal('confirm-delete-modal');
+    const confirmTransfer = createConfirmModal('confirm-transfer-modal');
 
     //加载数据
     await loadData();
@@ -44,11 +62,7 @@ renderTopBar();
     inviteBackdrop.addEventListener('click', (e) => {
         if (e.target === inviteBackdrop) closeInviteModal();
     });
-    deleteCancel.addEventListener('click', closeDeleteModal);
-    deleteConfirm.addEventListener('click', submitDelete);
-    deleteBackdrop.addEventListener('click', (e) => {
-        if (e.target === deleteBackdrop) closeDeleteModal();
-    });
+    //（确认弹窗的事件由 createConfirmModal 内部处理）
 
     // ==== 数据加载 ====
 
@@ -135,7 +149,7 @@ renderTopBar();
             document.getElementById('btn-invite')?.addEventListener('click', openInviteModal);
         }
         if (canDelete) {
-            document.getElementById('btn-delete-team')?.addEventListener('click', openDeleteModal);
+            document.getElementById('btn-delete-team')?.addEventListener('click', submitDelete);
         }
 
         //成员行事件
@@ -146,46 +160,66 @@ renderTopBar();
         const roleLabel = getRoleLabel(member.role);
         const roleClass = getRoleClass(member.role);
         const isMe = String(member.userId) === String(userId);
-        const canModify = myRole >= 3 && !isMe && member.role !== 4; // ADMIN+可改非自己的非owner
-        const canRemove = myRole >= 3 && !isMe && member.role !== 4;  // ADMIN+可移除非自己的非owner
-        const canChangeRole = myRole === 4 && !isMe;                   // OWNER可改任何非自己的角色
+
+        // owner 可改任何非自己成员的角色（含所有权转让）
+        const canChangeRole = myRole === 4 && !isMe;
+        // admin 只能改 viewer/editor 的角色
+        const canChangeRoleLimited = myRole === 3 && !isMe && member.role <= 2;
+        // 是否有角色编辑权限
+        const canEditRole = canChangeRole || canChangeRoleLimited;
+        // 可移除（admin+可移除非自己的非owner）
+        const canRemove = myRole >= 3 && !isMe && member.role !== 4;
 
         return `
-            <li class="member-row" data-user-id="${member.userId}">
+            <li class="member-row" data-user-uuid="${member.userUuid || ''}">
                 <span class="member-name">${escapeHtml(member.userName || '用户' + member.userId)}${isMe ? ' (我)' : ''}</span>
-                ${canChangeRole ? `
-                    <select class="role-select member-role-select" data-user-id="${member.userId}">
-                        <option value="1" ${member.role === 1 ? 'selected' : ''}>viewer</option>
-                        <option value="2" ${member.role === 2 ? 'selected' : ''}>editor</option>
-                        <option value="3" ${member.role === 3 ? 'selected' : ''}>admin</option>
-                        <option value="4" ${member.role === 4 ? 'selected' : ''}>owner</option>
-                    </select>
-                ` : `
+                ${canEditRole ? renderRoleSelect(member, canChangeRole) : `
                     <span class="role-badge ${roleClass}">${roleLabel}</span>
                 `}
                 ${canRemove ? `
-                    <button class="btn-remove member-remove-btn" data-user-id="${member.userId}">移除</button>
+                    <button class="btn-remove member-remove-btn" data-user-uuid="${member.userUuid || ''}">移除</button>
                 ` : ''}
             </li>
         `;
+    }
+
+    function renderRoleSelect(member, isOwner) {
+        var options = isOwner
+            ? [{ v: 1, l: 'viewer' }, { v: 2, l: 'editor' }, { v: 3, l: 'admin' }, { v: 4, l: 'owner' }]
+            : [{ v: 1, l: 'viewer' }, { v: 2, l: 'editor' }];
+        return '<select class="role-select member-role-select" data-user-uuid="' + (member.userUuid || '') + '">'
+            + options.map(function (o) {
+                return '<option value="' + o.v + '"' + (member.role === o.v ? ' selected' : '') + '>' + o.l + '</option>';
+            }).join('')
+            + '</select>';
     }
 
     function bindMemberEvents() {
         //角色变更
         document.querySelectorAll('.member-role-select').forEach(select => {
             select.addEventListener('change', async function () {
-                const targetUserId = this.getAttribute('data-user-id');
+                const targetUserUuid = this.getAttribute('data-user-uuid');
                 const newRole = parseInt(this.value);
+
+                //所有权转让确认
+                if (newRole === 4) {
+                    const ok = await confirmTransfer.open(
+                        '确认将团队所有权转让给该成员？转让后你的角色将降级为 admin。',
+                        '转让团队所有权',
+                        '确认转让'
+                    );
+                    if (!ok) { await reload(); return; }
+                }
+
                 try {
-                    await TeamApi.updateMemberRole(teamId, targetUserId, {
+                    await TeamApi.updateMemberRole(teamId, targetUserUuid, {
                         teamId: Number(teamId),
-                        userId: Number(targetUserId),
+                        userUuid: targetUserUuid,
                         role: newRole
                     });
-                    showToast('角色已更新', 'success');
+                    showToast(newRole === 4 ? '所有权已转让，你已降级为 admin' : '角色已更新', 'success');
                 } catch (e) {
                     console.error('更新角色失败：', e);
-                    //showToast('更新失败：' + (e.response?.data?.msg || e.message), 'error');
                     await reload();
                 }
             });
@@ -194,14 +228,13 @@ renderTopBar();
         //移除成员
         document.querySelectorAll('.member-remove-btn').forEach(btn => {
             btn.addEventListener('click', async function () {
-                const targetUserId = this.getAttribute('data-user-id');
+                const targetUserUuid = this.getAttribute('data-user-uuid');
                 if (!confirm('确认移除该成员吗？')) return;
                 try {
-                    await TeamApi.removeMember(teamId, targetUserId);
+                    await TeamApi.removeMember(teamId, targetUserUuid);
                     await reload();
                 } catch (e) {
                     console.error('移除成员失败：', e);
-                    //showToast('移除失败：' + (e.response?.data?.msg || e.message), 'error');
                 }
             });
         });
@@ -236,59 +269,98 @@ renderTopBar();
     }
 
     function openInviteModal() {
-        inviteUserId.value = '';
+        inviteUserSearch.value = '';
+        inviteUserUuid.value = '';
+        inviteUserResults.style.display = 'none';
         inviteRole.value = '2';
         inviteBackdrop.classList.add('is-open');
         inviteBackdrop.setAttribute('aria-hidden', 'false');
-        setTimeout(() => inviteUserId.focus(), 0);
+        setTimeout(() => inviteUserSearch.focus(), 0);
     }
 
     function closeInviteModal() {
         inviteBackdrop.classList.remove('is-open');
         inviteBackdrop.setAttribute('aria-hidden', 'true');
+        inviteUserResults.style.display = 'none';
+    }
+
+    //搜索用户（带300ms防抖）
+    let searchTimer = null;
+    inviteUserSearch.addEventListener('input', function () {
+        clearTimeout(searchTimer);
+        const keyword = this.value.trim();
+        if (keyword.length < 2) {
+            inviteUserResults.style.display = 'none';
+            return;
+        }
+        searchTimer = setTimeout(async () => {
+            try {
+                const res = await axios.get('/tex/user/search', {
+                    params: { keyword },
+                    headers: { token: localStorage.getItem('token') }
+                });
+                const users = res.data?.data || [];
+                renderSearchResults(users);
+            } catch (e) {
+                console.error('搜索失败:', e);
+            }
+        }, 300);
+    });
+
+    function renderSearchResults(users) {
+        inviteUserResults.innerHTML = '';
+        if (users.length === 0) {
+            inviteUserResults.style.display = 'none';
+            return;
+        }
+        users.forEach(u => {
+            const li = document.createElement('li');
+            li.innerHTML = `<span class="su-name">${escapeHtml(u.userName)}</span>
+                             <span class="su-email">${escapeHtml(u.email || '')}</span>`;
+            li.addEventListener('click', () => {
+                inviteUserSearch.value = u.userName;
+                inviteUserUuid.value = u.uuid;
+                inviteUserResults.style.display = 'none';
+            });
+            inviteUserResults.appendChild(li);
+        });
+        inviteUserResults.style.display = 'block';
     }
 
     async function submitInvite() {
-        const uid = inviteUserId.value.trim();
+        const userUuid = inviteUserUuid.value.trim();
         const role = parseInt(inviteRole.value);
-        if (!uid) {
-            showToast('请输入用户ID', 'error');
-            inviteUserId.focus();
+        if (!userUuid) {
+            showToast('请搜索并选择要邀请的用户', 'error');
+            inviteUserSearch.focus();
             return;
         }
         try {
             await TeamApi.invite(teamId, {
                 teamId: Number(teamId),
-                userId: Number(uid),
+                userUuid: userUuid,
                 role
             });
             closeInviteModal();
             await reload();
         } catch (e) {
             console.error('邀请失败：', e);
-            //showToast('邀请失败：' + (e.response?.data?.msg || e.message), 'error');
         }
     }
 
-    function openDeleteModal() {
-        deleteBackdrop.classList.add('is-open');
-        deleteBackdrop.setAttribute('aria-hidden', 'false');
-    }
-
-    function closeDeleteModal() {
-        deleteBackdrop.classList.remove('is-open');
-        deleteBackdrop.setAttribute('aria-hidden', 'true');
-    }
-
     async function submitDelete() {
+        const ok = await confirmDelete.open(
+            '确认删除该团队吗？此操作不可恢复，团队下所有项目将不再归属任何团队。',
+            '删除团队',
+            '确认删除'
+        );
+        if (!ok) return;
         try {
             await TeamApi.delete(teamId);
-            closeDeleteModal();
             showToast('团队已删除', 'success');
             window.location.href = '../home/home.html';
         } catch (e) {
             console.error('删除团队失败：', e);
-            //showToast('删除失败：' + (e.response?.data?.msg || e.message), 'error');
         }
     }
 

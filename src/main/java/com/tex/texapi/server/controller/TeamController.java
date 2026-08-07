@@ -97,16 +97,16 @@ public class TeamController {
     /**
      * 移除成员
      * @param id
-     * @param userId
+     * @param userUuid
      * @return
      */
-    @DeleteMapping("/{id}/member/{userId}")
+    @DeleteMapping("/{id}/member/{userUuid}")
     @TeamAuth(level = TeamMember.ADMIN)
-    public Result removeMember(@PathVariable Long id, @PathVariable Long userId) {
-        log.info("移除成员：teamId={}, userId={}", id, userId);
+    public Result removeMember(@PathVariable Long id, @PathVariable String userUuid) {
+        log.info("移除成员：teamId={}, userUuid={}", id, userUuid);
         RemoveMemberDTO dto = RemoveMemberDTO.builder()
                 .teamId(id)
-                .userId(userId)
+                .userUuid(userUuid)
                 .build();
         teamService.removeMember(dto);
         return Result.success();
@@ -115,17 +115,17 @@ public class TeamController {
     /**
      * 修改成员角色
      * @param id
-     * @param userId
+     * @param userUuid
      * @param dto
      * @return
      */
-    @PutMapping("/{id}/member/{userId}")
-    @TeamAuth(level = TeamMember.OWNER)
-    public Result updateMemberRole(@PathVariable Long id, @PathVariable Long userId,
+    @PutMapping("/{id}/member/{userUuid}")
+    @TeamAuth(level = TeamMember.ADMIN)
+    public Result updateMemberRole(@PathVariable Long id, @PathVariable String userUuid,
                                    @RequestBody UpdateTeamMemberDTO dto) {
-        log.info("修改成员角色：teamId={}, userId={}, role={}", id, userId, dto.getRole());
+        log.info("修改成员角色：teamId={}, userUuid={}, role={}", id, userUuid, dto.getRole());
         dto.setTeamId(id);
-        dto.setUserId(userId);
+        dto.setUserUuid(userUuid);
         teamService.updateMemberRole(dto);
         return Result.success();
     }

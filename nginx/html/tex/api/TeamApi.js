@@ -23,12 +23,12 @@ const TeamApi = {
         return request.post(`${baseUrl}/${teamId}/invite`, data)
     },
     //移除成员
-    removeMember(teamId, userId) {
-        return request.delete(`${baseUrl}/${teamId}/member/${userId}`)
+    removeMember(teamId, userUuid) {
+        return request.delete(`${baseUrl}/${teamId}/member/${userUuid}`)
     },
     //修改成员角色
-    updateMemberRole(teamId, userId, data) {
-        return request.put(`${baseUrl}/${teamId}/member/${userId}`, data)
+    updateMemberRole(teamId, userUuid, data) {
+        return request.put(`${baseUrl}/${teamId}/member/${userUuid}`, data)
     },
     //获取团队成员列表
     listMembers(teamId) {

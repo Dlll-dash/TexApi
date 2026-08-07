@@ -123,13 +123,20 @@ create table user
 (
     id        bigint auto_increment comment '用户id'
         primary key,
+    uuid      varchar(36) not null comment '对外唯一标识',
     name      varchar(50) not null comment '姓名',
     user_name varchar(50) not null comment '用户名',
     password  varchar(64) not null comment '密码',
     gender    varchar(2)  null comment '性别',
     phone     varchar(11) null comment '电话号码',
-    email     varchar(50) not null comment '邮箱'
+    email     varchar(50) not null comment '邮箱',
+    constraint uk_uuid
+        unique (uuid)
 )
     comment '用户表';
+
+create index idx_user_name on user (user_name);
+
+create index idx_user_email on user (email);
 
 

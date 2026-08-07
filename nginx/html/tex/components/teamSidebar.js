@@ -213,7 +213,7 @@ function renderTeamSidebar(options = {}) {
         `;
         gearBtn.addEventListener('click', (e) => {
             e.stopPropagation();
-            window.open(`../team/manage.html?teamId=${team.id}`, '_blank');
+            window.location.href = `../team/manage.html?teamId=${team.id}`;
         });
         item.appendChild(gearBtn);
 

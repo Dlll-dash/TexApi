@@ -4,6 +4,9 @@ import com.tex.texapi.pojo.dto.UserLoginDTO;
 import com.tex.texapi.pojo.dto.UserRegistryDTO;
 import com.tex.texapi.pojo.vo.UserLoginVO;
 import com.tex.texapi.pojo.vo.UserProfileVO;
+import com.tex.texapi.pojo.vo.UserSearchResultVO;
+
+import java.util.List;
 
 public interface UserService {
     /**
@@ -23,4 +26,11 @@ public interface UserService {
      * @return
      */
     UserProfileVO getProfile();
+
+    /**
+     * 搜索用户（按用户名、姓名或邮箱模糊匹配）
+     * @param keyword 搜索关键词（至少2个字符）
+     * @return 匹配的用户列表（最多20条）
+     */
+    List<UserSearchResultVO> searchUsers(String keyword);
 }

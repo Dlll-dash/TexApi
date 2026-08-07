@@ -35,6 +35,12 @@ public interface ProjectMapper {
     void deleteProject(Long id);
 
     /**
+     * 按团队ID批量删除项目
+     */
+    @Delete("delete from project where team_id = #{teamId}")
+    void deleteByTeamId(Long teamId);
+
+    /**
      * 创建项目
      * @param project
      */

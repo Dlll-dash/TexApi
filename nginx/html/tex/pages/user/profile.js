@@ -6,7 +6,21 @@ import { renderTopBar } from '../../components/topBar.js';
 import { getOrCreateAvatar } from '../../utils/AvatarUtil.js';
 import { UserApi } from '../../api/UserApi.js';
 
-renderTopBar();
+renderTopBar({
+    dropdownItems: [
+        {
+            label: '个人主页',
+            onClick: () => { window.location.href = '../user/profile.html'; }
+        },
+        {
+            label: '退出登录',
+            onClick: () => {
+                localStorage.clear();
+                window.location.href = '/index.html';
+            }
+        }
+    ]
+});
 
 (async function main() {
     const container = document.getElementById('profile-content');
@@ -34,7 +48,7 @@ renderTopBar();
             <ul class="info-list">
                 <li class="info-row">
                     <span class="info-label">用户ID</span>
-                    <span class="info-value">${user.id ?? '-'}</span>
+                    <span class="info-value" style="font-family:monospace;font-size:13px;">${user.uuid ?? '-'}</span>
                 </li>
                 <li class="info-row">
                     <span class="info-label">用户名</span>

@@ -16,8 +16,11 @@ public class TeamMemberVO implements Serializable {
     //主键
     Long id;
 
-    //用户ID
+    //用户ID（内部使用）
     Long userId;
+
+    //用户UUID（对外标识）
+    String userUuid;
 
     //用户名
     String userName;

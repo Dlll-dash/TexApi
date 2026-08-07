@@ -5,9 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" href="../../favicon .ico" type="image/x-icon">
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
     <title>团队管理</title>
     <link rel="stylesheet" href="../../css/reset.css">
     <link rel="stylesheet" href="../../css/layout.css">
+    <link rel="stylesheet" href="../../css/components.css">
     <style>
         body {
             padding: 0.5rem 1rem;
@@ -301,6 +303,31 @@
             background: #3182ce;
         }
 
+        /* 搜索下拉 */
+        .search-results {
+            list-style: none;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            max-height: 200px;
+            overflow-y: auto;
+            margin: -8px 0 12px;
+            background: #ffffff;
+        }
+        .search-results li {
+            padding: 8px 12px;
+            cursor: pointer;
+            font-size: 14px;
+            border-bottom: 1px solid #f3f4f6;
+        }
+        .search-results li:last-child {
+            border-bottom: none;
+        }
+        .search-results li:hover {
+            background: #ebf4ff;
+        }
+        .search-results .su-name { font-weight: 600; color: #111827; }
+        .search-results .su-email { font-size: 12px; color: #9ca3af; margin-left: 8px; }
+
         @media (max-width: 768px) {
             .manage-layout {
                 flex-direction: column;
@@ -328,8 +355,10 @@
     <div id="invite-backdrop" class="modal-backdrop" aria-hidden="true">
         <div class="modal-dialog" role="dialog" aria-modal="true">
             <h3>邀请成员</h3>
-            <label for="invite-user-id">用户ID</label>
-            <input id="invite-user-id" type="number" placeholder="输入要邀请的用户ID" autocomplete="off" />
+            <label for="invite-user-search">搜索用户</label>
+            <input id="invite-user-search" type="text" placeholder="输入用户名或邮箱搜索" autocomplete="off" />
+            <ul id="invite-user-results" class="search-results" style="display:none;"></ul>
+            <input type="hidden" id="invite-user-uuid" />
             <label for="invite-role">角色</label>
             <select id="invite-role">
                 <option value="1">viewer - 只读</option>
@@ -339,21 +368,6 @@
             <div class="modal-actions">
                 <button id="invite-cancel" class="btn-cancel" type="button">取消</button>
                 <button id="invite-confirm" class="btn-confirm" type="button">邀请</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- 删除团队确认弹窗 -->
-    <div id="delete-backdrop" class="modal-backdrop" aria-hidden="true">
-        <div class="modal-dialog" role="dialog" aria-modal="true">
-            <h3>删除团队</h3>
-            <p style="font-size: 14px; color: #6b7280; margin-bottom: 16px;">
-                确认删除该团队吗？此操作不可恢复，团队下所有项目将不再归属任何团队。
-            </p>
-            <div class="modal-actions">
-                <button id="delete-cancel" class="btn-cancel" type="button">取消</button>
-                <button id="delete-confirm" class="btn-confirm" type="button"
-                        style="background: #e53e3e;">确认删除</button>
             </div>
         </div>
     </div>
